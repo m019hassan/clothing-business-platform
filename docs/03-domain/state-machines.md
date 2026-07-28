@@ -6,21 +6,25 @@
 - pending_payment
 - confirmed
 - processing
+- ready_to_ship
 - shipped
 - delivered
 - cancelled
 - returned
+- refunded
 
 ### Allowed transitions
 - draft -> pending_payment
 - pending_payment -> confirmed
 - pending_payment -> cancelled
 - confirmed -> processing
-- processing -> shipped
+- processing -> ready_to_ship
+- ready_to_ship -> shipped
 - shipped -> delivered
 - confirmed -> cancelled
 - shipped -> returned
 - delivered -> returned
+- returned -> refunded
 
 ### Triggering actors
 - Customer may create or cancel their own order within policy limits.
@@ -78,17 +82,21 @@
 - pending
 - packed
 - shipped
+- out_for_delivery
 - delivered
 - failed
 - cancelled
+- returned
 
 ### Allowed transitions
 - pending -> packed
 - packed -> shipped
-- shipped -> delivered
+- shipped -> out_for_delivery
+- out_for_delivery -> delivered
 - pending -> cancelled
 - packed -> cancelled
 - shipped -> failed
+- delivered -> returned
 
 ### Triggering actors
 - Staff or fulfillment handlers update shipment state.

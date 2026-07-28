@@ -20,6 +20,7 @@ The system will begin as a modular monolith deployed as a single Next.js applica
 - Transactions are committed through Prisma to PostgreSQL.
 - Events and notifications are emitted to internal queues or background workers when needed.
 - AI interactions go through the AI gateway, which calls business services and permission checks rather than accessing the database directly.
+- File uploads such as payment proofs and product images should be stored through a dedicated object-storage layer rather than directly inside PostgreSQL.
 
 ## Design principles
 - Business rules live in application services, not UI components.

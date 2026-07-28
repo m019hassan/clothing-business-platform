@@ -29,6 +29,15 @@ Inventory must be modeled as a location-based ledger. A product is not simply as
 - An order can only be confirmed if available stock exists.
 - Reservations should expire or be released if the order is abandoned.
 - Inventory should be shared across ecommerce and store channels.
+- Payment failure, cancellation, and returns must release or adjust reservations and stock accordingly.
+
+## Inventory lifecycle
+1. Stock is received into a warehouse as an inbound movement.
+2. Inventory balances are updated and recorded in stock movements.
+3. An order creates a reservation against available stock.
+4. Payment confirmation or order confirmation converts the reservation into a committed sale.
+5. Cancellation, payment failure, or return events release or reverse the movement as appropriate.
+6. Manual adjustments, damages, and production output are recorded as separate movements.
 
 ## MVP scope
 - Warehouses for store and online fulfillment

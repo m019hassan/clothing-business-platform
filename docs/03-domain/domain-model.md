@@ -5,8 +5,8 @@
 - Role: named collection of permissions
 - Permission: atomic authorization capability
 - Customer: external buyer or storefront contact
-- Product: sellable item in the catalog
-- ProductVariant: specific version of a product with attributes such as size or color
+- Product: sellable catalog item
+- ProductVariant: specific sellable variation of a product defined by size, color, or another attribute
 - Category: product grouping
 - Warehouse: physical or logical location for stock
 - InventoryBalance: current stock quantity at a location for a given SKU or product variant
@@ -15,6 +15,7 @@
 - Order: customer purchase request
 - OrderItem: line item within an order
 - Payment: financial transaction associated with an order
+- PaymentProof: uploaded evidence for manual verification of bank transfer payment
 - Shipment: delivery fulfillment record
 - Return: reverse fulfillment event
 - Refund: financial reversal event

@@ -19,6 +19,11 @@ Payments represent the financial handling of an order. They are separate from th
 - failed
 - cancelled
 
+## Payment lifecycle rules
+- The payment state is independent from the order state.
+- Bank transfer payments should remain in pending_verification until a staff member approves or rejects them.
+- Refunds should be represented as a separate financial event from cancellation and should not automatically imply the order is fully refunded.
+
 ## Bank transfer workflow
 1. Customer creates an order and selects bank transfer.
 2. The system creates a payment record with state pending_verification.

@@ -8,21 +8,25 @@ Orders represent customer purchase requests and should be treated independently 
 - pending_payment
 - confirmed
 - processing
+- ready_to_ship
 - shipped
 - delivered
 - cancelled
 - returned
+- refunded
 
 ## Allowed transitions
 - draft -> pending_payment
 - pending_payment -> confirmed
 - pending_payment -> cancelled
 - confirmed -> processing
-- processing -> shipped
+- processing -> ready_to_ship
+- ready_to_ship -> shipped
 - shipped -> delivered
 - confirmed -> cancelled
 - shipped -> returned
 - delivered -> returned
+- returned -> refunded
 
 ## Side effects
 - Confirming an order may reserve inventory.

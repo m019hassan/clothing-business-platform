@@ -152,3 +152,54 @@ A home server is practical for backup copies but is not a safe primary productio
 
 ### Consequences
 The deployment plan must support cloud production, encrypted backup copies, and recovery procedures.
+
+## ADR-010: Why product variants are modeled explicitly
+### Context
+The clothing business needs a catalog that can represent products with multiple sizes, colors, and sellable combinations without losing clarity.
+
+### Decision
+Model products as a parent catalog item and represent each sellable variation as an explicit product variant with its own SKU and inventory identity.
+
+### Alternatives considered
+- A single product record with size and color stored as free-form tags
+- Separate product records for every size-color combination
+
+### Reasoning
+Explicit variants and SKUs make inventory, pricing, and order line handling precise and scalable. They also align with the business reality that each size-color combination can have its own stock profile.
+
+### Consequences
+The data model is more structured, but it creates a cleaner foundation for later promotions, bundles, and warehouse-level stock control.
+
+## ADR-011: Why inventory uses stock movements and reservations
+### Context
+The platform needs to prevent overselling while supporting orders, returns, payments, and manual adjustments.
+
+### Decision
+Track inventory through location-based balances plus immutable stock movements and reservations rather than a single mutable count.
+
+### Alternatives considered
+- A single stock field per variant
+- Per-channel-only inventory without reservation support
+
+### Reasoning
+This provides clean auditability, reconciliation, and a safer path for future production, transfer, and multi-location workflows.
+
+### Consequences
+The inventory model is more complex, but it is materially safer and easier to reason about than a one-field stock snapshot.
+
+## ADR-012: Why payment and order states remain independent
+### Context
+Bank transfer verification and other payment workflows can leave an order in a different state from its payment state.
+
+### Decision
+Keep payment state and order state as separate concepts in the domain model and application logic.
+
+### Alternatives considered
+- A single status field shared by payments and orders
+- Embedding payment verification into the order state machine only
+
+### Reasoning
+This avoids conflating fulfillment with financial processing and makes approval and reconciliation workflows more explicit.
+
+### Consequences
+The implementation must synchronize both states carefully and surface them independently in the UI and APIs.
