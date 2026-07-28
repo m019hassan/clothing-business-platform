@@ -1,34 +1,28 @@
 # Architecture Principles
 
-## Simplicity first
-The architecture should stay simple enough for a small team to understand and operate. This is important because the business value of the system comes from reliable daily use, not from unnecessary technical complexity.
+## Modularity
+The platform should be organized into clear business-oriented modules so that each area of the system has a defined purpose and ownership. This principle exists to make the system easier to understand, easier to evolve, and less fragile as it grows.
 
-## Modular monolith
-The initial system should be built as a single Next.js application with clear internal modules. This keeps the MVP practical while preserving a clean path for later extraction if growth justifies it.
+## Separation of Concerns
+Different responsibilities should remain distinct so that business rules, user experience, and integration concerns do not become tightly mixed. This principle exists to keep the system easier to reason about, test, and change.
 
-## Documentation driven development
-Architecture must be explained clearly in documentation so that business stakeholders, developers, and AI agents can align on the same model. Documentation is not an afterthought; it is part of the architecture itself.
+## Domain Isolation
+Core business areas such as inventory, orders, factory operations, and retail workflows should be treated as meaningful domains rather than as loosely related features. This principle exists to preserve business clarity and reduce accidental coupling between areas of the system.
 
-## Domain driven thinking
-The architecture should reflect the business domain. Inventory, orders, payments, and shipping should be treated as business concerns, not as technical features that happen to be implemented in code.
+## Simplicity First
+The architecture should stay as simple as possible for the current stage of growth. This principle exists to prevent unnecessary complexity, reduce delivery risk, and keep the system sustainable for a small team.
 
-## Separation of concerns
-The presentation layer, application services, domain rules, and infrastructure integrations should remain distinct. This keeps business logic easier to reason about, test, and evolve.
+## Documentation Driven Development
+Architecture decisions should be captured in documentation so that the intended direction of the platform is visible to everyone involved. This principle exists to ensure alignment between business goals, implementation work, and future evolution.
 
-## Explicit dependencies
-Modules should depend on one another through well-defined interfaces and shared contracts rather than through hidden or broad coupling. This reduces surprise and makes the system safer to evolve.
+## Security First
+Security must be considered as part of the architecture from the beginning, not as a last-minute addition. This principle exists to protect business data, reduce risk, and support trusted operations across internal and external channels.
 
-## Reusable business logic
-Business rules should live in the domain or application layer where they can be reused across store, online, and future channels. They should not be repeated inside UI or integration code.
+## Extensibility
+The architecture should allow the platform to grow through additional modules, experiences, and integrations without requiring a complete rewrite. This principle exists to support long-term business growth while preserving the investment already made.
 
-## Single source of truth
-Core concepts such as product, inventory, order, payment, customer, and permission should be defined consistently and reused across the system rather than duplicated in multiple places.
+## AI Ready
+The system should be understandable and manageable for AI-assisted development and operational support. This principle exists to enable safer automation, clearer collaboration, and better future productivity without sacrificing control.
 
-## AI ready
-The architecture should be understandable to AI tools and should allow them to operate through controlled application services, permissions, and review workflows rather than by bypassing business logic.
-
-## Security by design
-Security should be considered as part of the architecture from the start. Access control, auditability, and safe external integration boundaries are foundational requirements, not later additions.
-
-## Evolutionary architecture
-The system should be designed to grow incrementally. The architecture should support future extraction of services, additional integrations, and new channels without forcing a rewrite.
+## Cloud Ready
+The architecture should be designed in a way that can be hosted and operated in modern cloud environments when needed. This principle exists to avoid locking the platform into a rigid model and to prepare it for future scalability and resilience.

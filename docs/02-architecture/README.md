@@ -1,30 +1,10 @@
-# Architecture Documentation
+# Architecture Vision
 
-This folder captures the target architecture for the clothing business platform. The design is intentionally business-aware, implementation-ready at a high level, and structured to remain simple during the MVP while staying extensible for future growth.
+## Purpose of this documentation
+This architecture documentation defines the guiding vision for the clothing business platform. Its purpose is to make the intended structure of the system clear to business stakeholders, developers, and AI agents so that decisions remain consistent as the platform grows.
 
-## Document map
-- [system-architecture.md](system-architecture.md): overall system view and runtime structure
-- [architecture-principles.md](architecture-principles.md): the principles that guide all architectural decisions
-- [modular-monolith.md](modular-monolith.md): the modular monolith structure and module ownership
-- [module-boundaries.md](module-boundaries.md): responsibilities and boundaries between modules
-- [dependency-rules.md](dependency-rules.md): allowed and forbidden dependencies
-- [layered-architecture.md](layered-architecture.md): internal layers and their responsibilities
-- [application-layers.md](application-layers.md): the application-facing architecture model
-- [folder-structure.md](folder-structure.md): proposed project organization
-- [shared-kernel.md](shared-kernel.md): shared abstractions and reusable cross-cutting capabilities
-- [integration-boundaries.md](integration-boundaries.md): external systems and adapter strategy
-- [event-strategy.md](event-strategy.md): event usage guidance for internal workflows
-- [configuration-strategy.md](configuration-strategy.md): configuration and secret management approach
-- [environment-strategy.md](environment-strategy.md): development, testing, staging, and production expectations
-- [logging-strategy.md](logging-strategy.md): logging, audit, security, and observability guidance
-- [error-handling-strategy.md](error-handling-strategy.md): error classification and propagation rules
-- [performance-strategy.md](performance-strategy.md): practical performance guidance for the MVP and early growth
-- [scalability-strategy.md](scalability-strategy.md): growth planning without premature optimization
-- [testing-strategy.md](testing-strategy.md): architecture-level testing approach
-- [coding-guidelines.md](coding-guidelines.md): architecture-relevant coding rules
-- [naming-conventions.md](naming-conventions.md): naming conventions for folders, modules, files, and concepts
-- [architectural-decisions.md](architectural-decisions.md): major architecture decisions and rationale
-- [architecture-review-checklist.md](architecture-review-checklist.md): checklist for future architectural reviews
+## How future documents are organized
+The architecture folder is meant to grow in a structured way. Each future document will focus on one concern, such as the overall system view, module boundaries, principles, quality goals, or operational concerns. Together, these documents should provide a coherent picture of how the platform is meant to evolve.
 
-## Architectural intent
-The architecture is designed to support a small business productively at first, while giving future teams a clear path to evolve the system. The design favors clarity over complexity and strong boundaries over broad coupling.
+## How developers and AI agents should use these documents
+Developers and AI agents should treat this section as a reference point before making changes. They should use these documents to understand the intended direction of the platform, preserve architectural boundaries, and avoid introducing unnecessary complexity. When a decision seems to conflict with the vision, the documents should be consulted first and updated when the direction changes.
