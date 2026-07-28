@@ -1,31 +1,52 @@
 # System Architecture
 
 ## Architectural style
-The system will begin as a modular monolith deployed as a single Next.js application with a shared database and shared domain modules. The core design goal is to keep the business logic cohesive while isolating concerns through module boundaries.
+The system will begin as a modular monolith deployed as a single Next.js application with a shared database and a clear internal module structure. The design goal is to keep the business logic cohesive while isolating technical concerns through explicit boundaries.
 
 ## High-level layers
 1. Presentation layer
    - Next.js App Router pages and server components
-   - Admin UI and storefront UI
+   - Admin and storefront interfaces
 2. Application layer
-   - Domain services for catalog, inventory, orders, payments, shipping, and identity
-3. Infrastructure layer
-   - Prisma ORM, PostgreSQL, object storage adapters, notification providers, authentication providers
-4. Cross-cutting concerns
-   - Logging, audit, permissions, validation, background job hooks, and AI gateway integration
+   - Use cases for catalog, inventory, orders, payments, shipping, authentication, and reporting
+3. Domain layer
+   - Core business rules for products, stock, orders, payments, fulfillment, roles, and permissions
+4. Infrastructure layer
+   - Persistence, storage, external integrations, logging, security enforcement, and configuration access
+5. Shared layer
+   - Common types, errors, contracts, validation utilities, and cross-cutting abstractions
 
 ## Runtime view
-- Users interact through the web app.
-- The application layer performs validation and business rules.
-- Transactions are committed through Prisma to PostgreSQL.
-- Events and notifications are emitted to internal queues or background workers when needed.
-- AI interactions go through the AI gateway, which calls business services and permission checks rather than accessing the database directly.
-- File uploads such as payment proofs and product images should be stored through a dedicated object-storage layer rather than directly inside PostgreSQL.
+- Users interact through the web application.
+- Application services coordinate and enforce business behavior.
+- Domain rules remain focused on business meaning and invariants.
+- Infrastructure adapters connect to PostgreSQL, storage, notifications, payments, shipping, and other external systems.
+- AI interactions go through the AI module and application services rather than accessing data directly.
+- File uploads such as payment proofs and product images should be handled through a storage abstraction rather than embedded directly in business logic.
+
+## Main modules
+- Auth
+- Users
+- Roles and Permissions
+- Products and Categories
+- Inventory and Warehouses
+- Customers
+- Orders
+- Payments
+- Shipping
+- Notifications
+- Factory
+- Reports
+- Discounts
+- AI
+- Integrations
+- Settings
+- Audit
 
 ## Design principles
-- Business rules live in application services, not UI components.
-- Modules should depend on shared abstractions rather than each other directly where possible.
-- The system should be deployable as one application now and split later if required.
+- Business rules live in the domain and application layers, not in UI or infrastructure code.
+- Modules should depend on explicit services and contracts rather than on each other’s implementation details.
+- The system should be deployable as one application now and evolve into more independent services later if required.
 
 ## Scalability approach
-The modular monolith can later be decomposed into separate services for payments, inventory, or AI integrations without changing the domain model entirely. The initial architecture should therefore define clear boundaries and stable interfaces.
+The modular monolith can later be decomposed into separate services for payments, inventory, AI, or reporting if the business grows. The initial architecture should therefore define stable boundaries and clear module ownership from the start.

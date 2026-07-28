@@ -203,3 +203,54 @@ This avoids conflating fulfillment with financial processing and makes approval 
 
 ### Consequences
 The implementation must synchronize both states carefully and surface them independently in the UI and APIs.
+
+## ADR-013: Why the architecture uses a modular monolith instead of microservices
+### Context
+The business is still small and the team should not carry the operational cost of distributed services before the system truly requires them.
+
+### Decision
+Use a modular monolith as the initial architecture and keep the internal boundaries clear enough for future extraction.
+
+### Alternatives considered
+- Microservices from the first release
+- A single tightly-coupled application with no module boundaries
+
+### Reasoning
+A modular monolith keeps development and operations simple while still preserving a path to future service extraction.
+
+### Consequences
+The team must preserve module boundaries carefully and avoid turning the monolith into an unstructured codebase.
+
+## ADR-014: Why AI uses application services rather than direct access
+### Context
+The business needs AI assistance without compromising security, permissions, or business consistency.
+
+### Decision
+AI workflows should call application services and use the same approval and permission model as human users.
+
+### Alternatives considered
+- Direct database access from AI flows
+- AI bypassing the application layer completely
+
+### Reasoning
+This keeps the AI operationally safe, auditable, and aligned with business rules.
+
+### Consequences
+AI features will be slightly more structured, but the system stays secure and easier to reason about.
+
+## ADR-015: Why adapters isolate external integrations
+### Context
+Payments, shipping, messaging, storage, and AI providers will change over time and must not leak through the business modules.
+
+### Decision
+All external integrations must be wrapped in adapter boundaries and translated into domain-facing contracts.
+
+### Alternatives considered
+- Letting domain modules depend directly on provider SDKs
+- Embedding integration logic in UI code
+
+### Reasoning
+This keeps the business model stable and reduces the ripple effect of provider changes.
+
+### Consequences
+The architecture becomes slightly more abstract, but the system is easier to evolve and test.

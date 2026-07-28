@@ -1,40 +1,24 @@
 # Business Requirements
 
-## Functional requirements
-### Identity and access
-- Users must authenticate securely.
-- Roles and permissions must support business operations and approvals.
-- Administrators must be able to assign roles and override permissions when needed.
+These requirements describe the business capabilities the platform must eventually support. They are written from the perspective of the operating business rather than the software design.
 
-### Catalog and products
-- The system must support products, categories, variants, sizes, colors, and images.
-- Product pricing and status must be managed centrally.
+## Core business capabilities
+- The business must be able to manage products, variants, pricing, and catalog information in a consistent way.
+- The business must maintain accurate inventory across store and online sales channels.
+- The business must process customer orders, confirm payment, and arrange delivery or pickup.
+- The business must support returns, refunds, and correction workflows without losing control of inventory or financial records.
+- The business must assign clear responsibilities to employees and protect sensitive actions through approvals.
 
-### Inventory
-- Inventory must be location-based and support stock movements.
-- Store sales and ecommerce sales must share the same inventory ledger.
-- The system must support reservation, adjustment, and return flows.
+## Operational control requirements
+- The business must understand the current state of stock, orders, payments, and fulfillment at any time.
+- The business must be able to review and approve high-risk actions such as major inventory change, payment verification, or user permission changes.
+- The business must preserve enough traceability to explain what happened, who approved it, and when it occurred.
 
-### Orders and sales
-- Customers must be able to place orders from the storefront.
-- Orders must track status and history.
-- Orders must support cancellations, returns, and refunds.
+## Customer and sales requirements
+- The business must provide a reliable buying experience for both store and online customers.
+- The business must keep customers informed about the status of their orders and any delivery issues.
+- The business must ensure the same stock and pricing rules apply across all sales channels.
 
-### Payments
-- The platform must support cash on delivery and bank transfer payment verification.
-- Bank transfer payments must move through a pending verification state.
-- Payment status must remain independent from order status.
-
-### Shipping
-- Orders must support shipping addresses, delivery fees, and shipment states.
-- The system must allow manual delivery handling or future shipping-provider integration.
-
-### Notifications
-- The system must notify staff and customers about key events.
-- Notification preferences must be configurable.
-
-## Non-functional requirements
-- The system must be auditable.
-- The system must preserve transactional consistency for inventory and payments.
-- The system must be secure by default.
-- The MVP must stay practical and avoid overengineering.
+## Growth and governance requirements
+- The platform must be simple enough for a small team to operate while still allowing future growth.
+- The platform must support gradual expansion into more channels, automation, and reporting without forcing a major rework.
