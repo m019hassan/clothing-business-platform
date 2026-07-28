@@ -7,6 +7,7 @@ This repository is being prepared as a modular monolith foundation for a small c
 - TypeScript
 - Tailwind CSS
 - Modular monolith architecture
+- Prisma ORM initialized for future database foundation work
 
 ## Current Structure
 - app/: default Next.js App Router entry points
