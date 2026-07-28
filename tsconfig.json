@@ -13,13 +13,35 @@
     "isolatedModules": true,
     "jsx": "react-jsx",
     "incremental": true,
+    "baseUrl": ".",
     "plugins": [
       {
         "name": "next"
       }
     ],
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "@/app/*": ["./app/*"],
+      "@/modules": ["./modules"],
+      "@/modules/*": ["./modules/*"],
+      "@/shared": ["./shared"],
+      "@/shared/*": ["./shared/*"],
+      "@/components": ["./components"],
+      "@/components/*": ["./components/*"],
+      "@/hooks": ["./hooks"],
+      "@/hooks/*": ["./hooks/*"],
+      "@/providers": ["./providers"],
+      "@/providers/*": ["./providers/*"],
+      "@/config": ["./config"],
+      "@/config/*": ["./config/*"],
+      "@/constants": ["./constants"],
+      "@/constants/*": ["./constants/*"],
+      "@/lib": ["./lib"],
+      "@/lib/*": ["./lib/*"],
+      "@/types": ["./types"],
+      "@/types/*": ["./types/*"],
+      "@/styles": ["./styles"],
+      "@/styles/*": ["./styles/*"]
     }
   },
   "include": [
