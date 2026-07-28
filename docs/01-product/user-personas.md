@@ -1,22 +1,59 @@
 # User Personas
 
-## Owner / business manager
-Needs an overview of revenue, orders, inventory, and operational issues. Wants approvals and reporting without being buried in low-level tasks.
+This document describes the key user types who will interact with the clothing business platform, their goals, responsibilities, and business needs.
 
-## Operations manager
-Coordinates production, inventory, and fulfillment. Needs visibility into low-stock items, pending payments, and fulfillment bottlenecks.
+## User Personas
 
-## Store cashier / retail staff
-Needs quick product lookup, stock visibility, sales entry, and simple return support.
+1. **Business Owner/Administrator**
+- Role: Owns or manages the clothing business
+- Business Goals:
+  - Monitor sales and revenue
+  - Track inventory levels
+  - Manage staff and permissions
+  - Access business reports and metrics
+- Key Concerns: Financial performance, operational efficiency, control
 
-## Ecommerce customer
-Needs a smooth shopping experience, account access, order history, and payment confirmation.
+2. **Store Manager**
+- Role: Oversees physical store operations
+- Business Goals:
+  - Manage store inventory
+  - Oversee sales staff
+  - Handle customer transactions
+  - Report issues to owner
+- Key Concerns: Daily operations, staff productivity, customer satisfaction
 
-## Administrator / system manager
-Creates users, assigns roles, configures permissions, reviews sensitive transactions, and manages notification rules.
+3. **Sales Associate/Cashier**
+- Role: Handles customer transactions and inquiries
+- Business Goals:
+  - Process in-store sales
+  - Check product availability
+  - Manage customer returns
+  - Place inventory requests
+- Key Concerns: Transaction speed, accuracy, customer service
 
-## Factory supervisor
-Needs to view what needs to be produced, compare materials to output, and track order fulfillment progress.
+4. **Inventory Specialist**
+- Role: Manages warehouse and stock levels
+- Business Goals:
+  - Receive and verify stock deliveries
+  - Conduct regular inventory counts
+  - Adjust stock levels for discrepancies
+  - Monitor low-stock items
+- Key Concerns: Inventory accuracy, reorder timing, storage organization
 
-## AI operator
-Uses the AI assistant to query business data or trigger allowed actions through the same permission system as human users.
+5. **E-commerce Customer**
+- Role: Shops online through the storefront
+- Business Goals:
+  - Browse available products
+  - Place orders with various payment methods
+  - Track order status and shipment
+  - Request returns or exchanges
+- Key Concerns: Product selection, payment options, delivery speed
+
+6. **Production Supervisor** *(future)*
+- Role: Oversees manufacturing operations
+- Business Goals:
+  - Plan production based on demand
+  - Track material usage and output
+  - Manage factory inventory
+  - Coordinate with warehouse
+- Key Concerns: Production efficiency, material costs, delivery timelines
