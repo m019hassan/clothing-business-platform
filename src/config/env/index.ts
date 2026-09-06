@@ -1,12 +1,24 @@
+import "server-only";
+
+function requiredEnvironmentVariable(name: string): string {
+  const value = process.env[name]?.trim();
+
+  if (!value) {
+    throw new Error(`[env] Missing required environment variable: ${name}`);
+  }
+
+  return value;
+}
+
 export const env = {
   appName: process.env.APP_NAME ?? 'clothing-business-platform',
   appEnv: process.env.APP_ENV ?? 'development',
   appUrl: process.env.APP_URL ?? 'http://localhost:3000',
   appVersion: process.env.APP_VERSION ?? '0.1.0',
 
-  databaseUrl: process.env.DATABASE_URL ?? '',
+  databaseUrl: requiredEnvironmentVariable('DATABASE_URL'),
 
-  authSecret: process.env.AUTH_SECRET ?? '',
+  authSecret: process.env.AUTH_SECRET?.trim() ?? '',
   authUrl: process.env.AUTH_URL ?? 'http://localhost:3000',
 
   storageProvider: process.env.STORAGE_PROVIDER ?? 'local',
@@ -34,3 +46,11 @@ export const env = {
 };
 
 export type AppEnv = typeof env;
+
+export function requireAuthSecret(): string {
+  if (!env.authSecret) {
+    throw new Error('[env] Missing required environment variable: AUTH_SECRET');
+  }
+
+  return env.authSecret;
+}

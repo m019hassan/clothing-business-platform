@@ -1,3 +1,5 @@
+import 'server-only';
+
 export * from './env';
 export * from './constants';
 
