@@ -92,3 +92,27 @@ export async function withDatabaseError<T>(operation: () => Promise<T>): Promise
     throw toAppError(error);
   }
 }
+
+export type ErrorResponseBody = {
+  error: {
+    code: AppErrorCode;
+    message: string;
+  };
+};
+
+export function toErrorResponse(error: unknown): {
+  status: number;
+  body: ErrorResponseBody;
+} {
+  const appError = toAppError(error);
+
+  return {
+    status: appError.statusCode,
+    body: {
+      error: {
+        code: appError.code,
+        message: appError.message,
+      },
+    },
+  };
+}

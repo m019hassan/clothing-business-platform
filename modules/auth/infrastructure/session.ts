@@ -27,8 +27,8 @@ const accountSelection = {
   createdAt: true,
   updatedAt: true,
   deletedAt: true,
-  customerProfile: true,
-  employeeProfile: true,
+  customerProfile: { select: { id: true } },
+  employeeProfile: { select: { id: true } },
 } as const;
 
 export type SafeAccount = Awaited<ReturnType<typeof getCurrentAccount>>;
@@ -53,6 +53,10 @@ export async function createSession(
   expiresAt = new Date(Date.now() + SESSION_DURATION_SECONDS * 1000),
 ): Promise<void> {
   const rawToken = randomBytes(32).toString("base64url");
+
+  await withDatabaseError(() =>
+    prisma.session.deleteMany({ where: { expiresAt: { lte: new Date() } } }),
+  );
 
   await withDatabaseError(() =>
     prisma.session.create({

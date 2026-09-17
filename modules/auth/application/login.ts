@@ -1,7 +1,7 @@
 import "server-only";
 
 import { headers } from "next/headers";
-import { AccountStatus } from "@prisma/client";
+import { AccountStatus, Prisma } from "@prisma/client";
 
 import { prisma } from "@/src/lib/db";
 import {
@@ -42,25 +42,36 @@ async function writeAuditLog(data: {
 
 async function recordFailedLogin(accountId: string): Promise<void> {
   const now = new Date();
-  const account = await prisma.account.findUnique({
-    where: { id: accountId },
-    select: { failedLoginAttempts: true },
-  });
 
-  if (!account) {
-    return;
+  let failedLoginAttempts: number;
+
+  try {
+    const account = await prisma.account.update({
+      where: { id: accountId },
+      data: { failedLoginAttempts: { increment: 1 } },
+      select: { failedLoginAttempts: true },
+    });
+
+    failedLoginAttempts = account.failedLoginAttempts;
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
+      return;
+    }
+
+    throw error;
   }
 
-  const failedLoginAttempts = account.failedLoginAttempts + 1;
   const shouldLock = failedLoginAttempts >= MAX_FAILED_ATTEMPTS;
 
-  await prisma.account.update({
-    where: { id: accountId },
-    data: {
-      failedLoginAttempts: shouldLock ? 0 : failedLoginAttempts,
-      lockedUntil: shouldLock ? new Date(now.getTime() + LOCKOUT_DURATION_MS) : null,
-    },
-  });
+  if (shouldLock) {
+    await prisma.account.update({
+      where: { id: accountId },
+      data: {
+        failedLoginAttempts: 0,
+        lockedUntil: new Date(now.getTime() + LOCKOUT_DURATION_MS),
+      },
+    });
+  }
 
   await writeAuditLog({
     accountId,
