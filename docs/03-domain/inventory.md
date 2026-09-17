@@ -34,10 +34,13 @@ Inventory must be modeled as a location-based ledger. A product is not simply as
 ## Inventory lifecycle
 1. Stock is received into a warehouse as an inbound movement.
 2. Inventory balances are updated and recorded in stock movements.
-3. An order creates a reservation against available stock.
-4. Payment confirmation or order confirmation converts the reservation into a committed sale.
-5. Cancellation, payment failure, or return events release or reverse the movement as appropriate.
-6. Manual adjustments, damages, and production output are recorded as separate movements.
+3. The cart creates a reservation against available stock (quantityReserved).
+4. Order creation preserves that reservation: the cart reservation is carried forward by the order items.
+5. The reservation remains held while the order is in draft or pending_payment.
+6. Cancelling an order releases its reservation exactly once.
+7. Confirming the order (payment success) consumes the reservation: quantityReserved and quantityOnHand both decrease by the ordered quantity.
+8. Payment failure or return events release or reverse the movement as appropriate.
+9. Manual adjustments, damages, and production output are recorded as separate movements.
 
 ## MVP scope
 - Warehouses for store and online fulfillment

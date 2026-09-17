@@ -15,12 +15,21 @@ export function isUuid(value: string): boolean {
   return UUID_PATTERN.test(value);
 }
 
-export function parsePaginationParams(searchParams: URLSearchParams): Pagination {
-  const limitParam = searchParams.get("limit");
-  const offsetParam = searchParams.get("offset");
+function toNumericParam(raw: string | null, fallback: number): number {
+  if (raw === null) {
+    return fallback;
+  }
 
-  const limit = limitParam === null ? DEFAULT_PAGE_SIZE : Number(limitParam);
-  const offset = offsetParam === null ? 0 : Number(offsetParam);
+  if (raw.trim() === "") {
+    return Number.NaN;
+  }
+
+  return Number(raw);
+}
+
+export function parsePaginationParams(searchParams: URLSearchParams): Pagination {
+  const limit = toNumericParam(searchParams.get("limit"), DEFAULT_PAGE_SIZE);
+  const offset = toNumericParam(searchParams.get("offset"), 0);
 
   if (!Number.isInteger(limit) || limit < 1 || limit > MAX_PAGE_SIZE) {
     throw new ValidationError(

@@ -8,6 +8,7 @@ export const PERMISSIONS = {
   ORDERS_VIEW: "orders.view",
   ORDERS_CREATE: "orders.create",
   ORDERS_CANCEL: "orders.cancel",
+  ORDERS_MANAGE: "orders.manage",
   CUSTOMERS_VIEW: "customers.view",
   CUSTOMERS_CREATE: "customers.create",
   CUSTOMERS_UPDATE: "customers.update",
@@ -18,6 +19,10 @@ export const PERMISSIONS = {
   ROLES_CREATE: "roles.create",
   ROLES_UPDATE: "roles.update",
   ROLES_DELETE: "roles.delete",
+  PAYMENTS_VIEW: "payments.view",
+  PAYMENTS_VERIFY: "payments.verify",
+  PAYMENTS_APPROVE: "payments.approve",
+  PAYMENTS_REJECT: "payments.reject",
 } as const;
 
 export type PermissionCode = (typeof PERMISSIONS)[keyof typeof PERMISSIONS] | (string & {});

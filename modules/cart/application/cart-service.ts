@@ -12,15 +12,17 @@ import {
   ValidationError,
   withDatabaseError,
 } from "@/src/lib/errors";
+import {
+  ReservationConflictError,
+  releaseStock,
+  reserveStock,
+  type TransactionClient,
+} from "@/modules/inventory/application/reservations";
 import { isUuid } from "@/src/lib/validation";
 
 const MAX_LINE_QUANTITY = 999;
 
 type AuthenticatedAccount = NonNullable<SafeAccount>;
-type TransactionClient = Prisma.TransactionClient;
-
-class RetryableReservationConflict extends Error {}
-
 const cartSelection = {
   id: true,
   status: true,
@@ -108,13 +110,8 @@ function mapCart(cart: CartRecord): CartView {
 }
 
 async function loadCart(customerProfileId: string): Promise<CartView> {
-  const cart = await prisma.cart.findUnique({
-    where: {
-      customerProfileId_status: {
-        customerProfileId,
-        status: CartStatus.ACTIVE,
-      },
-    },
+  const cart = await prisma.cart.findFirst({
+    where: { customerProfileId, status: CartStatus.ACTIVE },
     select: cartSelection,
   });
 
@@ -122,10 +119,8 @@ async function loadCart(customerProfileId: string): Promise<CartView> {
 }
 
 async function findOrCreateActiveCart(customerProfileId: string): Promise<{ id: string }> {
-  const existing = await prisma.cart.findUnique({
-    where: {
-      customerProfileId_status: { customerProfileId, status: CartStatus.ACTIVE },
-    },
+  const existing = await prisma.cart.findFirst({
+    where: { customerProfileId, status: CartStatus.ACTIVE },
     select: { id: true },
   });
 
@@ -140,10 +135,8 @@ async function findOrCreateActiveCart(customerProfileId: string): Promise<{ id: 
     });
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
-      const raced = await prisma.cart.findUnique({
-        where: {
-          customerProfileId_status: { customerProfileId, status: CartStatus.ACTIVE },
-        },
+      const raced = await prisma.cart.findFirst({
+        where: { customerProfileId, status: CartStatus.ACTIVE },
         select: { id: true },
       });
 
@@ -166,11 +159,11 @@ async function runCartTransaction<T>(
       return prisma.$transaction(operation);
     }
 
-    if (error instanceof RetryableReservationConflict) {
+    if (error instanceof ReservationConflictError) {
       try {
         return await prisma.$transaction(operation);
       } catch (retryError) {
-        if (retryError instanceof RetryableReservationConflict) {
+        if (retryError instanceof ReservationConflictError) {
           throw new ConflictError("Stock changed while processing the request. Please try again.");
         }
 
@@ -196,113 +189,6 @@ async function isVariantSellable(
   });
 
   return variant !== null;
-}
-
-async function reserveStock(
-  transaction: TransactionClient,
-  variantId: string,
-  quantity: number,
-): Promise<void> {
-  if (quantity <= 0) {
-    return;
-  }
-
-  const rows = await transaction.inventoryItem.findMany({
-    where: { variantId },
-    select: { id: true, quantityOnHand: true, quantityReserved: true },
-    orderBy: { quantityOnHand: "desc" },
-  });
-
-  const available = rows.reduce(
-    (sum, row) => sum + row.quantityOnHand - row.quantityReserved,
-    0,
-  );
-
-  if (available < quantity) {
-    throw new ConflictError("Insufficient stock for the requested quantity.");
-  }
-
-  let remaining = quantity;
-
-  for (const row of rows) {
-    if (remaining <= 0) {
-      break;
-    }
-
-    const headroom = row.quantityOnHand - row.quantityReserved;
-
-    if (headroom <= 0) {
-      continue;
-    }
-
-    const amount = Math.min(headroom, remaining);
-
-    const result = await transaction.inventoryItem.updateMany({
-      where: {
-        id: row.id,
-        quantityReserved: row.quantityReserved,
-        quantityOnHand: { gte: row.quantityReserved + amount },
-      },
-      data: { quantityReserved: { increment: amount } },
-    });
-
-    if (result.count === 0) {
-      throw new RetryableReservationConflict("Reservation state changed concurrently.");
-    }
-
-    remaining -= amount;
-  }
-
-  if (remaining > 0) {
-    throw new RetryableReservationConflict("Reservation state changed concurrently.");
-  }
-}
-
-async function releaseStock(
-  transaction: TransactionClient,
-  variantId: string,
-  quantity: number,
-): Promise<void> {
-  if (quantity <= 0) {
-    return;
-  }
-
-  const rows = await transaction.inventoryItem.findMany({
-    where: { variantId, quantityReserved: { gt: 0 } },
-    select: { id: true, quantityReserved: true },
-    orderBy: { quantityReserved: "desc" },
-  });
-
-  const reservedTotal = rows.reduce((sum, row) => sum + row.quantityReserved, 0);
-
-  if (reservedTotal < quantity) {
-    throw new ConflictError("Unable to release more stock than reserved.");
-  }
-
-  let remaining = quantity;
-
-  for (const row of rows) {
-    if (remaining <= 0) {
-      break;
-    }
-
-    const amount = Math.min(row.quantityReserved, remaining);
-
-    const result = await transaction.inventoryItem.updateMany({
-      where: { id: row.id, quantityReserved: { gte: amount } },
-      data: { quantityReserved: { decrement: amount } },
-    });
-
-    if (result.count === 0) {
-      throw new RetryableReservationConflict("Reservation state changed concurrently.");
-    }
-
-    remaining -= amount;
-  }
-
-  if (remaining > 0) {
-    throw new RetryableReservationConflict("Reservation state changed concurrently.");
-  }
 }
 
 export async function getCart(account: AuthenticatedAccount): Promise<CartView> {

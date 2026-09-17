@@ -6,6 +6,7 @@ import {
   AccountType,
   CartStatus,
   OrderStatus,
+  PaymentStatus,
   Prisma,
   ProductStatus,
 } from "@prisma/client";
@@ -23,12 +24,10 @@ import {
 import { isUuid, type Pagination } from "@/src/lib/validation";
 
 type AuthenticatedAccount = NonNullable<SafeAccount>;
-type TransactionClient = Prisma.TransactionClient;
-
 const ORDER_NUMBER_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 const ORDER_NUMBER_RANDOM_LENGTH = 6;
 
-const orderSelection = {
+export const orderSelection = {
   id: true,
   orderNumber: true,
   status: true,
@@ -95,7 +94,7 @@ function generateOrderNumber(now: Date): string {
   return `ORD-${datePart}-${randomPart}`;
 }
 
-function mapOrder(order: OrderRecord): OrderView {
+export function mapOrder(order: OrderRecord): OrderView {
   return {
     id: order.id,
     orderNumber: order.orderNumber,
@@ -188,64 +187,6 @@ export async function getOrder(
   return mapOrder(order);
 }
 
-async function consumeReservedStock(
-  transaction: TransactionClient,
-  variantId: string,
-  quantity: number,
-): Promise<void> {
-  if (quantity <= 0) {
-    return;
-  }
-
-  const rows = await transaction.inventoryItem.findMany({
-    where: { variantId },
-    select: { id: true, quantityOnHand: true, quantityReserved: true },
-    orderBy: { quantityReserved: "desc" },
-  });
-
-  const reservedTotal = rows.reduce((sum, row) => sum + row.quantityReserved, 0);
-
-  if (reservedTotal < quantity) {
-    throw new ConflictError("The reserved stock for this item is no longer available.");
-  }
-
-  let remaining = quantity;
-
-  for (const row of rows) {
-    if (remaining <= 0) {
-      break;
-    }
-
-    if (row.quantityReserved <= 0) {
-      continue;
-    }
-
-    const amount = Math.min(row.quantityReserved, remaining);
-
-    const result = await transaction.inventoryItem.updateMany({
-      where: {
-        id: row.id,
-        quantityOnHand: { gte: amount },
-        quantityReserved: { gte: amount },
-      },
-      data: {
-        quantityOnHand: { decrement: amount },
-        quantityReserved: { decrement: amount },
-      },
-    });
-
-    if (result.count === 0) {
-      throw new ConflictError("Insufficient stock to complete the order.");
-    }
-
-    remaining -= amount;
-  }
-
-  if (remaining > 0) {
-    throw new ConflictError("Insufficient stock to complete the order.");
-  }
-}
-
 async function runOrderTransaction<T>(
   operation: () => Promise<T>,
 ): Promise<T> {
@@ -279,13 +220,8 @@ export async function createOrderFromCart(
   return withDatabaseError(() =>
     runOrderTransaction(() =>
       prisma.$transaction(async (transaction) => {
-        const cart = await transaction.cart.findUnique({
-          where: {
-            customerProfileId_status: {
-              customerProfileId: profile.id,
-              status: CartStatus.ACTIVE,
-            },
-          },
+        const cart = await transaction.cart.findFirst({
+          where: { customerProfileId: profile.id, status: CartStatus.ACTIVE },
           select: {
             id: true,
             items: {
@@ -356,10 +292,6 @@ export async function createOrderFromCart(
           throw new ConflictError("The cart can no longer be converted into an order.");
         }
 
-        for (const item of cart.items) {
-          await consumeReservedStock(transaction, item.variant.id, item.quantity);
-        }
-
         const orderItems = cart.items.map((item) => {
           const unitPrice = item.variant.priceOverride ?? item.variant.product.basePrice;
 
@@ -385,6 +317,15 @@ export async function createOrderFromCart(
             totalAmount: subtotalAmount,
             currency: cart.items[0].variant.product.currency,
             items: { create: orderItems },
+            payments: {
+              create: [
+                {
+                  status: PaymentStatus.PENDING,
+                  amount: subtotalAmount,
+                  currency: cart.items[0].variant.product.currency,
+                },
+              ],
+            },
           },
           select: orderSelection,
         });

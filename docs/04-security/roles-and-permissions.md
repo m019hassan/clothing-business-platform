@@ -13,6 +13,7 @@ Permissions are atomic capabilities grouped into domain areas.
 - orders.view
 - orders.create
 - orders.cancel
+- orders.manage
 - payments.view
 - payments.approve
 - payments.reject
@@ -23,6 +24,10 @@ Permissions are atomic capabilities grouped into domain areas.
 - users.manage
 - roles.manage
 - notifications.manage
+
+## Order permission scope
+- orders.cancel covers order cancellation.
+- orders.manage is reserved for staff operational order state transitions once they are approved in the order state machine; it does not bypass the state machine and does not replace orders.cancel.
 
 ## Role model
 Roles are reusable bundles of permissions. Examples:

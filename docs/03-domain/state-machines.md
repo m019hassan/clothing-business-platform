@@ -15,6 +15,7 @@
 
 ### Allowed transitions
 - draft -> pending_payment
+- draft -> cancelled
 - pending_payment -> confirmed
 - pending_payment -> cancelled
 - confirmed -> processing
@@ -28,12 +29,15 @@
 
 ### Triggering actors
 - Customer may create or cancel their own order within policy limits.
-- Staff may update the order state.
+- Customer (owner) owns the transition draft -> pending_payment for their own order.
+- Cancellation is limited to within 24 hours of placement for customers.
+- Staff may update the order state, and may cancel using orders.cancel.
 - Administrators may override in exceptional cases.
 
 ### Side effects
-- Confirming an order reserves inventory.
-- Cancellation releases reservation.
+- The cart reserves inventory and order creation preserves that reservation.
+- Confirming an order (payment success) converts the reservation into a committed sale and decreases quantityOnHand.
+- Cancellation releases the reservation exactly once.
 - Returns may restock inventory and trigger refund logic.
 
 ### Notifications

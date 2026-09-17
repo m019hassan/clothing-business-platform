@@ -1,0 +1,195 @@
+import "server-only";
+
+import {
+  AccountType,
+  OrderStatus,
+  PaymentStatus,
+  Prisma,
+} from "@prisma/client";
+
+import { hasPermission } from "@/modules/auth/application/authorization";
+import { PERMISSIONS } from "@/modules/auth/application/permissions";
+import type { SafeAccount } from "@/modules/auth/infrastructure/session";
+import {
+  consumeStock,
+  releaseStock,
+  ReservationConflictError,
+} from "@/modules/inventory/application/reservations";
+import { mapOrder, orderSelection } from "@/modules/order/application/orders";
+import type {
+  PaymentOutcome,
+  PaymentSimulationResult,
+  PaymentView,
+} from "@/modules/payment/types";
+import { prisma } from "@/src/lib/db";
+import {
+  AuthorizationError,
+  ConflictError,
+  NotFoundError,
+  ValidationError,
+  withDatabaseError,
+} from "@/src/lib/errors";
+import { isUuid } from "@/src/lib/validation";
+
+type AuthenticatedAccount = NonNullable<SafeAccount>;
+
+const paymentSelection = {
+  id: true,
+  orderId: true,
+  status: true,
+  amount: true,
+  currency: true,
+  method: true,
+  createdAt: true,
+} satisfies Prisma.PaymentSelect;
+
+type PaymentRecord = Prisma.PaymentGetPayload<{ select: typeof paymentSelection }>;
+
+function mapPayment(payment: PaymentRecord): PaymentView {
+  return {
+    id: payment.id,
+    orderId: payment.orderId,
+    status: payment.status,
+    amount: payment.amount.toString(),
+    currency: payment.currency,
+    method: payment.method,
+    createdAt: payment.createdAt.toISOString(),
+  };
+}
+
+function isPaymentOutcome(value: unknown): value is PaymentOutcome {
+  return value === "success" || value === "failure";
+}
+
+async function runPaymentTransaction<T>(operation: () => Promise<T>): Promise<T> {
+  try {
+    return await operation();
+  } catch (error) {
+    if (error instanceof ReservationConflictError) {
+      try {
+        return await operation();
+      } catch (retryError) {
+        if (retryError instanceof ReservationConflictError) {
+          throw new ConflictError("Stock changed while processing the payment. Please retry.");
+        }
+
+        throw retryError;
+      }
+    }
+
+    throw error;
+  }
+}
+
+/**
+ * Simulates an external payment outcome for lifecycle testing.
+ * This is an internal application simulation, not an integration with a real
+ * payment provider; the documented verification flow (proof upload plus staff
+ * payments.verify / payments.reject) replaces it in a later slice.
+ */
+export async function simulatePaymentOutcome(
+  account: AuthenticatedAccount,
+  orderId: string,
+  outcomeValue: unknown,
+): Promise<PaymentSimulationResult> {
+  if (!isUuid(orderId)) {
+    throw new NotFoundError("Order not found.");
+  }
+
+  if (!isPaymentOutcome(outcomeValue)) {
+    throw new ValidationError('The payment outcome must be "success" or "failure".');
+  }
+
+  const outcome = outcomeValue;
+  const customerProfile = account.customerProfile;
+
+  if (account.accountType !== AccountType.CUSTOMER && account.accountType !== AccountType.EMPLOYEE) {
+    throw new AuthorizationError("A customer or employee account is required.");
+  }
+
+  let ownerFilter: Prisma.OrderWhereInput = {};
+
+  if (account.accountType === AccountType.CUSTOMER) {
+    if (!customerProfile) {
+      throw new AuthorizationError("A customer account is required.");
+    }
+
+    ownerFilter = { customerProfileId: customerProfile.id };
+  } else if (!(await hasPermission(PERMISSIONS.PAYMENTS_VERIFY))) {
+    throw new AuthorizationError("You do not have permission to process payments.");
+  }
+
+  return withDatabaseError(() =>
+    runPaymentTransaction(() =>
+      prisma.$transaction(async (transaction) => {
+        const order = await transaction.order.findFirst({
+          where: { id: orderId, ...ownerFilter },
+          select: {
+            id: true,
+            status: true,
+            items: { select: { variantId: true, quantity: true } },
+          },
+        });
+
+        if (!order) {
+          throw new NotFoundError("Order not found.");
+        }
+
+        if (order.status !== OrderStatus.PENDING_PAYMENT) {
+          throw new ConflictError("The order is not awaiting payment.");
+        }
+
+        const payment = await transaction.payment.findFirst({
+          where: { orderId, status: PaymentStatus.PENDING },
+          orderBy: { createdAt: "desc" },
+          select: paymentSelection,
+        });
+
+        if (!payment) {
+          throw new ConflictError("No pending payment was found for this order.");
+        }
+
+        const targetStatus =
+          outcome === "success" ? OrderStatus.CONFIRMED : OrderStatus.CANCELLED;
+
+        const transition = await transaction.order.updateMany({
+          where: { id: orderId, status: OrderStatus.PENDING_PAYMENT, ...ownerFilter },
+          data: { status: targetStatus },
+        });
+
+        if (transition.count !== 1) {
+          throw new ConflictError(
+            "The order status changed while the request was processed. Please retry.",
+          );
+        }
+
+        for (const item of order.items) {
+          if (outcome === "success") {
+            await consumeStock(transaction, item.variantId, item.quantity);
+          } else {
+            await releaseStock(transaction, item.variantId, item.quantity);
+          }
+        }
+
+        const updatedPayment = await transaction.payment.update({
+          where: { id: payment.id },
+          data: {
+            status: outcome === "success" ? PaymentStatus.APPROVED : PaymentStatus.REJECTED,
+          },
+          select: paymentSelection,
+        });
+
+        const updatedOrder = await transaction.order.findFirst({
+          where: { id: orderId, ...ownerFilter },
+          select: orderSelection,
+        });
+
+        if (!updatedOrder) {
+          throw new NotFoundError("Order not found.");
+        }
+
+        return { order: mapOrder(updatedOrder), payment: mapPayment(updatedPayment) };
+      }),
+    ),
+  );
+}

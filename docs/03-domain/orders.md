@@ -17,6 +17,7 @@ Orders represent customer purchase requests and should be treated independently 
 
 ## Allowed transitions
 - draft -> pending_payment
+- draft -> cancelled
 - pending_payment -> confirmed
 - pending_payment -> cancelled
 - confirmed -> processing
@@ -29,13 +30,16 @@ Orders represent customer purchase requests and should be treated independently 
 - returned -> refunded
 
 ## Side effects
-- Confirming an order may reserve inventory.
-- Cancelling an order should release reserved stock.
+- The cart reserves inventory, and order creation preserves that reservation.
+- The reservation remains held while the order is in draft or pending_payment.
+- Cancelling an order releases its reservation exactly once.
+- A pending payment is created with the order; payment success moves the order from pending_payment to confirmed and consumes the reservation, and payment failure or rejection cancels the order and releases it.
 - Returning an order may create a refund event or restock inventory depending on policy.
 
 ## Roles
 - Customer can create and view their own orders.
-- Staff can create, update, and manage orders.
+- Customer (owner) can move their own draft order to pending_payment and cancel their own order within 24 hours of placement.
+- Staff can create, update, and manage orders; staff cancellation uses orders.cancel.
 - Administrators can override order state where allowed.
 
 ## Notes
