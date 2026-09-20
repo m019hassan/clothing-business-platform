@@ -10,6 +10,25 @@ export type ProductVariantView = {
   availableQuantity: number;
 };
 
+export type ProductInventoryVariantView = ProductVariantView & {
+  quantityOnHand: number;
+  quantityReserved: number;
+};
+
+export type ProductInventoryView = {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  status: ProductStatus;
+  basePrice: string;
+  currency: string;
+  categoryName: string | null;
+  createdAt: string;
+  updatedAt: string;
+  variants: ProductInventoryVariantView[];
+};
+
 export type ProductView = {
   id: string;
   name: string;

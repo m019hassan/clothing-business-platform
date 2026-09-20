@@ -126,7 +126,7 @@ function SidebarContent({
               <path d="M15 12H4M8 8l-4 4 4 4" />
               <path d="M12 4h6a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6" />
             </svg>
-            Sign out
+            Sign outt
           </button>
         </form>
       </div>

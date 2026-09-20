@@ -2,7 +2,10 @@ import "server-only";
 
 import { Prisma, ProductStatus } from "@prisma/client";
 
-import type { ProductView } from "@/modules/catalog/types";
+import type {
+  ProductInventoryView,
+  ProductView,
+} from "@/modules/catalog/types";
 import { prisma } from "@/src/lib/db";
 import { NotFoundError, withDatabaseError } from "@/src/lib/errors";
 import {
@@ -88,6 +91,90 @@ export async function listProducts(
   );
 
   return products.map(mapProduct);
+}
+
+/**
+ * Management read used by the authenticated product screen.
+ * It intentionally exposes raw inventory counters and includes every variant
+ * (including draft/archived ones), so it must NOT be used by public API routes.
+ */
+export async function getProductInventory(
+  productId: string,
+): Promise<ProductInventoryView> {
+  if (!isUuid(productId)) {
+    throw new NotFoundError("Product not found.");
+  }
+
+  const product = await withDatabaseError(() =>
+    prisma.product.findFirst({
+      where: { id: productId, deletedAt: null },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        description: true,
+        status: true,
+        basePrice: true,
+        currency: true,
+        createdAt: true,
+        updatedAt: true,
+        category: { select: { name: true } },
+        variants: {
+          orderBy: { sku: "asc" },
+          select: {
+            id: true,
+            sku: true,
+            size: true,
+            color: true,
+            status: true,
+            priceOverride: true,
+            inventoryItems: {
+              select: { quantityOnHand: true, quantityReserved: true },
+            },
+          },
+        },
+      },
+    }),
+  );
+
+  if (!product) {
+    throw new NotFoundError("Product not found.");
+  }
+
+  return {
+    id: product.id,
+    name: product.name,
+    slug: product.slug,
+    description: product.description,
+    status: product.status,
+    basePrice: product.basePrice.toString(),
+    currency: product.currency,
+    categoryName: product.category?.name ?? null,
+    createdAt: product.createdAt.toISOString(),
+    updatedAt: product.updatedAt.toISOString(),
+    variants: product.variants.map((variant) => {
+      const quantityOnHand = variant.inventoryItems.reduce(
+        (sum, item) => sum + item.quantityOnHand,
+        0,
+      );
+      const quantityReserved = variant.inventoryItems.reduce(
+        (sum, item) => sum + item.quantityReserved,
+        0,
+      );
+
+      return {
+        id: variant.id,
+        sku: variant.sku,
+        size: variant.size,
+        color: variant.color,
+        status: variant.status,
+        priceOverride: variant.priceOverride ? variant.priceOverride.toString() : null,
+        quantityOnHand,
+        quantityReserved,
+        availableQuantity: quantityOnHand - quantityReserved,
+      };
+    }),
+  };
 }
 
 export async function getProduct(productId: string): Promise<ProductView> {
