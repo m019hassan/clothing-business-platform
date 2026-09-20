@@ -19,9 +19,11 @@ export type AddToCartVariant = {
 export function AddToCart({
   variants,
   currency,
+  canPurchase,
 }: {
   variants: AddToCartVariant[];
   currency: string;
+  canPurchase: boolean;
 }) {
   const router = useRouter();
   const sellableVariants = variants.filter((variant) => variant.sellable);
@@ -57,6 +59,17 @@ export function AddToCart({
     } finally {
       setPending(false);
     }
+  }
+
+  if (!canPurchase) {
+    return (
+      <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-5 py-4">
+        <p className="text-sm font-medium text-slate-700">Customer accounts only</p>
+        <p className="mt-1 text-sm text-slate-500">
+          Shopping cart actions are available for customer accounts. This account type cannot purchase.
+        </p>
+      </div>
+    );
   }
 
   if (sellableVariants.length === 0) {

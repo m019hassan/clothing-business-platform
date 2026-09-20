@@ -38,6 +38,13 @@ export function CheckoutButton() {
           Your order <span className="font-semibold">{createdOrder.orderNumber}</span> was created with status{" "}
           {createdOrder.status.replaceAll("_", " ")} for {createdOrder.totalAmount} {createdOrder.currency}.
         </p>
+        <ul className="mt-3 space-y-1 text-sm text-emerald-700">
+          <li>
+            Payment: {createdOrder.payment ? createdOrder.payment.status.replaceAll("_", " ").toLowerCase() : "not created"}
+          </li>
+          <li>The items stay reserved until the payment outcome is recorded.</li>
+          <li>You can cancel the order from its page within 24 hours.</li>
+        </ul>
         <div className="mt-4 flex flex-wrap gap-2">
           <Link
             href={`/orders/${createdOrder.id}`}

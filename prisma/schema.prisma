@@ -56,6 +56,9 @@ model Account {
   sessions  Session[]
   auditLogs AuditLog[]
 
+  notifications           Notification[]
+  notificationPreferences NotificationPreference[]
+
   @@index([status], map: "idx_account_status")
   @@index([accountType], map: "idx_account_type")
 }
@@ -497,6 +500,51 @@ enum PaymentMethod {
   BANK_TRANSFER
   MANUAL_TRANSFER_VERIFICATION
   ONLINE_GATEWAY
+}
+
+enum NotificationType {
+  ORDER
+  PAYMENT
+}
+
+model Notification {
+  id String @id @default(uuid()) @db.Uuid
+
+  accountId String @db.Uuid
+
+  type NotificationType
+
+  title String  @db.VarChar(200)
+  body  String? @db.Text
+
+  entityType String? @db.VarChar(50)
+  entityId   String? @db.VarChar(100)
+
+  readAt DateTime?
+
+  createdAt DateTime @default(now())
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId, readAt], map: "idx_notification_account_read")
+  @@index([accountId, createdAt], map: "idx_notification_account_created")
+  @@index([entityType, entityId], map: "idx_notification_entity")
+}
+
+model NotificationPreference {
+  id String @id @default(uuid()) @db.Uuid
+
+  accountId String @db.Uuid
+  type      NotificationType
+
+  inApp Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@unique([accountId, type], map: "uq_notification_preference_account_type")
 }
 
 model Payment {

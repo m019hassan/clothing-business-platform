@@ -2,6 +2,7 @@ import "server-only";
 
 import {
   AccountType,
+  NotificationType,
   OrderStatus,
   PaymentStatus,
   Prisma,
@@ -15,11 +16,14 @@ import {
   releaseStock,
   ReservationConflictError,
 } from "@/modules/inventory/application/reservations";
+import { createNotification } from "@/modules/notification/application/notifications";
 import { mapOrder, orderSelection } from "@/modules/order/application/orders";
 import type {
   PaymentOutcome,
   PaymentSimulationResult,
   PaymentView,
+  PendingPaymentPage,
+  PendingPaymentRow,
 } from "@/modules/payment/types";
 import { prisma } from "@/src/lib/db";
 import {
@@ -29,7 +33,7 @@ import {
   ValidationError,
   withDatabaseError,
 } from "@/src/lib/errors";
-import { isUuid } from "@/src/lib/validation";
+import { isUuid, type Pagination } from "@/src/lib/validation";
 
 type AuthenticatedAccount = NonNullable<SafeAccount>;
 
@@ -81,6 +85,75 @@ async function runPaymentTransaction<T>(operation: () => Promise<T>): Promise<T>
   }
 }
 
+const pendingPaymentWhere = {
+  status: OrderStatus.PENDING_PAYMENT,
+  payments: { some: { status: PaymentStatus.PENDING } },
+} satisfies Prisma.OrderWhereInput;
+
+/**
+ * Read-only queue of orders waiting for a payment outcome, for staff with
+ * payments.view. Uses the existing order/payment models; no new API.
+ */
+export async function listPendingPayments(
+  pagination: Pagination,
+): Promise<PendingPaymentPage> {
+  return withDatabaseError(async () => {
+    const [records, total] = await Promise.all([
+      prisma.order.findMany({
+        where: pendingPaymentWhere,
+        orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+        take: pagination.limit,
+        skip: pagination.offset,
+        select: {
+          id: true,
+          orderNumber: true,
+          totalAmount: true,
+          currency: true,
+          createdAt: true,
+          _count: { select: { items: true } },
+          customerProfile: {
+            select: {
+              firstName: true,
+              lastName: true,
+              customerCode: true,
+              account: { select: { email: true, phone: true } },
+            },
+          },
+          payments: {
+            where: { status: PaymentStatus.PENDING },
+            orderBy: { createdAt: "desc" },
+            take: 1,
+            select: { status: true, amount: true, method: true },
+          },
+        },
+      }),
+      prisma.order.count({ where: pendingPaymentWhere }),
+    ]);
+
+    const rows: PendingPaymentRow[] = records.map((order) => ({
+      orderId: order.id,
+      orderNumber: order.orderNumber,
+      totalAmount: order.totalAmount.toString(),
+      currency: order.currency,
+      createdAt: order.createdAt.toISOString(),
+      itemCount: order._count.items,
+      customerName: [order.customerProfile.firstName, order.customerProfile.lastName]
+        .filter(Boolean)
+        .join(" "),
+      customerCode: order.customerProfile.customerCode,
+      customerContact: order.customerProfile.account.email ?? order.customerProfile.account.phone,
+      paymentStatus: order.payments[0]?.status ?? PaymentStatus.PENDING,
+      paymentMethod: order.payments[0]?.method ?? null,
+      paymentAmount: order.payments[0]?.amount.toString() ?? order.totalAmount.toString(),
+    }));
+
+    return {
+      rows,
+      pagination: { limit: pagination.limit, offset: pagination.offset, total },
+    };
+  });
+}
+
 /**
  * Simulates an external payment outcome for lifecycle testing.
  * This is an internal application simulation, not an integration with a real
@@ -126,8 +199,10 @@ export async function simulatePaymentOutcome(
           where: { id: orderId, ...ownerFilter },
           select: {
             id: true,
+            orderNumber: true,
             status: true,
             items: { select: { variantId: true, quantity: true } },
+            customerProfile: { select: { accountId: true } },
           },
         });
 
@@ -177,6 +252,21 @@ export async function simulatePaymentOutcome(
             status: outcome === "success" ? PaymentStatus.APPROVED : PaymentStatus.REJECTED,
           },
           select: paymentSelection,
+        });
+
+        await createNotification(transaction, {
+          accountId: order.customerProfile.accountId,
+          type: NotificationType.PAYMENT,
+          title:
+            outcome === "success"
+              ? `Payment approved for ${order.orderNumber}`
+              : `Payment rejected for ${order.orderNumber}`,
+          body:
+            outcome === "success"
+              ? "Your order is confirmed and stock has been reserved for shipment."
+              : "The payment was not completed and the order was cancelled.",
+          entityType: "Order",
+          entityId: order.id,
         });
 
         const updatedOrder = await transaction.order.findFirst({

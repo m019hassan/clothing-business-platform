@@ -12,6 +12,7 @@ export type CartItemView = {
   unitPrice: string;
   lineTotal: string;
   currency: string;
+  availableQuantity: number;
 };
 
 export type CartView = {

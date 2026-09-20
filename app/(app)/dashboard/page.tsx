@@ -2,7 +2,9 @@ import { redirect } from "next/navigation";
 
 import { getCurrentAccount } from "@/modules/auth/infrastructure/session";
 import { OrderStatusBadge } from "@/components/orders/order-status-badge";
-import { getDashboardSummary } from "@/modules/dashboard/application/summary";
+import { OperationsOverview } from "@/components/dashboard/operations-overview";
+import { getCurrentPermissions } from "@/modules/auth/application/authorization";
+import { getDashboardOperations, getDashboardSummary } from "@/modules/dashboard/application/summary";
 import type { DashboardSummary } from "@/modules/dashboard/types";
 import { formatDate, formatMoney } from "@/src/lib/format";
 
@@ -38,6 +40,17 @@ export default async function DashboardPage() {
     summary = await getDashboardSummary(account);
   } catch {
     loadError = true;
+  }
+
+  if (account.accountType === "EMPLOYEE") {
+    const permissions = await getCurrentPermissions();
+
+    return (
+      <OperationsOverview
+        operations={await getDashboardOperations(permissions)}
+        recentOrders={summary?.recentOrders ?? []}
+      />
+    );
   }
 
   return (

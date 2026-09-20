@@ -1,13 +1,14 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import { AddToCart } from "@/components/cart/add-to-cart";
 import { ProductStatusBadge } from "@/components/products/product-status-badge";
 import { StockBadge } from "@/components/products/stock-badge";
+import { getCurrentAccount } from "@/modules/auth/infrastructure/session";
 import { getProductInventory } from "@/modules/catalog/application/products";
 import type { ProductInventoryView } from "@/modules/catalog/types";
 import { NotFoundError } from "@/src/lib/errors";
-import { formatDate, formatMoney } from "@/src/lib/format";
+import { formatDate, formatMoney, formatVariantAttributes, variantLabel } from "@/src/lib/format";
 
 type ProductDetailProps = {
   params: Promise<{ id: string }>;
@@ -23,6 +24,12 @@ function InfoRow({ label, value }: { label: string; value: string }) {
 }
 
 export default async function ProductDetailPage({ params }: ProductDetailProps) {
+  const account = await getCurrentAccount();
+
+  if (!account) {
+    redirect("/login");
+  }
+
   const { id } = await params;
 
   let product: ProductInventoryView | null = null;
@@ -116,10 +123,11 @@ export default async function ProductDetailPage({ params }: ProductDetailProps) 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <AddToCart
           currency={product.currency}
+          canPurchase={account.accountType === "CUSTOMER" && account.customerProfile !== null}
           variants={product.variants.map((variant) => ({
             id: variant.id,
             sku: variant.sku,
-            label: [variant.sku, variant.size, variant.color].filter(Boolean).join(" · "),
+            label: variantLabel(variant.sku, variant.size, variant.color),
             unitPrice: formatMoney(variant.priceOverride ?? product.basePrice, product.currency).replace(
               ` ${product.currency}`,
               "",
@@ -223,7 +231,7 @@ export default async function ProductDetailPage({ params }: ProductDetailProps) 
                     <div className="min-w-0">
                       <p className="truncate font-semibold text-slate-900">{variant.sku}</p>
                       <p className="truncate text-xs text-slate-500">
-                        {[variant.size, variant.color].filter(Boolean).join(" · ") || "No attributes"}
+                        {formatVariantAttributes(variant.size, variant.color)}
                       </p>
                     </div>
                     <StockBadge availableQuantity={variant.availableQuantity} />

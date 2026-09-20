@@ -1,4 +1,4 @@
-import type { OrderStatus } from "@prisma/client";
+import type { OrderStatus, PaymentMethod, PaymentStatus } from "@prisma/client";
 
 export type OrderItemView = {
   id: string;
@@ -35,6 +35,13 @@ export type OrderListPage = {
   };
 };
 
+export type OrderPaymentView = {
+  status: PaymentStatus;
+  amount: string;
+  currency: string;
+  method: PaymentMethod | null;
+};
+
 export type OrderView = {
   id: string;
   orderNumber: string;
@@ -44,4 +51,5 @@ export type OrderView = {
   totalAmount: string;
   createdAt: string;
   items: OrderItemView[];
+  payment: OrderPaymentView | null;
 };

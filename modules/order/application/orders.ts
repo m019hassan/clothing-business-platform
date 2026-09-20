@@ -5,6 +5,7 @@ import { randomBytes } from "node:crypto";
 import {
   AccountType,
   CartStatus,
+  NotificationType,
   OrderStatus,
   PaymentStatus,
   Prisma,
@@ -13,6 +14,7 @@ import {
 
 import type { SafeAccount } from "@/modules/auth/infrastructure/session";
 import type { OrderListPage, OrderSummaryView, OrderView } from "@/modules/order/types";
+import { createNotification } from "@/modules/notification/application/notifications";
 import { prisma } from "@/src/lib/db";
 import {
   AuthorizationError,
@@ -52,6 +54,11 @@ export const orderSelection = {
         },
       },
     },
+  },
+  payments: {
+    orderBy: { createdAt: "desc" },
+    take: 1,
+    select: { status: true, amount: true, currency: true, method: true },
   },
 } satisfies Prisma.OrderSelect;
 
@@ -116,6 +123,14 @@ export function mapOrder(order: OrderRecord): OrderView {
       discountAmount: item.discountAmount.toString(),
       lineTotal: item.unitPrice.mul(item.quantity).toString(),
     })),
+    payment: order.payments[0]
+      ? {
+          status: order.payments[0].status,
+          amount: order.payments[0].amount.toString(),
+          currency: order.payments[0].currency,
+          method: order.payments[0].method,
+        }
+      : null,
   };
 }
 
@@ -328,6 +343,15 @@ export async function createOrderFromCart(
             },
           },
           select: orderSelection,
+        });
+
+        await createNotification(transaction, {
+          accountId: account.id,
+          type: NotificationType.ORDER,
+          title: `Order ${order.orderNumber} created`,
+          body: "Your order is waiting for the payment outcome.",
+          entityType: "Order",
+          entityId: order.id,
         });
 
         return mapOrder(order);

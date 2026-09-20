@@ -6,7 +6,7 @@ import { getCurrentAccount } from "@/modules/auth/infrastructure/session";
 import { getCart } from "@/modules/cart/application/cart-service";
 import type { CartView } from "@/modules/cart/types";
 import { AuthorizationError } from "@/src/lib/errors";
-import { formatMoney } from "@/src/lib/format";
+import { formatMoney, formatVariantAttributes } from "@/src/lib/format";
 
 export default async function CartPage() {
   const account = await getCurrentAccount();
@@ -103,13 +103,24 @@ export default async function CartPage() {
                     </Link>
                     <p className="mt-1 text-xs text-slate-500">
                       {item.sku}
-                      {[item.size, item.color].filter(Boolean).length > 0
-                        ? ` · ${[item.size, item.color].filter(Boolean).join(" · ")}`
+                      {[item.size, item.color].some(Boolean)
+                        ? ` · ${formatVariantAttributes(item.size, item.color)}`
                         : ""}
                     </p>
                     <p className="mt-3 text-sm text-slate-600">
                       {formatMoney(item.unitPrice, item.currency)} each
                     </p>
+                    {item.availableQuantity <= 0 ? (
+                      <p className="mt-1 text-xs font-medium text-rose-700">
+                        Out of stock — remove this item to continue.
+                      </p>
+                    ) : item.availableQuantity < item.quantity ? (
+                      <p className="mt-1 text-xs font-medium text-amber-700">
+                        Only {item.availableQuantity} available (you have {item.quantity} in the cart).
+                      </p>
+                    ) : item.availableQuantity < 10 ? (
+                      <p className="mt-1 text-xs text-amber-700">Only {item.availableQuantity} left.</p>
+                    ) : null}
                   </div>
 
                   <div className="flex flex-col items-start gap-3 sm:items-end">

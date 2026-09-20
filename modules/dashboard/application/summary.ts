@@ -1,9 +1,14 @@
 import "server-only";
 
-import { OrderStatus, Prisma, ProductStatus } from "@prisma/client";
+import { OrderStatus, PaymentStatus, Prisma, ProductStatus } from "@prisma/client";
 
 import type { SafeAccount } from "@/modules/auth/infrastructure/session";
-import type { DashboardSummary } from "@/modules/dashboard/types";
+import { PERMISSIONS } from "@/modules/auth/application/permissions";
+import type {
+  DashboardOperationsView,
+  DashboardSummary,
+} from "@/modules/dashboard/types";
+import { getInventorySummary } from "@/modules/inventory/application/inventory";
 import { prisma } from "@/src/lib/db";
 import { withDatabaseError } from "@/src/lib/errors";
 
@@ -16,6 +21,67 @@ const PENDING_STATUSES: OrderStatus[] = [
   OrderStatus.DRAFT,
   OrderStatus.PENDING_PAYMENT,
 ];
+
+const IN_PROGRESS_STATUSES: OrderStatus[] = [
+  OrderStatus.CONFIRMED,
+  OrderStatus.PROCESSING,
+  OrderStatus.READY_TO_SHIP,
+  OrderStatus.SHIPPED,
+];
+
+/**
+ * Operational overview for staff. Every number is a server-side count of an
+ * existing model; blocks the viewer has no permission for are returned as null
+ * and never queried.
+ */
+export async function getDashboardOperations(
+  permissions: ReadonlySet<string>,
+): Promise<DashboardOperationsView> {
+  const canViewOrders = permissions.has(PERMISSIONS.ORDERS_VIEW);
+  const canViewPayments = permissions.has(PERMISSIONS.PAYMENTS_VIEW);
+  const canViewInventory = permissions.has(PERMISSIONS.INVENTORY_VIEW);
+  const canViewCustomers = permissions.has(PERMISSIONS.CUSTOMERS_VIEW);
+
+  return withDatabaseError(async () => {
+    const [orderStatusCounts, paymentStatusCounts, inventory, customerCount] = await Promise.all([
+      canViewOrders
+        ? prisma.order.groupBy({ by: ["status"], _count: { _all: true } })
+        : Promise.resolve(null),
+      canViewPayments
+        ? prisma.payment.groupBy({ by: ["status"], _count: { _all: true } })
+        : Promise.resolve(null),
+      canViewInventory ? getInventorySummary() : Promise.resolve(null),
+      canViewCustomers ? prisma.customerProfile.count() : Promise.resolve(null),
+    ]);
+
+    const orderCount = (status: OrderStatus) =>
+      orderStatusCounts?.find((entry) => entry.status === status)?._count._all ?? 0;
+    const paymentCount = (status: PaymentStatus) =>
+      paymentStatusCounts?.find((entry) => entry.status === status)?._count._all ?? 0;
+
+    return {
+      orders: orderStatusCounts
+        ? {
+            total: orderStatusCounts.reduce((sum, entry) => sum + entry._count._all, 0),
+            pending: orderCount(OrderStatus.DRAFT) + orderCount(OrderStatus.PENDING_PAYMENT),
+            inProgress: IN_PROGRESS_STATUSES.reduce((sum, status) => sum + orderCount(status), 0),
+            delivered: orderCount(OrderStatus.DELIVERED),
+            cancelled: orderCount(OrderStatus.CANCELLED),
+          }
+        : null,
+      payments: paymentStatusCounts
+        ? {
+            total: paymentStatusCounts.reduce((sum, entry) => sum + entry._count._all, 0),
+            pending: paymentCount(PaymentStatus.PENDING),
+            approved: paymentCount(PaymentStatus.APPROVED),
+            rejected: paymentCount(PaymentStatus.REJECTED),
+          }
+        : null,
+      inventory,
+      customers: customerCount === null ? null : { total: customerCount },
+    };
+  });
+}
 
 export async function getDashboardSummary(
   account: AuthenticatedAccount,

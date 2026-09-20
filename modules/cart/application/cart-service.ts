@@ -38,6 +38,9 @@ const cartSelection = {
           size: true,
           color: true,
           priceOverride: true,
+          inventoryItems: {
+            select: { quantityOnHand: true, quantityReserved: true },
+          },
           product: {
             select: { id: true, name: true, basePrice: true, currency: true },
           },
@@ -97,6 +100,10 @@ function mapCart(cart: CartRecord): CartView {
       unitPrice: unitPrice.toString(),
       lineTotal: unitPrice.mul(item.quantity).toString(),
       currency: item.variant.product.currency,
+      availableQuantity: item.variant.inventoryItems.reduce(
+        (sum, inventory) => sum + inventory.quantityOnHand - inventory.quantityReserved,
+        0,
+      ),
     };
   });
 

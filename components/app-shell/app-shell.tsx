@@ -7,10 +7,16 @@ import { useState, type ReactNode } from "react";
 import { logoutAction } from "@/modules/auth/application/actions";
 
 const NAV_ITEMS = [
-  { href: "/dashboard", label: "Dashboard" },
-  { href: "/products", label: "Products" },
-  { href: "/orders", label: "Orders" },
-  { href: "/cart", label: "Cart" },
+  { href: "/dashboard", label: "Dashboard", customerOnly: false },
+  { href: "/reports", label: "Reports", customerOnly: false, requiresReports: true },
+  { href: "/products", label: "Products", customerOnly: false },
+  { href: "/orders", label: "Orders", customerOnly: true },
+  { href: "/cart", label: "Cart", customerOnly: true },
+  { href: "/account", label: "Account", customerOnly: false },
+  { href: "/inventory", label: "Inventory", customerOnly: false, requiresInventory: true },
+  { href: "/payments", label: "Payments", customerOnly: false, requiresPayments: true },
+  { href: "/employees", label: "Employees", customerOnly: false, requiresEmployees: true },
+  { href: "/roles", label: "Roles", customerOnly: false, requiresRoles: true },
 ] as const;
 
 function NavIcon({ href }: { href: string }) {
@@ -52,6 +58,61 @@ function NavIcon({ href }: { href: string }) {
     );
   }
 
+  if (href === "/reports") {
+    return (
+      <svg {...common}>
+        <path d="M4 19V5M4 19h16" />
+        <path d="M8 16v-5M12 16V7M16 16v-8" />
+      </svg>
+    );
+  }
+
+  if (href === "/employees") {
+    return (
+      <svg {...common}>
+        <circle cx="9" cy="8" r="3" />
+        <path d="M3 20a6 6 0 0 1 12 0" />
+        <path d="M16 11a3 3 0 1 0 0-6M21 20a6 6 0 0 0-4-5.7" />
+      </svg>
+    );
+  }
+
+  if (href === "/roles") {
+    return (
+      <svg {...common}>
+        <path d="M12 3l7 3v6c0 4-3 7-7 9-4-2-7-5-7-9V6z" />
+        <path d="M9.5 12.5l1.8 1.8 3.2-3.6" />
+      </svg>
+    );
+  }
+
+  if (href === "/payments") {
+    return (
+      <svg {...common}>
+        <rect x="3" y="6" width="18" height="12" rx="2" />
+        <path d="M3 10h18M7 14h3" />
+      </svg>
+    );
+  }
+
+  if (href === "/inventory") {
+    return (
+      <svg {...common}>
+        <path d="M3 9.5 12 4l9 5.5v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z" />
+        <path d="M9 20.5v-6h6v6" />
+      </svg>
+    );
+  }
+
+  if (href === "/account") {
+    return (
+      <svg {...common}>
+        <circle cx="12" cy="8" r="3.2" />
+        <path d="M4.5 20a7.5 7.5 0 0 1 15 0" />
+      </svg>
+    );
+  }
+
   return (
     <svg {...common}>
       <circle cx="9" cy="20" r="1.4" />
@@ -64,12 +125,48 @@ function NavIcon({ href }: { href: string }) {
 function SidebarContent({
   pathname,
   userLabel,
+  isCustomer,
+  canViewInventory,
+  canViewPayments,
+  canViewEmployees,
+  canViewRoles,
+  canViewReports,
   onNavigate,
 }: {
   pathname: string;
   userLabel: string;
+  isCustomer: boolean;
+  canViewInventory: boolean;
+  canViewPayments: boolean;
+  canViewEmployees: boolean;
+  canViewRoles: boolean;
+  canViewReports: boolean;
   onNavigate?: () => void;
 }) {
+  const visibleItems = NAV_ITEMS.filter((item) => {
+    if (item.customerOnly && !isCustomer) {
+      return false;
+    }
+
+    if ("requiresInventory" in item && item.requiresInventory && !canViewInventory) {
+      return false;
+    }
+
+    if ("requiresPayments" in item && item.requiresPayments && !canViewPayments) {
+      return false;
+    }
+
+    if ("requiresEmployees" in item && item.requiresEmployees && !canViewEmployees) {
+      return false;
+    }
+
+    if ("requiresRoles" in item && item.requiresRoles && !canViewRoles) {
+      return false;
+    }
+
+    return !("requiresReports" in item && item.requiresReports && !canViewReports);
+  });
+
   return (
     <div className="flex h-full flex-col">
       <div className="flex h-16 items-center gap-3 border-b border-slate-200 px-5">
@@ -83,7 +180,7 @@ function SidebarContent({
       </div>
 
       <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4" aria-label="Main navigation">
-        {NAV_ITEMS.map((item) => {
+        {visibleItems.map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
 
           return (
@@ -136,22 +233,41 @@ function SidebarContent({
 
 export function AppShell({
   userLabel,
+  isCustomer,
+  canViewInventory,
+  canViewPayments,
+  canViewEmployees,
+  canViewRoles,
+  canViewReports,
   children,
 }: {
   userLabel: string;
+  isCustomer: boolean;
+  canViewInventory: boolean;
+  canViewPayments: boolean;
+  canViewEmployees: boolean;
+  canViewRoles: boolean;
+  canViewReports: boolean;
   children: ReactNode;
 }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const activeItem = NAV_ITEMS.find(
-    (item) => pathname === item.href || pathname.startsWith(`${item.href}/`),
-  );
+  const activeItem = NAV_ITEMS.find((item) => pathname === item.href || pathname.startsWith(`${item.href}/`));
   const title = activeItem?.label ?? "Dashboard";
 
   return (
     <div className="min-h-screen bg-slate-100 lg:flex">
       <aside className="hidden w-64 shrink-0 border-r border-slate-200 bg-white lg:sticky lg:top-0 lg:block lg:h-screen">
-        <SidebarContent pathname={pathname} userLabel={userLabel} />
+        <SidebarContent
+          pathname={pathname}
+          userLabel={userLabel}
+          isCustomer={isCustomer}
+          canViewInventory={canViewInventory}
+          canViewPayments={canViewPayments}
+          canViewEmployees={canViewEmployees}
+          canViewRoles={canViewRoles}
+          canViewReports={canViewReports}
+        />
       </aside>
 
       {mobileOpen ? (
@@ -166,6 +282,12 @@ export function AppShell({
             <SidebarContent
               pathname={pathname}
               userLabel={userLabel}
+              isCustomer={isCustomer}
+              canViewInventory={canViewInventory}
+              canViewPayments={canViewPayments}
+              canViewEmployees={canViewEmployees}
+              canViewRoles={canViewRoles}
+              canViewReports={canViewReports}
               onNavigate={() => setMobileOpen(false)}
             />
           </aside>

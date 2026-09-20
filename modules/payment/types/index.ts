@@ -14,6 +14,30 @@ export type PaymentView = {
   createdAt: string;
 };
 
+export type PendingPaymentRow = {
+  orderId: string;
+  orderNumber: string;
+  totalAmount: string;
+  currency: string;
+  createdAt: string;
+  itemCount: number;
+  customerName: string;
+  customerCode: string;
+  customerContact: string;
+  paymentStatus: PaymentStatus;
+  paymentMethod: PaymentMethod | null;
+  paymentAmount: string;
+};
+
+export type PendingPaymentPage = {
+  rows: PendingPaymentRow[];
+  pagination: {
+    limit: number;
+    offset: number;
+    total: number;
+  };
+};
+
 export type PaymentSimulationResult = {
   order: OrderView;
   payment: PaymentView;
