@@ -31,7 +31,7 @@ export async function loginAction(
     };
   }
 
-  redirect("/admin");
+  redirect("/dashboard");
 }
 
 export async function logoutAction(): Promise<void> {

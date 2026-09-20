@@ -7,7 +7,7 @@ export default async function LoginPage() {
   const account = await getCurrentAccount();
 
   if (account) {
-    redirect("/admin");
+    redirect("/dashboard");
   }
 
   return (
