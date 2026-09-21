@@ -63,7 +63,7 @@ TypeScript/ESLint/Build/Prisma validate: **PASS** · 6/6 migrations مطبّقة
 ### المرحلة A — التثبيت والأساس *(الأولوية القصوى)*
 - **A1**: تشغيل Postgres عبر docker-compose + `prisma migrate deploy` عليه (نقل التطوير من pglite) + `.env` بالاتصال الصحيح.
 - **A2 (✅ منجز)**: إطار اختبارات Vitest (`npm test`) — 27 اختباراً مقابل قاعدة التطوير: `tests/unit/format.test.ts` (8)، `tests/integration/cart.test.ts` (10: ثوابت الحجز 0≤reserved≤onHand، 409/400/404)، `tests/integration/orders.test.ts` (9: دورة الطلب DRAFT→PENDING_PAYMENT→CONFIRMED، نتيجة الدفع/الاستهلاك، بوابات التفويض).
-- **A3**: توفيق الوثائق مع الكود: تسمية الصلاحيات، `endpoints.md`، إضافة `total` إلى `GET /api/products`.
+- **A3 (✅ منجز)**: `countProducts()` + `total` في استجابة `GET /api/products` (مع عرض "X of Z" في `/products`)؛ إعادة كتابة `docs/06-api/endpoints.md` (المُنفَّذ فعلياً + قائمة GAP) و`docs/04-security/roles-and-permissions.md` (24 كود صلاحية مطابقة لـ`PERMISSIONS`) وتصحيح `authorization.md`.
 - **A4**: git: التقسيم لالتزامات منطقية (backend/frontend/docs).
 
 ### المرحلة B — إكمال تجربة الشراء للعميل *(واجهة فقط — الـBackend جاهز)*
