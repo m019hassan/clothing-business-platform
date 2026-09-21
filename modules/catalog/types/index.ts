@@ -40,3 +40,14 @@ export type ProductView = {
   categoryName: string | null;
   variants: ProductVariantView[];
 };
+
+export type CategoryView = {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  isActive: boolean;
+  productCount: number;
+  createdAt: string;
+  updatedAt: string;
+};

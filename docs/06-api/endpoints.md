@@ -57,7 +57,18 @@ The public `GET` returns the catalog view (active variants, availability) while 
 write routes return the management view for every variant, including counters — the
 same shape the inventory screen reads.
 
-GAP: `GET /api/categories` and category management do not exist yet.
+## Categories
+| Method | Path | Auth | Response |
+| --- | --- | --- | --- |
+| GET | `/api/categories` | public | `{ categories }` (active only) |
+| GET | `/api/categories?includeInactive=1` | `products.view` | `{ categories }` (includes inactive) |
+| POST | `/api/categories` | `products.create` | `{ category }` (201) |
+| PUT | `/api/categories/:id` | `products.update` | `{ category }` |
+
+Category writes are gated by the catalog permissions (`products.*`) because the
+permission set has no `categories.*` codes. Deactivating a category
+(`isActive = false`) hides it from the public list and from catalog filters while
+keeping its products intact.
 
 ## Cart (customer accounts only)
 | Method | Path | Auth | Response |
