@@ -72,7 +72,7 @@ TypeScript/ESLint/Build/Prisma validate: **PASS** · 6/6 migrations مطبّقة
 - **B3 (✅ منجز)**: بعد «Submit for payment» تظهر لوحة تأكيد «Submitted for payment» بروابط مباشرة لحالة الطلب وكل الطلبات، وكتلة تنبيه «بانتظار الدفع» على صفحة الطلب أثناء `PENDING_PAYMENT`.
 
 ### المرحلة C — إدارة الكتالوج (Backend ثم واجهة)
-- **C1**: endpoints المنتجات: إنشاء/تعديل/أرشفة/variants + `total` + بحث/فلترة/ترتيب + تصنيفات.
+- **C1 (✅ منجز)**: مسارات الكتابة `POST/PUT/DELETE /api/products` و`POST/PUT/DELETE .../variants` بصلاحيات `products.create/update/delete` (تحقق كامل + 409/404/400/403/401)، بحث/فلترة/ترتيب في `GET /api/products` (`q`/`category`/`sort`)، أرشفة = `status = ARCHIVED`. متبقٍ من C: واجهة الإدارة (C2) وAPI التصنيفات (C3).
 - **C2**: تفعيل الصلاحيات `products.create/update/delete` على المسارات + واجهة الإدارة (فك الأزرار المعطّلة).
 - **C3**: API التصنيفات (قائمة/إدارة).
 

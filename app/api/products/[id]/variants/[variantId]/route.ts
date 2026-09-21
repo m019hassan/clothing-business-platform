@@ -2,32 +2,18 @@ import { NextResponse } from "next/server";
 
 import { requireAuthenticated } from "@/modules/auth/infrastructure/session";
 import {
-  archiveProduct,
-  updateProduct,
+  archiveVariant,
+  updateVariant,
 } from "@/modules/catalog/application/product-management";
-import { getProduct } from "@/modules/catalog/application/products";
 import { toErrorResponse, ValidationError } from "@/src/lib/errors";
 
 export const dynamic = "force-dynamic";
 
-type RouteContext = { params: Promise<{ id: string }> };
-
-export async function GET(_request: Request, context: RouteContext) {
-  try {
-    const { id } = await context.params;
-    const product = await getProduct(id);
-
-    return NextResponse.json({ product });
-  } catch (error) {
-    const { status, body } = toErrorResponse(error);
-
-    return NextResponse.json(body, { status });
-  }
-}
+type RouteContext = { params: Promise<{ id: string; variantId: string }> };
 
 export async function PUT(request: Request, context: RouteContext) {
   try {
-    await requireAuthenticated();
+    const account = await requireAuthenticated();
 
     let payload: unknown;
 
@@ -37,8 +23,8 @@ export async function PUT(request: Request, context: RouteContext) {
       throw new ValidationError("Request body must be valid JSON.");
     }
 
-    const { id } = await context.params;
-    const product = await updateProduct(await requireAuthenticated(), id, payload);
+    const { id, variantId } = await context.params;
+    const product = await updateVariant(account, id, variantId, payload);
 
     return NextResponse.json({ product });
   } catch (error) {
@@ -50,9 +36,9 @@ export async function PUT(request: Request, context: RouteContext) {
 
 export async function DELETE(_request: Request, context: RouteContext) {
   try {
-    await requireAuthenticated();
-    const { id } = await context.params;
-    const product = await archiveProduct(await requireAuthenticated(), id);
+    const account = await requireAuthenticated();
+    const { id, variantId } = await context.params;
+    const product = await archiveVariant(account, id, variantId);
 
     return NextResponse.json({ product });
   } catch (error) {

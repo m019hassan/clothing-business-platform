@@ -29,14 +29,35 @@ GAP: there are no REST `/api/auth/*` endpoints (login, logout, forgot-password),
 ## Catalog
 | Method | Path | Auth | Response |
 | --- | --- | --- | --- |
-| GET | `/api/products?limit=&offset=` | public | `{ products, total }` |
-| GET | `/api/products/:id` | public | `{ product }` |
+| GET | `/api/products?limit=&offset=&q=&category=&sort=` | public | `{ products, total }` (public view) |
+| GET | `/api/products/:id` | public | `{ product }` (public view) |
+| POST | `/api/products` | `products.create` | `{ product }` (management view, 201) |
+| PUT | `/api/products/:id` | `products.update` | `{ product }` (management view) |
+| DELETE | `/api/products/:id` | `products.delete` | `{ product }` archived |
+| POST | `/api/products/:id/variants` | `products.update` | `{ product }` (201) |
+| PUT | `/api/products/:id/variants/:variantId` | `products.update` | `{ product }` |
+| DELETE | `/api/products/:id/variants/:variantId` | `products.update` | `{ product }` (variant archived) |
 
 Pagination: `limit` is 1-100 (default 50), `offset` is >= 0. Listing returns only
 sellable products (`status = ACTIVE`, not soft-deleted, at least one ACTIVE
-variant); `total` counts exactly that set, so `total` and paging stay consistent.
+variant); `total` counts exactly the same filtered set, so `total` and paging stay
+consistent.
 
-GAP: `POST/PUT/DELETE /api/products` and `GET /api/categories` do not exist.
+Filters (all optional, additive): `q` searches name/slug (1-100 chars, case
+insensitive), `category` filters by category slug, `sort` accepts `name`
+(default), `name_desc`, `price`, `price_desc`, `newest`. Unknown values are
+rejected with 400 instead of being ignored silently.
+
+Write rules: only `SAR` is accepted as currency, `slug`/`sku` must be unique
+(duplicates -> 409), a category id must exist and be active (-> 404), and unknown
+payload fields are rejected (-> 400). `DELETE` archives (`status = ARCHIVED`),
+which hides the row from the public catalog while keeping order history intact.
+
+The public `GET` returns the catalog view (active variants, availability) while the
+write routes return the management view for every variant, including counters — the
+same shape the inventory screen reads.
+
+GAP: `GET /api/categories` and category management do not exist yet.
 
 ## Cart (customer accounts only)
 | Method | Path | Auth | Response |
@@ -85,4 +106,3 @@ is no separate "create payment" endpoint.
 - `GET /api/shipping`, `PUT /api/shipping/:id/status`
 - `PUT /api/notifications/preferences` (the implemented path is `/api/notification-preferences`)
 - `POST /api/orders/:id/cancel` (superseded by `PUT /api/orders/:id/status` with `CANCELLED`)
-- `POST/PUT/DELETE /api/products`
