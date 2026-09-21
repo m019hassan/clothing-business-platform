@@ -93,6 +93,10 @@ export async function listProducts(
   return products.map(mapProduct);
 }
 
+export async function countProducts(): Promise<number> {
+  return withDatabaseError(() => prisma.product.count({ where: sellableProductWhere }));
+}
+
 /**
  * Management read used by the authenticated product screen.
  * It intentionally exposes raw inventory counters and includes every variant

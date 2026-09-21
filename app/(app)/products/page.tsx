@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { ProductStatusBadge } from "@/components/products/product-status-badge";
-import { listProducts } from "@/modules/catalog/application/products";
+import { countProducts, listProducts } from "@/modules/catalog/application/products";
 import type { ProductView } from "@/modules/catalog/types";
 import { formatMoney } from "@/src/lib/format";
 
@@ -44,10 +44,14 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
   const limit = parseLimit(params.limit);
 
   let products: ProductView[] = [];
+  let total: number | null = null;
   let loadError = false;
 
   try {
-    products = await listProducts({ limit, offset });
+    [products, total] = await Promise.all([
+      listProducts({ limit, offset }),
+      countProducts(),
+    ]);
   } catch {
     loadError = true;
   }
@@ -55,7 +59,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
   const rangeStart = products.length === 0 ? offset : offset + 1;
   const rangeEnd = offset + products.length;
   const hasPrevious = offset > 0;
-  const hasNext = products.length === limit;
+  const hasNext = total !== null ? offset + products.length < total : products.length === limit;
 
   return (
     <div className="space-y-6">
@@ -193,6 +197,11 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
             <p className="text-slate-600">
               Showing <span className="font-medium text-slate-900">{rangeStart}</span>–
               <span className="font-medium text-slate-900">{rangeEnd}</span>
+              {total !== null ? (
+                <span>
+                  {" "}of <span className="font-medium text-slate-900">{total}</span>
+                </span>
+              ) : null}
             </p>
             <div className="flex items-center gap-2">
               {hasPrevious ? (

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import {
+  countProducts,
   listProducts,
   parsePaginationParams,
 } from "@/modules/catalog/application/products";
@@ -12,9 +13,12 @@ export async function GET(request: Request) {
   try {
     const searchParams = new URL(request.url).searchParams;
     const pagination = parsePaginationParams(searchParams);
-    const products = await listProducts(pagination);
+    const [products, total] = await Promise.all([
+      listProducts(pagination),
+      countProducts(),
+    ]);
 
-    return NextResponse.json({ products });
+    return NextResponse.json({ products, total });
   } catch (error) {
     const { status, body } = toErrorResponse(error);
 
