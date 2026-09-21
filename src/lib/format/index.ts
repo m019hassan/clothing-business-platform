@@ -8,12 +8,16 @@ export function formatMoney(value: string, currency: string): string {
   return `${amount.toFixed(2)} ${currency}`;
 }
 
+// Deterministic month names: toLocaleDateString output varies with the
+// runtime ICU data (e.g. "Sep" vs "Sept"), so the format is fixed here.
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
 export function formatDate(value: string): string {
-  return new Date(value).toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
+  const date = new Date(value);
+  const day = date.getUTCDate().toString().padStart(2, "0");
+  const month = MONTHS[date.getUTCMonth()];
+
+  return `${day} ${month} ${date.getUTCFullYear()}`;
 }
 
 export function formatVariantAttributes(
