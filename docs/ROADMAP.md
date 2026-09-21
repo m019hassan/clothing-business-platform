@@ -69,7 +69,7 @@ TypeScript/ESLint/Build/Prisma validate: **PASS** · 6/6 migrations مطبّقة
 ### المرحلة B — إكمال تجربة الشراء للعميل *(واجهة فقط — الـBackend جاهز)*
 - **B1 (✅ منجز)**: مركز الإشعارات: جرس + عدّاد غير مقروء في الـShell (`NotificationBell`)، صفحة `/notifications` (قائمة + ترقيم + تعليم مقروء/الكل عبر Server Actions)، واختبارات خدمة (`tests/integration/notifications.test.ts`).
 - **B2 (✅ منجز)**: قسم Preferences في `/account`: اللغة/التوقيت/موافقة التسويق عبر Server Actions (نفس خدمة `GET/PUT /api/account/preferences`) + مفاتيح تفضيلات الإشعارات لكل نوع، مع اختبارات الخدمة (`tests/integration/account-preferences.test.ts`).
-- **B3**: تحسين طلب الدفع: بعد «Submit for payment» رابط واضح لحالة الطلب (موجود جزئياً).
+- **B3 (✅ منجز)**: بعد «Submit for payment» تظهر لوحة تأكيد «Submitted for payment» بروابط مباشرة لحالة الطلب وكل الطلبات، وكتلة تنبيه «بانتظار الدفع» على صفحة الطلب أثناء `PENDING_PAYMENT`.
 
 ### المرحلة C — إدارة الكتالوج (Backend ثم واجهة)
 - **C1**: endpoints المنتجات: إنشاء/تعديل/أرشفة/variants + `total` + بحث/فلترة/ترتيب + تصنيفات.
