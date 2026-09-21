@@ -64,11 +64,11 @@ TypeScript/ESLint/Build/Prisma validate: **PASS** · 6/6 migrations مطبّقة
 - **A1**: تشغيل Postgres عبر docker-compose + `prisma migrate deploy` عليه (نقل التطوير من pglite) + `.env` بالاتصال الصحيح.
 - **A2 (✅ منجز)**: إطار اختبارات Vitest (`npm test`) — 27 اختباراً مقابل قاعدة التطوير: `tests/unit/format.test.ts` (8)، `tests/integration/cart.test.ts` (10: ثوابت الحجز 0≤reserved≤onHand، 409/400/404)، `tests/integration/orders.test.ts` (9: دورة الطلب DRAFT→PENDING_PAYMENT→CONFIRMED، نتيجة الدفع/الاستهلاك، بوابات التفويض).
 - **A3 (✅ منجز)**: `countProducts()` + `total` في استجابة `GET /api/products` (مع عرض "X of Z" في `/products`)؛ إعادة كتابة `docs/06-api/endpoints.md` (المُنفَّذ فعلياً + قائمة GAP) و`docs/04-security/roles-and-permissions.md` (24 كود صلاحية مطابقة لـ`PERMISSIONS`) وتصحيح `authorization.md`.
-- **A4**: git: التقسيم لالتزامات منطقية (backend/frontend/docs).
+- **A4 (✅ منجز)**: التزامات منطقية بعد كل مرحلة (كود/اختبارات/وثائق) — الالتزامات e5e11bb, 45e2f7c, 1cfecbc (A2), 73c5bf1, a788256 (A3), ffe4e5f, 2743a54 (B1).
 
 ### المرحلة B — إكمال تجربة الشراء للعميل *(واجهة فقط — الـBackend جاهز)*
 - **B1 (✅ منجز)**: مركز الإشعارات: جرس + عدّاد غير مقروء في الـShell (`NotificationBell`)، صفحة `/notifications` (قائمة + ترقيم + تعليم مقروء/الكل عبر Server Actions)، واختبارات خدمة (`tests/integration/notifications.test.ts`).
-- **B2**: صفحة الإعدادات: اللغة/التوقيت/موافقة التسويق (استهلاك `GET/PUT /api/account/preferences`).
+- **B2 (✅ منجز)**: قسم Preferences في `/account`: اللغة/التوقيت/موافقة التسويق عبر Server Actions (نفس خدمة `GET/PUT /api/account/preferences`) + مفاتيح تفضيلات الإشعارات لكل نوع، مع اختبارات الخدمة (`tests/integration/account-preferences.test.ts`).
 - **B3**: تحسين طلب الدفع: بعد «Submit for payment» رابط واضح لحالة الطلب (موجود جزئياً).
 
 ### المرحلة C — إدارة الكتالوج (Backend ثم واجهة)

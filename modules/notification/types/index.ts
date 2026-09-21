@@ -31,3 +31,8 @@ export type AccountPreferenceView = {
   timezone: string;
   marketingConsent: boolean | null;
 };
+
+export type PreferencesFormState = {
+  ok: boolean;
+  message: string;
+};
