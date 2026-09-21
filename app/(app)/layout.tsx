@@ -28,6 +28,7 @@ export default async function AppLayout({
       canViewInventory={permissions.has(PERMISSIONS.INVENTORY_VIEW)}
       canViewPayments={permissions.has(PERMISSIONS.PAYMENTS_VIEW)}
       canViewEmployees={permissions.has(PERMISSIONS.EMPLOYEES_VIEW)}
+      canViewCustomers={permissions.has(PERMISSIONS.CUSTOMERS_VIEW)}
       canViewRoles={permissions.has(PERMISSIONS.ROLES_VIEW)}
       canViewReports={
         permissions.has(PERMISSIONS.ORDERS_VIEW) ||

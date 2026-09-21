@@ -83,6 +83,17 @@ permission set has no `categories.*` codes. Deactivating a category
 (`isActive = false`) hides it from the public list and from catalog filters while
 keeping its products intact.
 
+## Customers (staff)
+| Method | Path | Auth | Response |
+| --- | --- | --- | --- |
+| GET | `/api/customers?limit=&offset=&q=` | `customers.view` | `{ customers, pagination: { limit, offset, total } }` |
+| GET | `/api/customers/:id` | `customers.view` | `{ customer }` |
+
+`q` searches first/last name, customer code, email and phone (1-100 chars, case
+insensitive except the phone substring). The detail view includes the profile
+fields and the ten most recent orders. Both routes are read-only (customer
+administration is not implemented yet) and never expose `passwordHash`.
+
 ## Cart (customer accounts only)
 | Method | Path | Auth | Response |
 | --- | --- | --- | --- |
