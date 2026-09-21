@@ -17,6 +17,7 @@ const inventorySelection = {
   quantityOnHand: true,
   quantityReserved: true,
   updatedAt: true,
+  warehouseId: true,
   warehouse: { select: { name: true, code: true } },
   variant: {
     select: {
@@ -43,6 +44,7 @@ function mapRow(row: InventoryRecord): InventoryRowView {
     productId: row.variant.product.id,
     productName: row.variant.product.name,
     warehouseName: row.warehouse.name,
+    warehouseId: row.warehouseId,
     warehouseCode: row.warehouse.code,
     quantityOnHand: row.quantityOnHand,
     quantityReserved: row.quantityReserved,

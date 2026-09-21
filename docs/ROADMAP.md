@@ -84,7 +84,7 @@ TypeScript/ESLint/Build/Prisma validate: **PASS** · 6/6 migrations مطبّقة
 ### المرحلة E — المخزون التشغيلي
 - **E1 (✅ منجز)**: نموذج `StockMovement` + migration مطبَّقة، تعديلات يدوية (`POST /api/inventory/adjustments` بصلاحية `inventory.adjust`، حماية عدم النزول تحت المحجوز) وقراءة السجلّ (`GET /api/inventory/movements`)، وربط مسارات السلة/الدفع لتسجيل `RESERVATION`/`RELEASE`/`CONSUMPTION` داخل نفس المعاملة.
 - **E2 (✅ منجز)**: سياسة انتهاء الحجوزات كنص سكربت خلفي `npm run expire-reservations` (نافذة `RESERVATION_TTL_HOURS` افتراضياً 48 سا، `--older-than-hours/--dry-run/--json/--quiet`): السلة الخاملة → `ABANDONED` + إفراج الحجز + كتابة `RELEASE` في السجلّ. مُتحقق باختبارات + تشغيل فعلي. التسجيل عبر cron موثّق في `docs/10-development/development-workflow.md`.
-- **E3**: واجهة تعديل المخزون (فك «قراءة فقط»).
+- **E3 (✅ منجز)**: واجهة `/inventory` بقت تفاعلية للمصرّح لهم (`inventory.adjust`): نموذج تعديل inline لكل صف (سالب/موجب + سبب) عبر Server Action بنفس خدمة E1، + جدول «Stock movements» بآخر 20 حركة (النوع/التغيير/الرصيد بعد/السبب/التاريخ) لصلاحية `inventory.view`.
 
 ### المرحلة F — التوصيل والتنفيذ
 - **F1**: نموذج Address + ربطه بالطلبات (شريحة أساس التوصيل).
