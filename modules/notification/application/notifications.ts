@@ -93,9 +93,10 @@ export async function markNotificationRead(
 
   return withDatabaseError(async () => {
     // Ownership is part of the write condition, so another account's id can
-    // never be modified even if it is guessed.
+    // never be modified even if it is guessed. readAt: null keeps the original
+    // read timestamp when the action is repeated.
     const result = await prisma.notification.updateMany({
-      where: { id: notificationId, accountId: account.id },
+      where: { id: notificationId, accountId: account.id, readAt: null },
       data: { readAt: new Date() },
     });
 
