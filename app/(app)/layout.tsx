@@ -4,6 +4,7 @@ import { AppShell } from "@/components/app-shell/app-shell";
 import { getCurrentPermissions } from "@/modules/auth/application/authorization";
 import { PERMISSIONS } from "@/modules/auth/application/permissions";
 import { getCurrentAccount } from "@/modules/auth/infrastructure/session";
+import { getUnreadNotificationCount } from "@/modules/notification/application/notifications";
 
 export default async function AppLayout({
   children,
@@ -14,11 +15,15 @@ export default async function AppLayout({
     redirect("/login");
   }
 
-  const permissions = await getCurrentPermissions();
+  const [permissions, unreadNotificationCount] = await Promise.all([
+    getCurrentPermissions(),
+    getUnreadNotificationCount(account),
+  ]);
 
   return (
     <AppShell
       userLabel={account.email ?? account.phone}
+      unreadNotificationCount={unreadNotificationCount}
       isCustomer={account.accountType === "CUSTOMER"}
       canViewInventory={permissions.has(PERMISSIONS.INVENTORY_VIEW)}
       canViewPayments={permissions.has(PERMISSIONS.PAYMENTS_VIEW)}

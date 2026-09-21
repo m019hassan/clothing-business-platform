@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
 
 import { logoutAction } from "@/modules/auth/application/actions";
+import { NotificationBell } from "@/modules/notification/components/notification-bell";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", customerOnly: false },
@@ -233,6 +234,7 @@ function SidebarContent({
 
 export function AppShell({
   userLabel,
+  unreadNotificationCount,
   isCustomer,
   canViewInventory,
   canViewPayments,
@@ -242,6 +244,7 @@ export function AppShell({
   children,
 }: {
   userLabel: string;
+  unreadNotificationCount: number;
   isCustomer: boolean;
   canViewInventory: boolean;
   canViewPayments: boolean;
@@ -324,6 +327,7 @@ export function AppShell({
             </div>
 
             <div className="ml-auto flex items-center gap-3">
+              <NotificationBell unreadCount={unreadNotificationCount} />
               <span className="hidden max-w-[220px] truncate text-sm text-slate-600 sm:block">
                 {userLabel}
               </span>

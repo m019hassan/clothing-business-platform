@@ -67,7 +67,7 @@ TypeScript/ESLint/Build/Prisma validate: **PASS** · 6/6 migrations مطبّقة
 - **A4**: git: التقسيم لالتزامات منطقية (backend/frontend/docs).
 
 ### المرحلة B — إكمال تجربة الشراء للعميل *(واجهة فقط — الـBackend جاهز)*
-- **B1**: مركز الإشعارات: جرس + عدّاد غير مقروء في الـShell + قائمة + تعليم مقروء/الكل (استهلاك المسارات الجاهزة).
+- **B1 (✅ منجز)**: مركز الإشعارات: جرس + عدّاد غير مقروء في الـShell (`NotificationBell`)، صفحة `/notifications` (قائمة + ترقيم + تعليم مقروء/الكل عبر Server Actions)، واختبارات خدمة (`tests/integration/notifications.test.ts`).
 - **B2**: صفحة الإعدادات: اللغة/التوقيت/موافقة التسويق (استهلاك `GET/PUT /api/account/preferences`).
 - **B3**: تحسين طلب الدفع: بعد «Submit for payment» رابط واضح لحالة الطلب (موجود جزئياً).
 
