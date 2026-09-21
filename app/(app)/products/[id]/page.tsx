@@ -4,6 +4,8 @@ import { notFound, redirect } from "next/navigation";
 import { AddToCart } from "@/components/cart/add-to-cart";
 import { ProductStatusBadge } from "@/components/products/product-status-badge";
 import { StockBadge } from "@/components/products/stock-badge";
+import { getCurrentPermissions } from "@/modules/auth/application/authorization";
+import { PERMISSIONS } from "@/modules/auth/application/permissions";
 import { getCurrentAccount } from "@/modules/auth/infrastructure/session";
 import { getProductInventory } from "@/modules/catalog/application/products";
 import type { ProductInventoryView } from "@/modules/catalog/types";
@@ -29,6 +31,9 @@ export default async function ProductDetailPage({ params }: ProductDetailProps) 
   if (!account) {
     redirect("/login");
   }
+
+  const permissions = await getCurrentPermissions();
+  const canUpdateProduct = permissions.has(PERMISSIONS.PRODUCTS_UPDATE);
 
   const { id } = await params;
 
@@ -90,24 +95,22 @@ export default async function ProductDetailPage({ params }: ProductDetailProps) 
             <p className="text-lg font-semibold text-slate-900">
               {formatMoney(product.basePrice, product.currency)}
             </p>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                disabled
-                title="Product editing is not available through the API yet"
-                className="cursor-not-allowed rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-400"
-              >
-                Edit product
-              </button>
-              <button
-                type="button"
-                disabled
-                title="Variant creation is not available through the API yet"
-                className="cursor-not-allowed rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-400"
-              >
-                Add variant
-              </button>
-            </div>
+            {canUpdateProduct ? (
+              <div className="flex gap-2">
+                <Link
+                  href={`/products/${product.id}/edit`}
+                  className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+                >
+                  Edit product
+                </Link>
+                <Link
+                  href={`/products/${product.id}/edit`}
+                  className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-50"
+                >
+                  Manage variants
+                </Link>
+              </div>
+            ) : null}
           </div>
         </div>
 

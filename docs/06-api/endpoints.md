@@ -48,6 +48,11 @@ insensitive), `category` filters by category slug, `sort` accepts `name`
 (default), `name_desc`, `price`, `price_desc`, `newest`. Unknown values are
 rejected with 400 instead of being ignored silently.
 
+`status` (`DRAFT` / `ACTIVE` / `ARCHIVED`) switches the listing to the staff
+management view of exactly that status, which is how draft and archived products
+stay reachable. It requires `products.view`; without it the request is rejected
+with 403, so drafts can never leak through the public route.
+
 Write rules: only `SAR` is accepted as currency, `slug`/`sku` must be unique
 (duplicates -> 409), a category id must exist and be active (-> 404), and unknown
 payload fields are rejected (-> 400). `DELETE` archives (`status = ARCHIVED`),

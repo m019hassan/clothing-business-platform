@@ -1,15 +1,46 @@
 import Link from "next/link";
 
 import { ProductStatusBadge } from "@/components/products/product-status-badge";
-import { countProducts, listProducts } from "@/modules/catalog/application/products";
+import { getCurrentPermissions } from "@/modules/auth/application/authorization";
+import { PERMISSIONS } from "@/modules/auth/application/permissions";
+import { listCategories } from "@/modules/catalog/application/categories";
+import { CategoryManager } from "@/modules/catalog/components/category-manager";
+import {
+  countProducts,
+  listProducts,
+  parseProductListFilters,
+  type ProductListFilters,
+} from "@/modules/catalog/application/products";
 import type { ProductView } from "@/modules/catalog/types";
 import { formatMoney } from "@/src/lib/format";
 
 const PAGE_SIZE = 10;
 
 type ProductsPageProps = {
-  searchParams: Promise<{ offset?: string; limit?: string }>;
+  searchParams: Promise<{
+    offset?: string;
+    limit?: string;
+    q?: string;
+    category?: string;
+    sort?: string;
+    status?: string;
+  }>;
 };
+
+const SORT_OPTIONS = [
+  { value: "name", label: "Name (A-Z)" },
+  { value: "name_desc", label: "Name (Z-A)" },
+  { value: "price", label: "Price (low to high)" },
+  { value: "price_desc", label: "Price (high to low)" },
+  { value: "newest", label: "Newest first" },
+] as const;
+
+const STATUS_OPTIONS = [
+  { value: "", label: "Sellable only" },
+  { value: "ACTIVE", label: "Active" },
+  { value: "DRAFT", label: "Draft" },
+  { value: "ARCHIVED", label: "Archived" },
+] as const;
 
 function parseOffset(raw: string | undefined): number {
   const value = Number(raw ?? "0");
@@ -39,9 +70,33 @@ function totalAvailable(product: ProductView): number {
 }
 
 export default async function ProductsPage({ searchParams }: ProductsPageProps) {
+  const permissions = await getCurrentPermissions();
+  const canManageCatalog = permissions.has(PERMISSIONS.PRODUCTS_VIEW);
+  const canCreate = permissions.has(PERMISSIONS.PRODUCTS_CREATE);
+  const canUpdate = permissions.has(PERMISSIONS.PRODUCTS_UPDATE);
+
   const params = await searchParams;
   const offset = parseOffset(params.offset);
   const limit = parseLimit(params.limit);
+
+  const query = new URLSearchParams();
+  for (const key of ["q", "category", "sort", "status"] as const) {
+    const value = params[key];
+
+    if (typeof value === "string" && value.length > 0) {
+      query.set(key, value);
+    }
+  }
+
+  let filters: ProductListFilters = {};
+  let filterError = false;
+
+  try {
+    filters = parseProductListFilters(query, { allowStatus: canManageCatalog });
+  } catch {
+    filters = {};
+    filterError = true;
+  }
 
   let products: ProductView[] = [];
   let total: number | null = null;
@@ -49,12 +104,17 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
 
   try {
     [products, total] = await Promise.all([
-      listProducts({ limit, offset }),
-      countProducts(),
+      listProducts({ limit, offset }, filters),
+      countProducts(filters),
     ]);
   } catch {
     loadError = true;
   }
+
+  const categories = canCreate || canUpdate ? await listCategories({ includeInactive: true }) : [];
+  const activeFilters = ["q", "category", "sort", "status"].filter((key) =>
+    query.has(key),
+  );
 
   const rangeStart = products.length === 0 ? offset : offset + 1;
   const rangeEnd = offset + products.length;
@@ -72,23 +132,109 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
           </p>
         </div>
 
-        <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
-          <input
-            type="search"
-            disabled
-            placeholder="Search (coming soon)"
-            aria-label="Search products"
-            className="w-full cursor-not-allowed rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-400 sm:w-56"
-          />
-          <button
-            type="button"
-            disabled
-            title="Product creation is not available through the API yet"
-            className="cursor-not-allowed rounded-lg border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-400"
+        {canCreate ? (
+          <Link
+            href="/products/new"
+            className="shrink-0 rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-slate-700"
           >
             Add product
-          </button>
-        </div>
+          </Link>
+        ) : null}
+      </section>
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <form method="get" className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="lg:col-span-2">
+            <label htmlFor="q" className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
+              Search
+            </label>
+            <input
+              id="q"
+              name="q"
+              type="search"
+              defaultValue={params.q ?? ""}
+              placeholder="Name or slug"
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none ring-blue-500 focus:ring-2"
+            />
+          </div>
+          <div>
+            <label htmlFor="category" className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
+              Category
+            </label>
+            <select
+              id="category"
+              name="category"
+              defaultValue={params.category ?? ""}
+              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none ring-blue-500 focus:ring-2"
+            >
+              <option value="">All categories</option>
+              {categories
+                .filter((category) => category.isActive)
+                .map((category) => (
+                  <option key={category.id} value={category.slug}>
+                    {category.name}
+                  </option>
+                ))}
+            </select>
+          </div>
+          <div>
+            <label htmlFor="sort" className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
+              Sort
+            </label>
+            <select
+              id="sort"
+              name="sort"
+              defaultValue={params.sort ?? "name"}
+              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none ring-blue-500 focus:ring-2"
+            >
+              {SORT_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          {canManageCatalog ? (
+            <div>
+              <label htmlFor="status" className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
+                Status
+              </label>
+              <select
+                id="status"
+                name="status"
+                defaultValue={params.status ?? ""}
+                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none ring-blue-500 focus:ring-2"
+              >
+                {STATUS_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : null}
+          <div className="flex items-end gap-2 sm:col-span-2 lg:col-span-5">
+            <button
+              type="submit"
+              className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+            >
+              Apply filters
+            </button>
+            {activeFilters.length > 0 ? (
+              <Link
+                href="/products"
+                className="rounded-lg px-3 py-2 text-sm font-medium text-slate-500 transition-colors hover:text-slate-800"
+              >
+                Clear
+              </Link>
+            ) : null}
+            {filterError ? (
+              <p role="alert" className="text-sm text-rose-700">
+                One of the filters was invalid, so the full catalog is shown.
+              </p>
+            ) : null}
+          </div>
+        </form>
       </section>
 
       {loadError ? (
@@ -232,6 +378,8 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
           </section>
         </>
       )}
+
+      {canCreate ? <CategoryManager categories={categories} /> : null}
     </div>
   );
 }

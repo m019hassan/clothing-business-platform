@@ -73,7 +73,7 @@ TypeScript/ESLint/Build/Prisma validate: **PASS** · 6/6 migrations مطبّقة
 
 ### المرحلة C — إدارة الكتالوج (Backend ثم واجهة)
 - **C1 (✅ منجز)**: مسارات الكتابة `POST/PUT/DELETE /api/products` و`POST/PUT/DELETE .../variants` بصلاحيات `products.create/update/delete` (تحقق كامل + 409/404/400/403/401)، بحث/فلترة/ترتيب في `GET /api/products` (`q`/`category`/`sort`)، أرشفة = `status = ARCHIVED`. متبقٍ من C: واجهة الإدارة (C2) وAPI التصنيفات (C3).
-- **C2**: تفعيل الصلاحيات `products.create/update/delete` على المسارات + واجهة الإدارة (فك الأزرار المعطّلة).
+- **C2 (✅ منجز)**: واجهة إدارة الكتالوج: `/products/new` و`/products/[id]/edit` (نموذج منتج + مدير متغيّرات بإضافة/تعديل/أرشفة) + مدير التصنيفات + فك زرّي «Add product»/«Edit product» المعطّلين، وفلترة/ترتيب/بحث فعلية مع فلتر حالة للموظفين فقط (`GET /api/products?status=` يتطلب `products.view`).
 - **C3 (✅ منجز)**: `GET /api/categories` (نشطة فقط علناً، و`includeInactive=1` بصلاحية `products.view`)، `POST /api/categories` (`products.create`)، `PUT /api/categories/:id` (`products.update`)، مع اختبارات وتحقق HTTP.
 
 ### المرحلة D — العملاء والحسابات

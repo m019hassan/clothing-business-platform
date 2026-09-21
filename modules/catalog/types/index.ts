@@ -23,6 +23,7 @@ export type ProductInventoryView = {
   status: ProductStatus;
   basePrice: string;
   currency: string;
+  categoryId: string;
   categoryName: string | null;
   createdAt: string;
   updatedAt: string;
@@ -50,4 +51,9 @@ export type CategoryView = {
   productCount: number;
   createdAt: string;
   updatedAt: string;
+};
+
+export type CatalogFormState = {
+  ok: boolean;
+  message: string;
 };

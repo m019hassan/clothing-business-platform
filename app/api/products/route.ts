@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import {
+  canFilterByStatus,
   countProducts,
   listProducts,
   parsePaginationParams,
@@ -18,7 +19,9 @@ export async function GET(request: Request) {
   try {
     const searchParams = new URL(request.url).searchParams;
     const pagination = parsePaginationParams(searchParams);
-    const filters = parseProductListFilters(searchParams);
+    const filters = parseProductListFilters(searchParams, {
+      allowStatus: await canFilterByStatus(),
+    });
     const [products, total] = await Promise.all([
       listProducts(pagination, filters),
       countProducts(filters),

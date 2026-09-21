@@ -8,8 +8,6 @@ vi.mock("@/modules/auth/application/authorization", () => ({
   getCurrentPermissions: vi.fn(async () => new Set<string>()),
 }));
 
-import { Prisma } from "@prisma/client";
-
 import type { SafeAccount } from "@/modules/auth/infrastructure/session";
 import {
   archiveProduct,

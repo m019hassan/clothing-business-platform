@@ -7,7 +7,9 @@ import type {
   ProductView,
 } from "@/modules/catalog/types";
 import { prisma } from "@/src/lib/db";
-import { NotFoundError, ValidationError, withDatabaseError } from "@/src/lib/errors";
+import { AuthorizationError, NotFoundError, ValidationError, withDatabaseError } from "@/src/lib/errors";
+import { hasPermission } from "@/modules/auth/application/authorization";
+import { PERMISSIONS } from "@/modules/auth/application/permissions";
 import {
   isUuid,
   parsePaginationParams,
@@ -85,7 +87,11 @@ export type ProductListFilters = {
   search?: string;
   categorySlug?: string;
   sort?: ProductSort;
+  /** Staff-only: list one lifecycle status instead of the sellable catalog. */
+  status?: ProductStatus;
 };
+
+export const PRODUCT_LIST_STATUSES: readonly ProductStatus[] = ["DRAFT", "ACTIVE", "ARCHIVED"];
 
 const MAX_SEARCH_LENGTH = 100;
 
@@ -109,7 +115,11 @@ function productOrderBy(sort: ProductSort = "name"): Prisma.ProductOrderByWithRe
  * original sellable catalog, so the count and the page always share one where clause.
  */
 function buildProductWhere(filters: ProductListFilters): Prisma.ProductWhereInput {
-  const where: Prisma.ProductWhereInput = { ...sellableProductWhere };
+  // A status filter is the management view: it shows exactly that status, so an
+  // archived product without active variants stays reachable for staff.
+  const where: Prisma.ProductWhereInput = filters.status
+    ? { status: filters.status, deletedAt: null }
+    : { ...sellableProductWhere };
 
   if (filters.search !== undefined) {
     where.OR = [
@@ -125,8 +135,15 @@ function buildProductWhere(filters: ProductListFilters): Prisma.ProductWhereInpu
   return where;
 }
 
-/** Validates the optional catalog query parameters (search, category, sort). */
-export function parseProductListFilters(searchParams: URLSearchParams): ProductListFilters {
+/**
+ * Validates the optional catalog query parameters (search, category, sort) and the
+ * staff-only status filter. `status` is rejected unless the caller checked the
+ * catalog permission, so draft products can never leak through the public route.
+ */
+export function parseProductListFilters(
+  searchParams: URLSearchParams,
+  { allowStatus = false }: { allowStatus?: boolean } = {},
+): ProductListFilters {
   const filters: ProductListFilters = {};
 
   const search = searchParams.get("q");
@@ -151,6 +168,20 @@ export function parseProductListFilters(searchParams: URLSearchParams): ProductL
     }
 
     filters.categorySlug = trimmed;
+  }
+
+  const status = searchParams.get("status");
+
+  if (status !== null) {
+    if (!allowStatus) {
+      throw new AuthorizationError("Catalog access is required to filter by status.");
+    }
+
+    if (!PRODUCT_LIST_STATUSES.includes(status as ProductStatus)) {
+      throw new ValidationError(`status must be one of: ${PRODUCT_LIST_STATUSES.join(", ")}.`);
+    }
+
+    filters.status = status as ProductStatus;
   }
 
   const sort = searchParams.get("sort");
@@ -183,6 +214,11 @@ export async function listProducts(
   return products.map(mapProduct);
 }
 
+/** True when the caller may see draft/archived products in listing filters. */
+export async function canFilterByStatus(): Promise<boolean> {
+  return hasPermission(PERMISSIONS.PRODUCTS_VIEW);
+}
+
 export async function countProducts(filters: ProductListFilters = {}): Promise<number> {
   return withDatabaseError(() => prisma.product.count({ where: buildProductWhere(filters) }));
 }
@@ -212,6 +248,7 @@ export async function getProductInventory(
         currency: true,
         createdAt: true,
         updatedAt: true,
+        categoryId: true,
         category: { select: { name: true } },
         variants: {
           orderBy: { sku: "asc" },
@@ -243,6 +280,7 @@ export async function getProductInventory(
     status: product.status,
     basePrice: product.basePrice.toString(),
     currency: product.currency,
+    categoryId: product.categoryId,
     categoryName: product.category?.name ?? null,
     createdAt: product.createdAt.toISOString(),
     updatedAt: product.updatedAt.toISOString(),
