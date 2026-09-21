@@ -21,3 +21,20 @@
 - Audit logs
 - Idempotency for critical operations
 - Approval workflow for high-risk actions
+
+## Security headers (implemented)
+
+Applied to every response from `next.config.ts`:
+
+| Header | Value |
+| --- | --- |
+| `Content-Security-Policy` | `default-src 'self'` with `script-src 'self' 'unsafe-inline'` (`'unsafe-eval'` only outside production), `style-src 'self' 'unsafe-inline'`, `img-src 'self' data: blob:`, `form-action 'self'`, `frame-ancestors 'none'`, `base-uri 'self'`, `object-src 'none'` |
+| `X-Content-Type-Options` | `nosniff` |
+| `X-Frame-Options` | `DENY` |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` |
+| `Permissions-Policy` | camera, microphone, geolocation and payment disabled |
+| `Cross-Origin-Opener-Policy` | `same-origin` |
+| `Strict-Transport-Security` | `max-age=63072000; includeSubDomains; preload` (production only) |
+
+`X-Powered-By` is disabled. The CSP keeps `'unsafe-inline'` because Next injects
+its hydration bootstrap inline; a nonce-based policy is the next hardening step.

@@ -98,7 +98,7 @@ TypeScript/ESLint/Build/Prisma validate: **PASS** · 6/6 migrations مطبّقة
 
 ### المرحلة H — تحصين وتشغيل
 - **H1**: اختبار تزامن متعدد الاتصالات على Postgres حقيقي (حارسات الحجز).
-- **H2**: Rate limiting على الدخول + مراجعة Security headers.
+- **H2 (✅ منجز)**: Rate limiting نافذي على الدخول (5 محاولات/15د لكل معرّف + 20/15د لكل عميل عبر `src/lib/rate-limit.ts`، مع 429/`RATE_LIMITED` و`retryAfterSeconds`، وتصفير النافذة عند نجاح الدخول — فوق قفل الحساب الموجود) + Security headers كاملة في `next.config.ts` (CSP/no‑sniff/X‑Frame‑Options/Referrer‑Policy/Permissions‑Policy/COOP/HSTS في الإنتاج) وإخفاء `X-Powered-By`.
 - **H3**: مراقبة أخطاء إنتاج + سجلّ منظم.
 
 ### تبعيات مهمة

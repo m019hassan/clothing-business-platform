@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 
 export type AppErrorCode =
+  | "RATE_LIMITED"
   | "VALIDATION_ERROR"
   | "AUTHENTICATION_ERROR"
   | "AUTHORIZATION_ERROR"
@@ -10,6 +11,7 @@ export type AppErrorCode =
   | "INTERNAL_ERROR";
 
 const statusByCode: Record<AppErrorCode, number> = {
+  RATE_LIMITED: 429,
   VALIDATION_ERROR: 400,
   AUTHENTICATION_ERROR: 401,
   AUTHORIZATION_ERROR: 403,
@@ -63,6 +65,16 @@ export class ConflictError extends AppError {
   }
 }
 
+export class RateLimitError extends AppError {
+  constructor(message: string, retryAfterSeconds = 0) {
+    super("RATE_LIMITED", message, { retryAfterSeconds });
+
+    this.retryAfterSeconds = retryAfterSeconds;
+  }
+
+  readonly retryAfterSeconds: number;
+}
+
 export class DatabaseError extends AppError {
   constructor(message = "A database operation failed.", details?: unknown) {
     super("DATABASE_ERROR", message, details);
@@ -97,6 +109,7 @@ export type ErrorResponseBody = {
   error: {
     code: AppErrorCode;
     message: string;
+    retryAfterSeconds?: number;
   };
 };
 
@@ -112,6 +125,9 @@ export function toErrorResponse(error: unknown): {
       error: {
         code: appError.code,
         message: appError.message,
+        ...(appError instanceof RateLimitError && appError.retryAfterSeconds > 0
+          ? { retryAfterSeconds: appError.retryAfterSeconds }
+          : {}),
       },
     },
   };

@@ -16,6 +16,8 @@ export default defineConfig({
       // The services import "server-only", which throws outside a React Server
       // environment. Tests exercise them as plain server modules.
       "server-only": path.resolve(rootDir, "tests/stubs/server-only.ts"),
+      // next/headers needs a request context that plain Node does not have.
+      "next/headers": path.resolve(rootDir, "tests/stubs/next-headers.ts"),
       "@": rootDir,
     },
   },
