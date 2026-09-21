@@ -77,7 +77,7 @@ TypeScript/ESLint/Build/Prisma validate: **PASS** · 6/6 migrations مطبّقة
 - **C3 (✅ منجز)**: `GET /api/categories` (نشطة فقط علناً، و`includeInactive=1` بصلاحية `products.view`)، `POST /api/categories` (`products.create`)، `PUT /api/categories/:id` (`products.update`)، مع اختبارات وتحقق HTTP.
 
 ### المرحلة D — العملاء والحسابات
-- **D1**: كتابة الملف الشخصي (الاسم/الجنس/الميلاد/الموافقة) + واجهة التعديل.
+- **D1 (✅ منجز)**: `GET/PUT /api/account/profile` (خدمة مملوكة للعميل، تحقق كامل: اسم/جنس/تاريخ ميلاد + منع المستقبل) + نموذج تعديل الملف في `/account` وفك زر «Edit profile» المعطّل. (موافقة التسويق تُدار من قسم Preferences.)
 - **D2**: قائمة/تفاصيل العملاء للموظفين (customers.view) — قراءة ثم إدارة لاحقاً.
 - **D3**: Sign up + تحقق البريد (يتطلب مزوّد بريد — قرار بنية).
 

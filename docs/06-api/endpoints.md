@@ -16,6 +16,14 @@ GAP: there are no REST `/api/auth/*` endpoints (login, logout, forgot-password),
 | --- | --- | --- | --- |
 | GET | `/api/account/preferences` | authenticated | `{ preferences }` |
 | PUT | `/api/account/preferences` | authenticated | `{ preferences }` |
+| GET | `/api/account/profile` | customer | `{ profile }` |
+| PUT | `/api/account/profile` | customer | `{ profile }` |
+
+The profile endpoints are self-service and ownership-based (customer accounts
+only; employees receive 403 because their details are administrator-managed).
+Editable fields: `firstName`, `lastName`, `gender` (`MALE`/`FEMALE`/`OTHER`),
+`birthDate` (`YYYY-MM-DD`, not in the future, after 1899). Empty values clear the
+optional fields; `customerCode` and the classification are read-only.
 
 ## Notifications
 | Method | Path | Auth | Response |

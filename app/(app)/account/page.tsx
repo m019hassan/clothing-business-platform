@@ -5,6 +5,8 @@ import { AccountStatusBadge } from "@/components/account/account-status-badge";
 import { getCurrentAccount } from "@/modules/auth/infrastructure/session";
 import { getAccountOverview } from "@/modules/customers/application/account";
 import type { AccountOverviewView } from "@/modules/customers/types";
+import { getCustomerProfile } from "@/modules/customers/application/profile";
+import { CustomerProfileForm } from "@/modules/customers/components/customer-profile-form";
 import { AccountPreferencesForm } from "@/modules/notification/components/account-preferences-form";
 import { NotificationPreferencesForm } from "@/modules/notification/components/notification-preferences-form";
 import {
@@ -42,6 +44,16 @@ export default async function AccountPage() {
     overview = await getAccountOverview(account);
   } catch {
     loadError = true;
+  }
+
+  let customerProfile: Awaited<ReturnType<typeof getCustomerProfile>> | null = null;
+
+  if (overview?.customer) {
+    try {
+      customerProfile = await getCustomerProfile(account);
+    } catch {
+      customerProfile = null;
+    }
   }
 
   let accountPreferences: AccountPreferenceView | null = null;
@@ -98,17 +110,23 @@ export default async function AccountPage() {
             </div>
           </div>
           <div className="flex shrink-0 flex-col items-start gap-2 sm:items-end">
-            <button
-              type="button"
-              disabled
-              title="Profile editing is not available through the API yet"
-              className="cursor-not-allowed rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-400"
-            >
-              Edit profile
-            </button>
-            <p className="max-w-[220px] text-right text-xs text-slate-400">
-              Profile updates arrive with the account API.
-            </p>
+            {customerProfile ? (
+              <>
+                <a
+                  href="#profile"
+                  className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+                >
+                  Edit profile
+                </a>
+                <p className="max-w-[220px] text-right text-xs text-slate-400">
+                  Update your name, gender and birth date.
+                </p>
+              </>
+            ) : (
+              <p className="max-w-[220px] text-right text-xs text-slate-400">
+                Employee details are maintained by the store&apos;s administrator.
+              </p>
+            )}
           </div>
         </div>
       </section>
@@ -171,6 +189,16 @@ export default async function AccountPage() {
           </section>
         )}
       </div>
+
+      {customerProfile ? (
+        <section id="profile" className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
+            <h3 className="text-base font-semibold text-slate-900">Profile</h3>
+            <p className="text-xs text-slate-500">Customer code {customerProfile.customerCode}</p>
+          </div>
+          <CustomerProfileForm profile={customerProfile} />
+        </section>
+      ) : null}
 
       {accountPreferences ? (
         <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
