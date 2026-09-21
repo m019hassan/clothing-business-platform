@@ -231,7 +231,10 @@ export async function addItem(
         select: { id: true, quantity: true },
       });
 
-      await reserveStock(transaction, input.variantId, input.quantity);
+      await reserveStock(transaction, input.variantId, input.quantity, {
+        actorAccountId: account.id,
+        reason: "Cart item added",
+      });
 
       if (existingItem) {
         await transaction.cartItem.update({
@@ -293,9 +296,15 @@ export async function updateItem(
           throw new ConflictError("This product is no longer available.");
         }
 
-        await reserveStock(transaction, item.variantId, difference);
+        await reserveStock(transaction, item.variantId, difference, {
+          actorAccountId: account.id,
+          reason: "Cart quantity increased",
+        });
       } else if (difference < 0) {
-        await releaseStock(transaction, item.variantId, -difference);
+        await releaseStock(transaction, item.variantId, -difference, {
+          actorAccountId: account.id,
+          reason: "Cart quantity reduced",
+        });
       }
 
       await transaction.cartItem.update({
@@ -339,7 +348,10 @@ export async function removeItem(
       }
 
       await transaction.cartItem.delete({ where: { id: item.id } });
-      await releaseStock(transaction, item.variantId, item.quantity);
+      await releaseStock(transaction, item.variantId, item.quantity, {
+        actorAccountId: account.id,
+        reason: "Cart item removed",
+      });
     }),
   );
 

@@ -1,3 +1,5 @@
+import type { StockMovementType } from "@prisma/client";
+
 export type InventoryRowView = {
   id: string;
   variantId: string;
@@ -32,4 +34,30 @@ export type InventoryPageView = {
     offset: number;
     total: number;
   };
+};
+
+export type StockMovementView = {
+  id: string;
+  variantId: string;
+  sku: string;
+  warehouseId: string;
+  warehouseCode: string;
+  type: StockMovementType;
+  quantityChange: number;
+  quantityOnHandAfter: number;
+  quantityReservedAfter: number;
+  reason: string | null;
+  orderId: string | null;
+  actorAccountId: string | null;
+  createdAt: string;
+};
+
+export type AdjustmentResultView = {
+  variantId: string;
+  sku: string;
+  warehouseId: string;
+  warehouseCode: string;
+  quantityOnHand: number;
+  quantityReserved: number;
+  availableQuantity: number;
 };

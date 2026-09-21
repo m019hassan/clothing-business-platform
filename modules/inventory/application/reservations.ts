@@ -2,6 +2,7 @@ import "server-only";
 
 import { Prisma } from "@prisma/client";
 
+import { recordMovement, type MovementContext } from "@/modules/inventory/application/ledger";
 import { ConflictError } from "@/src/lib/errors";
 
 export type TransactionClient = Prisma.TransactionClient;
@@ -12,6 +13,7 @@ export async function reserveStock(
   transaction: TransactionClient,
   variantId: string,
   quantity: number,
+  context?: MovementContext,
 ): Promise<void> {
   if (quantity <= 0) {
     return;
@@ -19,7 +21,7 @@ export async function reserveStock(
 
   const rows = await transaction.inventoryItem.findMany({
     where: { variantId },
-    select: { id: true, quantityOnHand: true, quantityReserved: true },
+    select: { id: true, warehouseId: true, quantityOnHand: true, quantityReserved: true },
     orderBy: { quantityOnHand: "desc" },
   });
 
@@ -60,6 +62,16 @@ export async function reserveStock(
       throw new ReservationConflictError("Reservation state changed concurrently.");
     }
 
+    await recordMovement(transaction, {
+      variantId,
+      warehouseId: row.warehouseId,
+      type: "RESERVATION",
+      quantityChange: 0,
+      quantityOnHandAfter: row.quantityOnHand,
+      quantityReservedAfter: row.quantityReserved + amount,
+      context,
+    });
+
     remaining -= amount;
   }
 
@@ -72,6 +84,7 @@ export async function releaseStock(
   transaction: TransactionClient,
   variantId: string,
   quantity: number,
+  context?: MovementContext,
 ): Promise<void> {
   if (quantity <= 0) {
     return;
@@ -79,7 +92,7 @@ export async function releaseStock(
 
   const rows = await transaction.inventoryItem.findMany({
     where: { variantId, quantityReserved: { gt: 0 } },
-    select: { id: true, quantityReserved: true },
+    select: { id: true, warehouseId: true, quantityOnHand: true, quantityReserved: true },
     orderBy: { quantityReserved: "desc" },
   });
 
@@ -107,6 +120,16 @@ export async function releaseStock(
       throw new ReservationConflictError("Reservation state changed concurrently.");
     }
 
+    await recordMovement(transaction, {
+      variantId,
+      warehouseId: row.warehouseId,
+      type: "RELEASE",
+      quantityChange: 0,
+      quantityOnHandAfter: row.quantityOnHand,
+      quantityReservedAfter: row.quantityReserved - amount,
+      context,
+    });
+
     remaining -= amount;
   }
 
@@ -119,6 +142,7 @@ export async function consumeStock(
   transaction: TransactionClient,
   variantId: string,
   quantity: number,
+  context?: MovementContext,
 ): Promise<void> {
   if (quantity <= 0) {
     return;
@@ -126,7 +150,7 @@ export async function consumeStock(
 
   const rows = await transaction.inventoryItem.findMany({
     where: { variantId },
-    select: { id: true, quantityOnHand: true, quantityReserved: true },
+    select: { id: true, warehouseId: true, quantityOnHand: true, quantityReserved: true },
     orderBy: { quantityReserved: "desc" },
   });
 
@@ -164,6 +188,16 @@ export async function consumeStock(
     if (result.count === 0) {
       throw new ReservationConflictError("Stock state changed concurrently.");
     }
+
+    await recordMovement(transaction, {
+      variantId,
+      warehouseId: row.warehouseId,
+      type: "CONSUMPTION",
+      quantityChange: -amount,
+      quantityOnHandAfter: row.quantityOnHand - amount,
+      quantityReservedAfter: row.quantityReserved - amount,
+      context,
+    });
 
     remaining -= amount;
   }

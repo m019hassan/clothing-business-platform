@@ -82,7 +82,7 @@ TypeScript/ESLint/Build/Prisma validate: **PASS** · 6/6 migrations مطبّقة
 - **D3**: Sign up + تحقق البريد (يتطلب مزوّد بريد — قرار بنية).
 
 ### المرحلة E — المخزون التشغيلي
-- **E1**: نموذج `StockMovement` (ledger) + تعديلات يدوية بصلاحية `inventory.adjust`.
+- **E1 (✅ منجز)**: نموذج `StockMovement` + migration مطبَّقة، تعديلات يدوية (`POST /api/inventory/adjustments` بصلاحية `inventory.adjust`، حماية عدم النزول تحت المحجوز) وقراءة السجلّ (`GET /api/inventory/movements`)، وربط مسارات السلة/الدفع لتسجيل `RESERVATION`/`RELEASE`/`CONSUMPTION` داخل نفس المعاملة.
 - **E2**: انتهاء صلاحية الحجوزات (سياسة + مهمة خلفية).
 - **E3**: واجهة تعديل المخزون (فك «قراءة فقط»).
 

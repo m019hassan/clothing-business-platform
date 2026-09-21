@@ -83,6 +83,26 @@ permission set has no `categories.*` codes. Deactivating a category
 (`isActive = false`) hides it from the public list and from catalog filters while
 keeping its products intact.
 
+## Inventory (staff)
+| Method | Path | Auth | Response |
+| --- | --- | --- | --- |
+| POST | `/api/inventory/adjustments` | `inventory.adjust` | `{ adjustment }` (201) |
+| GET | `/api/inventory/movements?limit=&offset=&variantId=` | `inventory.view` | `{ movements, pagination }` |
+
+`POST /api/inventory/adjustments` takes `{ variantId, quantityChange, reason?,
+warehouseId? }` where `quantityChange` is a non-zero whole number (max 100000 in
+absolute value, default warehouse = the first active one). The adjustment is
+rejected with 409 when it would leave less on-hand stock than the quantity
+currently reserved, and it creates the inventory row when the variant has none.
+
+Every balance change is appended to the `StockMovement` ledger in the same
+transaction: `RESERVATION` / `RELEASE` (cart add, update, remove), `CONSUMPTION`
+when an approved payment consumes stock, `RELEASE` when a rejected payment hands
+the reservation back, and `ADJUSTMENT` for manual corrections. `INTAKE` is
+reserved for a future receiving flow. Each row stores the signed on-hand change,
+the resulting on-hand and reserved quantities, the reason, the acting account and
+the related order when there is one.
+
 ## Customers (staff)
 | Method | Path | Auth | Response |
 | --- | --- | --- | --- |
@@ -136,7 +156,7 @@ is no separate "create payment" endpoint.
 - `POST /api/auth/login`, `POST /api/auth/logout`, `POST /api/auth/forgot-password`
 - `GET/POST/PUT /api/users*` (employee data is read through the app routes, not a REST API)
 - `GET /api/categories`
-- `GET /api/inventory/balances`, `POST /api/inventory/adjustments`, `POST /api/inventory/reservations`, `POST /api/inventory/releases`
+- `GET /api/inventory/balances`, `POST /api/inventory/reservations`, `POST /api/inventory/releases`
 - `GET /api/payments`, `POST /api/payments/:id/verify`, `POST /api/payments/:id/reject`, `POST /api/payments/:id/proof`
 - `GET /api/shipping`, `PUT /api/shipping/:id/status`
 - `PUT /api/notifications/preferences` (the implemented path is `/api/notification-preferences`)

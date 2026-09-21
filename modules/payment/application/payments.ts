@@ -240,9 +240,17 @@ export async function simulatePaymentOutcome(
 
         for (const item of order.items) {
           if (outcome === "success") {
-            await consumeStock(transaction, item.variantId, item.quantity);
+            await consumeStock(transaction, item.variantId, item.quantity, {
+              orderId: order.id,
+              actorAccountId: account.id,
+              reason: "Payment approved",
+            });
           } else {
-            await releaseStock(transaction, item.variantId, item.quantity);
+            await releaseStock(transaction, item.variantId, item.quantity, {
+              orderId: order.id,
+              actorAccountId: account.id,
+              reason: "Payment rejected",
+            });
           }
         }
 

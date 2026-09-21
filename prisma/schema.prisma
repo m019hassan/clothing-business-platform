@@ -53,6 +53,8 @@ model Account {
   customerProfile CustomerProfile?
   employeeProfile EmployeeProfile?
 
+  stockMovements StockMovement[] @relation("StockMovementActor")
+
   sessions  Session[]
   auditLogs AuditLog[]
 
@@ -352,6 +354,7 @@ model ProductVariant {
   inventoryItems InventoryItem[]
   cartItems      CartItem[]
   orderItems     OrderItem[]
+  movements      StockMovement[]
 
   @@index([productId], map: "idx_variant_product")
 }
@@ -368,6 +371,7 @@ model Warehouse {
   updatedAt DateTime @updatedAt
 
   inventoryItems InventoryItem[]
+  movements      StockMovement[]
 
   @@index([isActive], map: "idx_warehouse_active")
 }
@@ -389,6 +393,43 @@ model InventoryItem {
 
   @@unique([variantId, warehouseId], map: "uq_inventory_item_variant_warehouse")
   @@index([warehouseId], map: "idx_inventory_item_warehouse")
+}
+
+enum StockMovementType {
+  ADJUSTMENT
+  INTAKE
+  RESERVATION
+  RELEASE
+  CONSUMPTION
+}
+
+model StockMovement {
+  id String @id @default(uuid()) @db.Uuid
+
+  variantId   String @db.Uuid
+  warehouseId String @db.Uuid
+
+  type StockMovementType
+
+  quantityChange        Int
+  quantityOnHandAfter   Int
+  quantityReservedAfter Int
+
+  reason String? @db.VarChar(200)
+
+  actorAccountId String? @db.Uuid
+  orderId        String? @db.Uuid
+
+  createdAt DateTime @default(now())
+
+  variant   ProductVariant @relation(fields: [variantId], references: [id], onDelete: Restrict)
+  warehouse Warehouse      @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
+  actor     Account?       @relation("StockMovementActor", fields: [actorAccountId], references: [id], onDelete: SetNull)
+  order     Order?         @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  @@index([variantId, createdAt], map: "idx_stock_movement_variant_created")
+  @@index([type], map: "idx_stock_movement_type")
+  @@index([orderId], map: "idx_stock_movement_order")
 }
 
 model Cart {
@@ -458,6 +499,7 @@ model Order {
   customerProfile CustomerProfile @relation(fields: [customerProfileId], references: [id], onDelete: Restrict)
   items           OrderItem[]
   payments        Payment[]
+  stockMovements  StockMovement[]
 
   @@index([status], map: "idx_order_status")
   @@index([customerProfileId], map: "idx_order_customer")
