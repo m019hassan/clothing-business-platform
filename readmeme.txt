@@ -37,3 +37,21 @@ npm run seed -- --email x@example.com --password "NewPass123" --update-password 
 - نماذج البيانات: `prisma/schema.prisma` (Account / CustomerProfile / EmployeeProfile / Role / Permission).
 - منطق الدخول والجلسات: `modules/auth/`.
 - **لا يوجد تسجيل ذاتي (Sign up) بعد** — لو عايزه، أقدر أضيفه كشريحة جديدة (صفحة + endpoint) بقواعد صحة واضحة.
+
+
+
+cd /Users/mohammedhassan/My-Work/clothing-business-platform
+
+# عميل جديد
+npm run seed -- --email X@example.com --password 'Pass12345!' --type customer \
+  --phone +966555100003 --first Ahmed --last Ali --classification RETAIL
+
+# موظف جديد + دور
+npm run seed -- --email Y@example.com --password 'Pass12345!' --type employee \
+  --phone +966555100004 --first Sara --last Mostafa --department OPS --role order_manager
+
+# تغيير كلمة مرور حساب موجود
+npm run seed -- --email X@example.com --password 'NewPass123!' --update-password
+
+# قائمة كل الحسابات
+npm run seed -- --list
