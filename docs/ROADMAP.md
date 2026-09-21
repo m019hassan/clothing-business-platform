@@ -61,7 +61,7 @@ TypeScript/ESLint/Build/Prisma validate: **PASS** · 6/6 migrations مطبّقة
 ## 3) خريطة الطريق
 
 ### المرحلة A — التثبيت والأساس *(الأولوية القصوى)*
-- **A1**: تشغيل Postgres عبر docker-compose + `prisma migrate deploy` عليه (نقل التطوير من pglite) + `.env` بالاتصال الصحيح.
+- **A1**: نقل التطوير من pglite إلى Postgres حقيقي (`brew install postgresql@16`) + `prisma migrate deploy` + `.env`. **مبرر مقيس**: خادم `prisma dev` الحالي يقبل **9 اتصالات متزامنة كحد أقصى** (العاشر يفشل بـ`Can't reach database server`)، ما يسبب سقوطه المتكرر أثناء تشغيل الاختبارات/الخادم/Studio معاً — بينما Postgres الحقيقي يسمح بـ100. يفتح أيضاً `psql` وH1.
 - **A2 (✅ منجز)**: إطار اختبارات Vitest (`npm test`) — 27 اختباراً مقابل قاعدة التطوير: `tests/unit/format.test.ts` (8)، `tests/integration/cart.test.ts` (10: ثوابت الحجز 0≤reserved≤onHand، 409/400/404)، `tests/integration/orders.test.ts` (9: دورة الطلب DRAFT→PENDING_PAYMENT→CONFIRMED، نتيجة الدفع/الاستهلاك، بوابات التفويض).
 - **A3 (✅ منجز)**: `countProducts()` + `total` في استجابة `GET /api/products` (مع عرض "X of Z" في `/products`)؛ إعادة كتابة `docs/06-api/endpoints.md` (المُنفَّذ فعلياً + قائمة GAP) و`docs/04-security/roles-and-permissions.md` (24 كود صلاحية مطابقة لـ`PERMISSIONS`) وتصحيح `authorization.md`.
 - **A4 (✅ منجز)**: التزامات منطقية بعد كل مرحلة (كود/اختبارات/وثائق) — الالتزامات e5e11bb, 45e2f7c, 1cfecbc (A2), 73c5bf1, a788256 (A3), ffe4e5f, 2743a54 (B1).
