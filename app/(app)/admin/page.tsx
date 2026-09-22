@@ -259,7 +259,10 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                       <td className="px-6 py-4">
                         <UserRowActions
                           accountId={user.id}
-                          displayName={user.displayName}
+                          firstName={user.displayName.split(" ")[0] ?? ""}
+                          lastName={user.displayName.split(" ").slice(1).join(" ")}
+                          email={user.email ?? ""}
+                          phone={user.phone}
                           status={user.status}
                           branchId={user.branchId}
                         />

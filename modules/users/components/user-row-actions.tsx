@@ -15,36 +15,73 @@ const inputClass =
 
 export function UserRowActions({
   accountId,
-  displayName,
+  firstName,
+  lastName,
+  email,
+  phone,
   status,
   branchId,
 }: {
   accountId: string;
-  displayName: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
   status: string;
   branchId: string | null;
 }) {
+  const displayName = [firstName, lastName].filter(Boolean).join(" ").trim() || email;
   const [updateState, updateAction, isUpdating] = useActionState(updateUserAction, initialState);
   const [passwordState, passwordAction, isResetting] = useActionState(resetUserPasswordAction, initialState);
 
   return (
     <div className="space-y-2">
-      <form action={updateAction} className="flex flex-wrap items-center gap-2">
+      <form action={updateAction} className="grid grid-cols-2 gap-2">
         <input type="hidden" name="accountId" value={accountId} />
-        <input type="hidden" name="firstName" value={displayName.split(" ")[0] ?? ""} />
+        <input
+          name="firstName"
+          defaultValue={firstName}
+          placeholder="First name"
+          aria-label={`First name for ${displayName}`}
+          className={inputClass}
+        />
+        <input
+          name="lastName"
+          defaultValue={lastName}
+          placeholder="Last name"
+          aria-label={`Last name for ${displayName}`}
+          className={inputClass}
+        />
+        <input
+          name="email"
+          type="email"
+          defaultValue={email}
+          placeholder="Email"
+          aria-label={`Email for ${displayName}`}
+          className={inputClass}
+        />
+        <input
+          name="phone"
+          defaultValue={phone}
+          placeholder="Phone"
+          aria-label={`Phone for ${displayName}`}
+          className={inputClass}
+        />
         <select name="status" defaultValue={status} aria-label={`Status for ${displayName}`} className={inputClass}>
           <option value="ACTIVE">ACTIVE</option>
           <option value="SUSPENDED">SUSPENDED</option>
           <option value="ARCHIVED">ARCHIVED</option>
         </select>
-        <button
-          type="submit"
-          disabled={isUpdating}
-          className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-60"
-        >
-          {isUpdating ? "Saving…" : "Update status"}
-        </button>
-        {branchId ? <span className="text-xs text-slate-400">branch assigned</span> : null}
+        <div className="flex items-center gap-2">
+          <button
+            type="submit"
+            disabled={isUpdating}
+            className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-60"
+          >
+            {isUpdating ? "Saving…" : "Save account"}
+          </button>
+          {branchId ? <span className="text-xs text-slate-400">branch</span> : null}
+        </div>
       </form>
 
       <form action={passwordAction} className="flex flex-wrap items-center gap-2">

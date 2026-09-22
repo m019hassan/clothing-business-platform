@@ -86,12 +86,18 @@ export async function updateUserAction(
 
     const status = text(formData, "status");
     const firstName = text(formData, "firstName");
+    const lastName = text(formData, "lastName");
+    const email = text(formData, "email");
+    const phone = text(formData, "phone");
     const roleIdsRaw = formData.getAll("roleIds");
     const hasRoleField = formData.has("rolesProvided");
 
     const user = await updateUser(account, accountId, {
       ...(status ? { status } : {}),
       ...(firstName ? { firstName } : {}),
+      ...(formData.has("lastName") ? { lastName } : {}),
+      ...(email ? { email } : {}),
+      ...(phone ? { phone } : {}),
       ...(hasRoleField
         ? { roleIds: roleIdsRaw.filter((value): value is string => typeof value === "string") }
         : {}),
