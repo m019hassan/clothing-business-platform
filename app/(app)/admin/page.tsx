@@ -127,8 +127,15 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
         <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">Administration</p>
         <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-950">Accounts</h2>
         <p className="mt-1 text-sm text-slate-600">
-          Create employees and customers, assign roles and branches, suspend accounts and reset passwords.
+          Create employees, customers and distributors, assign roles and branches, suspend accounts and reset
+          passwords.
         </p>
+        <Link
+          href="/admin/branches"
+          className="mt-4 inline-flex rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-50"
+        >
+          Manage branches
+        </Link>
       </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">

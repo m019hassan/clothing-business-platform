@@ -50,3 +50,14 @@ export type AccessOverviewView = {
   roles: RoleView[];
   catalog: PermissionCatalogEntry[];
 };
+
+export type RoleWithPermissionsView = {
+  id: string;
+  code: string;
+  name: string;
+  description: string | null;
+  isSystem: boolean;
+  isActive: boolean;
+  permissionCodes: string[];
+};
+

@@ -60,6 +60,12 @@ Roles are data, not code. Development seeds such as "Finance Officer",
 "Inventory Officer" or "Order Manager" are examples. No role name is referenced in
 application code, so renaming or adding roles requires no code change.
 
+Role permissions are editable from `/roles` by accounts holding `roles.update`
+(`PUT /api/roles/:id/permissions`); the page falls back to a read-only matrix
+without that permission. **System roles are locked**: the `ADMIN` role is
+maintained by `npm run make-admin`, so the API refuses to edit it (409) and an
+administrator cannot strip their own access by accident.
+
 ## Not implemented (do not rely on)
 - **Direct permission overrides**: earlier revisions of this document mention them;
   no code path or model exists.

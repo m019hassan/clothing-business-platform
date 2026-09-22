@@ -151,6 +151,22 @@ Bootstrap the first administrator with `npm run make-admin` (see
 `docs/10-development/development-workflow.md`); it builds an `ADMIN` role from
 every code in `modules/auth/application/permissions.ts`.
 
+## Roles (staff)
+| Method | Path | Auth | Response |
+| --- | --- | --- | --- |
+| GET | `/api/roles` | `roles.view` | `{ roles, catalog }` (codes per role + every active permission grouped by module) |
+| PUT | `/api/roles/:id/permissions` | `roles.update` | `{ role }` |
+
+Replaces the permission set of a role (`{ permissionCodes: [...] }`, an empty array
+clears it). Unknown codes -> 404 instead of being ignored, **system roles (the
+ADMIN role built by `npm run make-admin`) -> 409** so an administrator cannot lock
+everyone out, unknown role -> 404 and every change is written to the audit log
+(`ROLE_PERMISSIONS_UPDATED`). Employees holding the role pick the change up on
+their next request because permissions are resolved per request.
+
+The `/roles` screen renders this as a checkbox matrix when the signed-in account
+holds `roles.update`, and stays read-only otherwise.
+
 ## Branches (staff)
 | Method | Path | Auth | Response |
 | --- | --- | --- | --- |

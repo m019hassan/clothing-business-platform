@@ -6,7 +6,16 @@ import { getCurrentPermissions } from "@/modules/auth/application/authorization"
 import { PERMISSIONS } from "@/modules/auth/application/permissions";
 import { getCurrentAccount } from "@/modules/auth/infrastructure/session";
 import { getAccessOverview } from "@/modules/employees/application/employees";
-import type { AccessOverviewView } from "@/modules/employees/types";
+import {
+  listPermissionCatalog,
+  listRolesWithPermissions,
+} from "@/modules/employees/application/role-permissions";
+import { RolePermissionsEditor } from "@/modules/employees/components/role-permissions-editor";
+import type {
+  AccessOverviewView,
+  PermissionCatalogEntry,
+  RoleWithPermissionsView,
+} from "@/modules/employees/types";
 
 export default async function RolesPage() {
   const account = await getCurrentAccount();
@@ -29,6 +38,22 @@ export default async function RolesPage() {
         </Link>
       </section>
     );
+  }
+
+  const canEditRoles = permissions.has(PERMISSIONS.ROLES_UPDATE);
+  let editableRoles: RoleWithPermissionsView[] = [];
+  let permissionCatalog: PermissionCatalogEntry[] = [];
+
+  if (canEditRoles) {
+    try {
+      [editableRoles, permissionCatalog] = await Promise.all([
+        listRolesWithPermissions(),
+        listPermissionCatalog(),
+      ]);
+    } catch {
+      editableRoles = [];
+      permissionCatalog = [];
+    }
   }
 
   let overview: AccessOverviewView | null = null;
@@ -155,12 +180,29 @@ export default async function RolesPage() {
         </>
       )}
 
-      <section className="rounded-2xl border border-dashed border-slate-300 bg-white p-5">
-        <h3 className="text-sm font-semibold text-slate-800">Read-only administration</h3>
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h3 className="text-base font-semibold text-slate-900">Edit role permissions</h3>
         <p className="mt-1 text-sm text-slate-500">
-          Creating roles, editing role permissions and assigning roles to employees have no backend endpoints yet.
-          Direct employee permissions are not part of the current model.
+          {canEditRoles
+            ? "Tick the capabilities a role should have. Employees holding the role get the change on their next request; the system role stays locked."
+            : "Your account does not have the roles.update permission, so the matrix above is read-only."}
         </p>
+
+        <div className="mt-5 space-y-4">
+          {canEditRoles
+            ? editableRoles.map((role) => (
+                <div key={role.id} className="rounded-xl border border-slate-200 p-4">
+                  <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
+                    <h4 className="text-sm font-semibold text-slate-900">
+                      {role.name} <span className="font-normal text-slate-500">({role.code})</span>
+                    </h4>
+                    <p className="text-xs text-slate-500">{role.permissionCodes.length} permission(s)</p>
+                  </div>
+                  <RolePermissionsEditor role={role} catalog={permissionCatalog} />
+                </div>
+              ))
+            : null}
+        </div>
       </section>
     </div>
   );
