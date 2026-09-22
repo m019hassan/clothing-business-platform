@@ -129,6 +129,21 @@ Orders can carry a delivery address: `POST /api/orders` accepts an optional
 (`deliveryAddress`), so later edits or deletion of the address never rewrite where
 an order was shipped. `GET /api/orders/:id` returns `addressId` and the snapshot.
 
+## Branches (staff)
+| Method | Path | Auth | Response |
+| --- | --- | --- | --- |
+| GET | `/api/branches?includeInactive=1` | `branches.view` | `{ branches }` (each with its warehouses) |
+| GET | `/api/branches/:id` | `branches.view` | `{ branch }` |
+| POST | `/api/branches` | `branches.manage` | `{ branch }` (201) |
+| PUT | `/api/branches/:id` | `branches.manage` | `{ branch }` |
+
+Fields: `code` (unique, uppercase letters/digits/dash/underscore), `name`,
+`phone`, `address`, `city`, `isActive` and `warehouseIds` (the full assignment set
+for the branch — the update replaces it, detaching the warehouses left out). A
+branch owns one or more warehouses (`Branch 1-* Warehouse`); today the factory
+warehouse serves the branches, and giving a branch its own warehouse is how stock
+becomes branch-specific. Duplicate codes -> 409, unknown warehouses -> 404.
+
 ## Deliveries (staff)
 | Method | Path | Auth | Response |
 | --- | --- | --- | --- |

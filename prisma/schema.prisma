@@ -363,6 +363,8 @@ model ProductVariant {
 model Warehouse {
   id String @id @default(uuid()) @db.Uuid
 
+  branchId String? @db.Uuid
+
   name String @db.VarChar(100)
   code String @unique @db.VarChar(50)
 
@@ -371,10 +373,12 @@ model Warehouse {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  branch         Branch?         @relation(fields: [branchId], references: [id], onDelete: SetNull)
   inventoryItems InventoryItem[]
   movements      StockMovement[]
 
   @@index([isActive], map: "idx_warehouse_active")
+  @@index([branchId], map: "idx_warehouse_branch")
 }
 
 model InventoryItem {
@@ -425,6 +429,26 @@ model Delivery {
   order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   @@index([status], map: "idx_delivery_status")
+}
+
+model Branch {
+  id String @id @default(uuid()) @db.Uuid
+
+  code String @unique @db.VarChar(50)
+  name String @db.VarChar(150)
+
+  phone   String? @db.VarChar(30)
+  address String? @db.VarChar(200)
+  city    String? @db.VarChar(100)
+
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  warehouses Warehouse[]
+
+  @@index([isActive], map: "idx_branch_active")
 }
 
 model Address {
