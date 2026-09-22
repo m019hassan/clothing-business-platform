@@ -9,6 +9,7 @@ vi.mock("@/modules/auth/application/authorization", () => ({
 import { Prisma } from "@prisma/client";
 
 import type { SafeAccount } from "@/modules/auth/infrastructure/session";
+import { getDistributorDashboard } from "@/modules/pos/application/pos-dashboard";
 import { createPosSale, getPosCatalog, parsePosSaleInput } from "@/modules/pos/application/pos-sales";
 import { prisma } from "@/src/lib/db";
 
@@ -267,6 +268,39 @@ describe("createPosSale", () => {
 
     const walkIns = await prisma.customerProfile.count({ where: { branchId, isWalkIn: true } });
     expect(walkIns).toBe(1);
+  });
+
+  it("reports the day/month totals, stock picture, shortages and top sellers", async () => {
+    const before = await getDistributorDashboard(distributor);
+
+    await createPosSale(distributor, { items: [{ variantId: variantA, quantity: 2 }] });
+    await createPosSale(distributor, { items: [{ variantId: variantB, quantity: 1 }] });
+
+    const dashboard = await getDistributorDashboard(distributor);
+
+    expect(dashboard.branchId).toBe(branchId);
+    expect(dashboard.timezone).toBe("Asia/Riyadh");
+    expect(dashboard.salesToday.orders).toBe(before.salesToday.orders + 2);
+    expect(dashboard.salesToday.items).toBe(before.salesToday.items + 3);
+    expect(Number(dashboard.salesToday.total)).toBeGreaterThan(Number(before.salesToday.total));
+    expect(Number(dashboard.salesThisMonth.total)).toBeGreaterThanOrEqual(Number(dashboard.salesToday.total));
+
+    expect(dashboard.stock.trackedItems).toBeGreaterThanOrEqual(2);
+    expect(dashboard.stock.totalAvailable).toBe(before.stock.totalAvailable - 3);
+
+    // variantB had a single unit: after selling it the branch is out of stock.
+    const shortage = dashboard.shortages.find((row) => row.variantId === variantB);
+    expect(shortage).toBeDefined();
+    expect(shortage?.availableQuantity).toBe(0);
+
+    const topSeller = dashboard.topSellers.find((row) => row.variantId === variantA);
+    expect(topSeller).toBeDefined();
+    expect(topSeller?.quantity).toBeGreaterThanOrEqual(2);
+    expect(topSeller?.sku).toBeTruthy();
+  });
+
+  it("refuses the dashboard for non-distributor accounts", async () => {
+    await expect(getDistributorDashboard(customer)).rejects.toMatchObject({ statusCode: 403 });
   });
 
   it("rejects insufficient stock, unknown variants and other account types", async () => {

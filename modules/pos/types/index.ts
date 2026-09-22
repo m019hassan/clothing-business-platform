@@ -38,3 +38,44 @@ export type PosReceiptView = {
   createdAt: string;
   lines: PosReceiptLineView[];
 };
+
+export type PosSalesBlock = {
+  orders: number;
+  items: number;
+  total: string;
+};
+
+export type PosStockBlock = {
+  trackedItems: number;
+  totalOnHand: number;
+  totalAvailable: number;
+  lowStockCount: number;
+  outOfStockCount: number;
+};
+
+export type PosShortageRow = {
+  variantId: string;
+  sku: string;
+  productName: string;
+  availableQuantity: number;
+};
+
+export type PosTopSellerRow = {
+  variantId: string;
+  sku: string;
+  productName: string;
+  quantity: number;
+  revenue: string;
+};
+
+export type PosDashboardView = {
+  branchId: string;
+  branchCode: string;
+  branchName: string;
+  timezone: string;
+  salesToday: PosSalesBlock;
+  salesThisMonth: PosSalesBlock;
+  stock: PosStockBlock;
+  shortages: PosShortageRow[];
+  topSellers: PosTopSellerRow[];
+};

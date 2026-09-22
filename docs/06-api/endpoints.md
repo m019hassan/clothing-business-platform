@@ -171,6 +171,7 @@ becomes branch-specific. Duplicate codes -> 409, unknown warehouses -> 404.
 | --- | --- | --- | --- |
 | GET | `/api/pos/catalog` | distributor account | `{ catalog }` (branch stock + prices) |
 | POST | `/api/pos/sales` | distributor account | `{ receipt }` (201) |
+| GET | `/api/pos/dashboard` | distributor account | `{ dashboard }` (own sales + branch picture) |
 
 Access is by **account type**, not by permission: the distributor profile carries the
 branch, and any other account type is rejected with 403. The catalog aggregates the
@@ -185,6 +186,14 @@ first use), a `CASH` payment is recorded as `APPROVED`, the branch stock is
 decremented and a `CONSUMPTION` ledger row is written with the reason
 "POS sale at <branch>". Insufficient stock -> 409, unknown or inactive products ->
 404, malformed payloads -> 400, and an audit row (`POS_SALE`) is written.
+
+`GET /api/pos/dashboard` returns the signed-in distributor's own counter sales for
+**today** and the **current month** (orders, units and revenue; day/month
+boundaries are computed in the account's timezone, never the server clock), the
+branch stock picture (tracked items, units on hand, units available, low stock and
+out of stock counts using the documented below-10 threshold), the five most urgent
+shortages and the five best sellers of the branch over the last 30 days by units
+sold.
 
 ## Deliveries (staff)
 | Method | Path | Auth | Response |

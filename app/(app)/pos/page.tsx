@@ -2,7 +2,9 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { getCurrentAccount } from "@/modules/auth/infrastructure/session";
+import { getDistributorDashboard } from "@/modules/pos/application/pos-dashboard";
 import { getPosCatalog } from "@/modules/pos/application/pos-sales";
+import { PosDashboardCards } from "@/modules/pos/components/pos-dashboard-cards";
 import { PosTerminal } from "@/modules/pos/components/pos-terminal";
 import { AuthorizationError } from "@/src/lib/errors";
 
@@ -31,9 +33,13 @@ export default async function PosPage() {
   }
 
   let catalog;
+  let dashboard;
 
   try {
-    catalog = await getPosCatalog(account);
+    [catalog, dashboard] = await Promise.all([
+      getPosCatalog(account),
+      getDistributorDashboard(account),
+    ]);
   } catch (error) {
     if (error instanceof AuthorizationError) {
       redirect("/dashboard");
@@ -54,6 +60,8 @@ export default async function PosPage() {
           ledger records it.
         </p>
       </section>
+
+      <PosDashboardCards dashboard={dashboard} />
 
       <PosTerminal catalog={catalog} />
     </div>
