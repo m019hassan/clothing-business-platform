@@ -122,6 +122,29 @@ Orders can carry a delivery address: `POST /api/orders` accepts an optional
 (`deliveryAddress`), so later edits or deletion of the address never rewrite where
 an order was shipped. `GET /api/orders/:id` returns `addressId` and the snapshot.
 
+## Deliveries (staff)
+| Method | Path | Auth | Response |
+| --- | --- | --- | --- |
+| GET | `/api/deliveries?limit=&offset=&status=` | `shipping.manage` | `{ deliveries, pagination }` |
+| GET | `/api/deliveries/:id` | `shipping.manage` | `{ delivery }` |
+| PUT | `/api/deliveries/:id` | `shipping.manage` | `{ delivery }` |
+
+A fulfilment record is created automatically (status `PENDING`) inside the
+transaction that confirms an order, so a paid order always has a delivery row;
+`PUT` accepts `{ status?, carrier?, trackingNumber?, notes? }`.
+
+State machine: `PENDING -> PROCESSING -> READY -> SHIPPED -> DELIVERED`, and any
+non-terminal state may move to `CANCELLED` (which also happens automatically when
+the order itself is cancelled). Invalid jumps are rejected with 409, `SHIPPED`
+requires a carrier and a tracking number (400 without them), `dispatchedAt` /
+`deliveredAt` are stamped automatically, and every status change is written to the
+audit log (`entity = "Delivery"`). `DELIVERED` is terminal and a `CANCELLED`
+delivery can no longer be edited.
+
+Customers see their delivery through the order view (`delivery` on
+`GET /api/orders/:id` and on the order page); there is no customer-facing delivery
+endpoint.
+
 ## Customers (staff)
 | Method | Path | Auth | Response |
 | --- | --- | --- | --- |

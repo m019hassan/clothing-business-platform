@@ -16,6 +16,7 @@ import {
   releaseStock,
   ReservationConflictError,
 } from "@/modules/inventory/application/reservations";
+import { ensureDeliveryForOrder } from "@/modules/delivery/application/deliveries";
 import { createNotification } from "@/modules/notification/application/notifications";
 import { mapOrder, orderSelection } from "@/modules/order/application/orders";
 import type {
@@ -236,6 +237,11 @@ export async function simulatePaymentOutcome(
           throw new ConflictError(
             "The order status changed while the request was processed. Please retry.",
           );
+        }
+
+        if (outcome === "success") {
+          // A confirmed order always gets a fulfilment record.
+          await ensureDeliveryForOrder(transaction, order.id);
         }
 
         for (const item of order.items) {

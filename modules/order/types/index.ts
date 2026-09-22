@@ -1,4 +1,5 @@
 import type { OrderStatus, PaymentMethod, PaymentStatus } from "@prisma/client";
+import type { OrderDeliveryView } from "@/modules/delivery/types";
 
 export type OrderItemView = {
   id: string;
@@ -64,6 +65,7 @@ export type OrderView = {
   createdAt: string;
   addressId: string | null;
   deliveryAddress: OrderDeliveryAddressView | null;
+  delivery: OrderDeliveryView | null;
   items: OrderItemView[];
   payment: OrderPaymentView | null;
 };

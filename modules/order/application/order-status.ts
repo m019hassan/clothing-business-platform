@@ -5,6 +5,7 @@ import { AccountType, OrderStatus, PaymentStatus, Prisma } from "@prisma/client"
 import { requirePermission } from "@/modules/auth/application/authorization";
 import { PERMISSIONS } from "@/modules/auth/application/permissions";
 import type { SafeAccount } from "@/modules/auth/infrastructure/session";
+import { cancelDeliveryForOrder } from "@/modules/delivery/application/deliveries";
 import { releaseStock } from "@/modules/inventory/application/reservations";
 import { mapOrder, orderSelection } from "@/modules/order/application/orders";
 import type { OrderView } from "@/modules/order/types";
@@ -73,6 +74,8 @@ async function applyTransition(
       }
 
       if (targetStatus === OrderStatus.CANCELLED) {
+        await cancelDeliveryForOrder(transaction, orderId);
+
         const items = await transaction.orderItem.findMany({
           where: { orderId },
           select: { variantId: true, quantity: true },

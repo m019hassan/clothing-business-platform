@@ -88,7 +88,7 @@ TypeScript/ESLint/Build/Prisma validate: **PASS** · 6/6 migrations مطبّقة
 
 ### المرحلة F — التوصيل والتنفيذ
 - **F1 (✅ منجز)**: نموذج `Address` + migration، CRUD للعناوين الذاتية (`/api/account/addresses`، أول عنوان افتراضي تلقائياً، حذف مؤقت) وواجهتها في `/account`، وربط الطلب بالعنوان مع **snapshot غير قابل للتغيير** (`Order.addressId` + `deliveryAddress`) ومنتقي عنوان في `/checkout` وعرضه في صفحة الطلب.
-- **F2**: نموذج التوصيل + حالاته + واجهة تجهيز للموظفين (confirmed→processing→ready→shipped→delivered) بصلاحية معتمدة (`shipping.manage` موجودة بالوثائق).
+- **F2 (✅ منجز)**: نموذج `Delivery` (+migration) بحالات `PENDING→PROCESSING→READY→SHIPPED→DELIVERED` و`CANCELLED`، يُنشأ تلقائياً عند تأكيد الدفع ويُلغى مع إلغاء الطلب، مع `carrier`/`trackingNumber` (إلزاميان للشحن) وأختام `dispatchedAt`/`deliveredAt` وسجلّ تدقيق لكل تغيير. صلاحية **`shipping.manage`** أُضيفت رسمياً (25 كوداً الآن)، ومسارات `/api/deliveries` + صفحة `/deliveries` للتجهيز + قسم Delivery في صفحة الطلب.
 - **F3**: إشعارات تغيّر حالة التوصيل.
 
 ### المرحلة G — الدفع الحقيقي

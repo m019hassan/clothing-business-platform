@@ -45,6 +45,9 @@ export const orderSelection = {
   createdAt: true,
   addressId: true,
   deliveryAddress: true,
+  delivery: {
+    select: { status: true, carrier: true, trackingNumber: true, dispatchedAt: true, deliveredAt: true },
+  },
   items: {
     orderBy: { createdAt: "asc" },
     select: {
@@ -120,6 +123,15 @@ export function mapOrder(order: OrderRecord): OrderView {
     createdAt: order.createdAt.toISOString(),
     addressId: order.addressId,
     deliveryAddress: order.deliveryAddress as OrderDeliveryAddressView | null,
+    delivery: order.delivery
+      ? {
+          status: order.delivery.status,
+          carrier: order.delivery.carrier,
+          trackingNumber: order.delivery.trackingNumber,
+          dispatchedAt: order.delivery.dispatchedAt?.toISOString() ?? null,
+          deliveredAt: order.delivery.deliveredAt?.toISOString() ?? null,
+        }
+      : null,
     items: order.items.map((item) => ({
       id: item.id,
       variantId: item.variantId,

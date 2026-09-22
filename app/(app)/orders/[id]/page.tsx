@@ -195,6 +195,50 @@ export default async function OrderDetailPage({ params }: OrderDetailProps) {
       {/* Payment */}
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h3 className="text-base font-semibold text-slate-900">Payment</h3>
+        {order.delivery ? (
+          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <h3 className="text-base font-semibold text-slate-900">Delivery</h3>
+              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-600">
+                {order.delivery.status}
+              </span>
+            </div>
+            <dl className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <div>
+                <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">Carrier</dt>
+                <dd className="mt-1 text-sm text-slate-800">{order.delivery.carrier ?? "—"}</dd>
+              </div>
+              <div>
+                <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">Tracking</dt>
+                <dd className="mt-1 text-sm text-slate-800">{order.delivery.trackingNumber ?? "—"}</dd>
+              </div>
+              <div>
+                <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">Dispatched</dt>
+                <dd className="mt-1 text-sm text-slate-800">
+                  {order.delivery.dispatchedAt ? formatDate(order.delivery.dispatchedAt) : "—"}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">Delivered</dt>
+                <dd className="mt-1 text-sm text-slate-800">
+                  {order.delivery.deliveredAt ? formatDate(order.delivery.deliveredAt) : "—"}
+                </dd>
+              </div>
+            </dl>
+            <p className="mt-4 text-xs text-slate-500">
+              Fulfilment status is maintained by the store team. Delivery fee and address-level tracking are not part
+              of this phase.
+            </p>
+          </section>
+        ) : (
+          <section className="rounded-2xl border border-dashed border-slate-300 bg-white p-5">
+            <h3 className="text-sm font-semibold text-slate-800">Delivery</h3>
+            <p className="mt-1 text-sm text-slate-500">
+              A fulfilment record is created automatically once the payment is approved.
+            </p>
+          </section>
+        )}
+
         {order.deliveryAddress ? (
           <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <h3 className="text-base font-semibold text-slate-900">Delivery address</h3>

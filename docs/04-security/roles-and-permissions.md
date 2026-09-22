@@ -24,6 +24,7 @@ The naming authority is `modules/auth/application/permissions.ts` (`PERMISSIONS`
 | customers | `customers.view`, `customers.create`, `customers.update` |
 | employees | `employees.view`, `employees.create`, `employees.update` |
 | roles | `roles.view`, `roles.create`, `roles.update`, `roles.delete` |
+| shipping | `shipping.manage` |
 | payments | `payments.view`, `payments.verify`, `payments.approve`, `payments.reject` |
 
 New codes must be added to that constant first. A code that exists only in the
@@ -56,9 +57,10 @@ application code, so renaming or adding roles requires no code change.
 ## Not implemented (do not rely on)
 - **Direct permission overrides**: earlier revisions of this document mention them;
   no code path or model exists.
-- **`shipping.view`, `shipping.manage`, `notifications.manage`, `users.view`,
-  `users.manage`, `roles.manage`**: these codes do not exist in code or in the
-  database. Employee/customer management uses `employees.*` / `customers.*`, and
-  role management uses `roles.view/create/update/delete`.
+- **`shipping.view`, `notifications.manage`, `users.view`, `users.manage`,
+  `roles.manage`**: these codes do not exist in code or in the database.
+  Employee/customer management uses `employees.*` / `customers.*`, and role
+  management uses `roles.view/create/update/delete`. (`shipping.manage` was added
+  with the delivery phase F2 and is now implemented.)
 - **`audit.*` permissions**: audit logging is not implemented yet
   (see `docs/04-security/audit-logging.md`).

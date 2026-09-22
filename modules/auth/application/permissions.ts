@@ -15,6 +15,7 @@ export const PERMISSIONS = {
   EMPLOYEES_VIEW: "employees.view",
   EMPLOYEES_CREATE: "employees.create",
   EMPLOYEES_UPDATE: "employees.update",
+  SHIPPING_MANAGE: "shipping.manage",
   ROLES_VIEW: "roles.view",
   ROLES_CREATE: "roles.create",
   ROLES_UPDATE: "roles.update",
