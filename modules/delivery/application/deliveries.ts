@@ -5,6 +5,7 @@ import { DeliveryStatus, Prisma } from "@prisma/client";
 import { requirePermission } from "@/modules/auth/application/authorization";
 import { PERMISSIONS } from "@/modules/auth/application/permissions";
 import type { SafeAccount } from "@/modules/auth/infrastructure/session";
+import { createNotification } from "@/modules/notification/application/notifications";
 import type {
   DeliveryListPage,
   DeliveryQueueItemView,
@@ -284,9 +285,16 @@ export async function updateDelivery(
         where: { id: deliveryId },
         select: {
           id: true,
+          orderId: true,
           status: true,
           carrier: true,
           trackingNumber: true,
+          order: {
+            select: {
+              orderNumber: true,
+              customerProfile: { select: { accountId: true } },
+            },
+          },
         },
       });
 
@@ -356,6 +364,25 @@ export async function updateDelivery(
           newValue: updated.status,
         },
       });
+
+      if (auditAction === "DELIVERY_STATUS_CHANGED") {
+        const label = updated.status.replaceAll("_", " ").toLowerCase();
+        const details = [
+          updated.carrier ? `Carrier: ${updated.carrier}.` : null,
+          updated.trackingNumber ? `Tracking number: ${updated.trackingNumber}.` : null,
+        ]
+          .filter((part): part is string => part !== null)
+          .join(" ");
+
+        await createNotification(transaction, {
+          accountId: current.order.customerProfile.accountId,
+          type: "DELIVERY",
+          title: `Delivery for ${current.order.orderNumber} is ${label}`,
+          body: details.length > 0 ? details : undefined,
+          entityType: "Order",
+          entityId: current.orderId,
+        });
+      }
 
       return mapDelivery(updated);
     }),

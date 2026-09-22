@@ -34,6 +34,13 @@ optional fields; `customerCode` and the classification are read-only.
 | GET | `/api/notification-preferences` | authenticated | `{ preferences }` |
 | PUT | `/api/notification-preferences` | authenticated | `{ preference }` |
 
+Notification types are `ORDER`, `PAYMENT` and `DELIVERY`. In-app notifications are
+created by the order, payment and delivery flows, and **the stored per-type
+preference is enforced centrally**: when `inApp` is false for a type, the
+notification is not written at all (unset means on). The delivery flow notifies the
+customer on every fulfilment status change (`Delivery for <order> is shipped`, with
+the carrier and tracking number in the body); metadata-only edits stay silent.
+
 ## Catalog
 | Method | Path | Auth | Response |
 | --- | --- | --- | --- |

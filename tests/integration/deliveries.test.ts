@@ -155,6 +155,7 @@ afterAll(async () => {
   await prisma.orderItem.deleteMany({ where: { orderId: { in: orderIds } } });
   await prisma.payment.deleteMany({ where: { orderId: { in: orderIds } } });
   await prisma.order.deleteMany({ where: { id: { in: orderIds } } });
+  await prisma.notificationPreference.deleteMany({ where: { accountId: { in: created.accountIds } } });
   await prisma.notification.deleteMany({ where: { accountId: { in: created.accountIds } } });
   await prisma.cartItem.deleteMany({ where: { variantId: { in: created.variantIds } } });
   await prisma.cart.deleteMany({ where: { customerProfileId: { in: created.profileIds } } });
@@ -266,6 +267,51 @@ describe("delivery lifecycle", () => {
 
     expect(await prisma.delivery.count({ where: { orderId: order.id } })).toBe(1);
     expect((await getDelivery(staff, record.id)).status).toBe("PENDING");
+  });
+
+  it("notifies the customer about every status change, respecting the preference", async () => {
+    const order = await confirmedOrder();
+    const record = await prisma.delivery.findUniqueOrThrow({ where: { orderId: order.id }, select: { id: true } });
+
+    await updateDelivery(staff, record.id, { status: "PROCESSING" });
+    await updateDelivery(staff, record.id, { carrier: "Aramex" });
+
+    const afterProgress = await prisma.notification.findMany({
+      where: { accountId: customer.id, type: "DELIVERY" },
+      select: { title: true, body: true },
+    });
+
+    // exactly one notification: the metadata-only update stays silent
+    expect(afterProgress).toHaveLength(1);
+    expect(afterProgress[0].title).toContain(order.orderNumber);
+    expect(afterProgress[0].title).toContain("processing");
+
+    await updateDelivery(staff, record.id, { status: "READY" });
+    const shipped = await updateDelivery(staff, record.id, { status: "SHIPPED", trackingNumber: "ARX-9" });
+
+    expect(shipped.status).toBe("SHIPPED");
+
+    const all = await prisma.notification.findMany({
+      where: { accountId: customer.id, type: "DELIVERY" },
+      orderBy: { createdAt: "asc" },
+      select: { title: true, body: true },
+    });
+
+    expect(all).toHaveLength(3);
+    expect(all[2].body).toContain("Aramex");
+    expect(all[2].body).toContain("ARX-9");
+
+    // Turning the in-app preference off silences the remaining transitions.
+    await prisma.notificationPreference.create({
+      data: { accountId: customer.id, type: "DELIVERY", inApp: false },
+    });
+
+    await updateDelivery(staff, record.id, { status: "DELIVERED" });
+
+    const afterOptOut = await prisma.notification.count({
+      where: { accountId: customer.id, type: "DELIVERY" },
+    });
+    expect(afterOptOut).toBe(3);
   });
 
   it("rejects unknown delivery ids", async () => {

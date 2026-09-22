@@ -297,6 +297,16 @@ export async function createNotification(
     entityId?: string;
   },
 ): Promise<void> {
+  // Respect the recipient's per-type in-app preference (on when unset).
+  const preference = await transaction.notificationPreference.findUnique({
+    where: { accountId_type: { accountId: input.accountId, type: input.type } },
+    select: { inApp: true },
+  });
+
+  if (preference && !preference.inApp) {
+    return;
+  }
+
   await transaction.notification.create({
     data: {
       accountId: input.accountId,

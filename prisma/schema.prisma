@@ -618,6 +618,7 @@ enum PaymentMethod {
 enum NotificationType {
   ORDER
   PAYMENT
+  DELIVERY
 }
 
 model Notification {

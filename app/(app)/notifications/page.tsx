@@ -15,6 +15,7 @@ const PAGE_SIZE = 20;
 const TYPE_LABELS: Record<string, string> = {
   ORDER: "Order",
   PAYMENT: "Payment",
+  DELIVERY: "Delivery",
 };
 
 type NotificationsPageProps = {

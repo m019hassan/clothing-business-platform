@@ -10,6 +10,7 @@ const initialState: PreferencesFormState = { ok: true, message: "" };
 const TYPE_LABELS: Record<string, string> = {
   ORDER: "Order updates",
   PAYMENT: "Payment updates",
+  DELIVERY: "Delivery updates",
 };
 
 export function NotificationPreferencesForm({
