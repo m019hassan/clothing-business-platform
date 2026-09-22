@@ -103,6 +103,25 @@ reserved for a future receiving flow. Each row stores the signed on-hand change,
 the resulting on-hand and reserved quantities, the reason, the acting account and
 the related order when there is one.
 
+## Account addresses (customer)
+| Method | Path | Auth | Response |
+| --- | --- | --- | --- |
+| GET | `/api/account/addresses` | customer | `{ addresses }` (default first) |
+| POST | `/api/account/addresses` | customer | `{ address }` (201) |
+| PUT | `/api/account/addresses/:id` | owner | `{ address }` |
+| DELETE | `/api/account/addresses/:id` | owner | `{ deleted: true, wasDefault }` |
+
+Fields: `recipientName`, `phone`, `line1`, `city` (required), `label`, `line2`,
+`region`, `postalCode`, `country` (ISO-2, default `SA`) and `isDefault`. The first
+address becomes the default automatically, and setting `isDefault: true` clears
+the previous default. `DELETE` is a soft delete (the row is kept for auditing) and
+ownership is enforced on every route (foreign ids -> 404).
+
+Orders can carry a delivery address: `POST /api/orders` accepts an optional
+`{ addressId }`, and the order stores **both** the id and an immutable snapshot
+(`deliveryAddress`), so later edits or deletion of the address never rewrite where
+an order was shipped. `GET /api/orders/:id` returns `addressId` and the snapshot.
+
 ## Customers (staff)
 | Method | Path | Auth | Response |
 | --- | --- | --- | --- |

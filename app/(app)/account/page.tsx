@@ -5,6 +5,8 @@ import { AccountStatusBadge } from "@/components/account/account-status-badge";
 import { getCurrentAccount } from "@/modules/auth/infrastructure/session";
 import { getAccountOverview } from "@/modules/customers/application/account";
 import type { AccountOverviewView } from "@/modules/customers/types";
+import { listAddresses } from "@/modules/customers/application/addresses";
+import { AddressManager } from "@/modules/customers/components/address-manager";
 import { getCustomerProfile } from "@/modules/customers/application/profile";
 import { CustomerProfileForm } from "@/modules/customers/components/customer-profile-form";
 import { AccountPreferencesForm } from "@/modules/notification/components/account-preferences-form";
@@ -67,6 +69,16 @@ export default async function AccountPage() {
   } catch {
     accountPreferences = null;
     notificationPreferences = null;
+  }
+
+  let addresses: Awaited<ReturnType<typeof listAddresses>> = [];
+
+  if (overview?.customer) {
+    try {
+      addresses = await listAddresses(account);
+    } catch {
+      addresses = [];
+    }
   }
 
   let orderTotal: number | null = null;
@@ -255,12 +267,19 @@ export default async function AccountPage() {
         </section>
       ) : null}
 
-      <section className="rounded-2xl border border-dashed border-slate-300 bg-white p-5">
-        <h3 className="text-sm font-semibold text-slate-800">Addresses</h3>
-        <p className="mt-1 text-sm text-slate-500">
-          Address management is not part of the current data model yet; it arrives with the shipping phase.
-        </p>
-      </section>
+      {overview.customer ? (
+        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
+            <h3 className="text-base font-semibold text-slate-900">Delivery addresses</h3>
+            <p className="text-xs text-slate-500">
+              Orders store a copy of the address, so edits never rewrite past orders.
+            </p>
+          </div>
+          <div className="mt-5">
+            <AddressManager addresses={addresses} />
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 }

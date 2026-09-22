@@ -87,7 +87,7 @@ TypeScript/ESLint/Build/Prisma validate: **PASS** · 6/6 migrations مطبّقة
 - **E3 (✅ منجز)**: واجهة `/inventory` بقت تفاعلية للمصرّح لهم (`inventory.adjust`): نموذج تعديل inline لكل صف (سالب/موجب + سبب) عبر Server Action بنفس خدمة E1، + جدول «Stock movements» بآخر 20 حركة (النوع/التغيير/الرصيد بعد/السبب/التاريخ) لصلاحية `inventory.view`.
 
 ### المرحلة F — التوصيل والتنفيذ
-- **F1**: نموذج Address + ربطه بالطلبات (شريحة أساس التوصيل).
+- **F1 (✅ منجز)**: نموذج `Address` + migration، CRUD للعناوين الذاتية (`/api/account/addresses`، أول عنوان افتراضي تلقائياً، حذف مؤقت) وواجهتها في `/account`، وربط الطلب بالعنوان مع **snapshot غير قابل للتغيير** (`Order.addressId` + `deliveryAddress`) ومنتقي عنوان في `/checkout` وعرضه في صفحة الطلب.
 - **F2**: نموذج التوصيل + حالاته + واجهة تجهيز للموظفين (confirmed→processing→ready→shipped→delivered) بصلاحية معتمدة (`shipping.manage` موجودة بالوثائق).
 - **F3**: إشعارات تغيّر حالة التوصيل.
 

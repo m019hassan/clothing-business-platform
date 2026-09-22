@@ -13,7 +13,13 @@ import {
 } from "@prisma/client";
 
 import type { SafeAccount } from "@/modules/auth/infrastructure/session";
-import type { OrderListPage, OrderSummaryView, OrderView } from "@/modules/order/types";
+import { resolveDeliveryAddress } from "@/modules/customers/application/addresses";
+import type {
+  OrderDeliveryAddressView,
+  OrderListPage,
+  OrderSummaryView,
+  OrderView,
+} from "@/modules/order/types";
 import { createNotification } from "@/modules/notification/application/notifications";
 import { prisma } from "@/src/lib/db";
 import {
@@ -37,6 +43,8 @@ export const orderSelection = {
   subtotalAmount: true,
   totalAmount: true,
   createdAt: true,
+  addressId: true,
+  deliveryAddress: true,
   items: {
     orderBy: { createdAt: "asc" },
     select: {
@@ -110,6 +118,8 @@ export function mapOrder(order: OrderRecord): OrderView {
     subtotalAmount: order.subtotalAmount.toString(),
     totalAmount: order.totalAmount.toString(),
     createdAt: order.createdAt.toISOString(),
+    addressId: order.addressId,
+    deliveryAddress: order.deliveryAddress as OrderDeliveryAddressView | null,
     items: order.items.map((item) => ({
       id: item.id,
       variantId: item.variantId,
@@ -229,8 +239,15 @@ async function runOrderTransaction<T>(
 
 export async function createOrderFromCart(
   account: AuthenticatedAccount,
+  input: { addressId?: string } = {},
 ): Promise<OrderView> {
   const profile = requireCustomerProfile(account);
+
+  // Ownership is checked before the transaction; the snapshot is what the order
+  // keeps, so later edits to the address never rewrite where it was shipped.
+  const delivery = input.addressId
+    ? await resolveDeliveryAddress(account, input.addressId)
+    : null;
 
   return withDatabaseError(() =>
     runOrderTransaction(() =>
@@ -328,6 +345,12 @@ export async function createOrderFromCart(
             orderNumber: generateOrderNumber(new Date()),
             customerProfileId: profile.id,
             status: OrderStatus.DRAFT,
+            ...(delivery
+              ? {
+                  addressId: delivery.addressId,
+                  deliveryAddress: delivery.snapshot as unknown as Prisma.InputJsonValue,
+                }
+              : {}),
             subtotalAmount,
             totalAmount: subtotalAmount,
             currency: cart.items[0].variant.product.currency,

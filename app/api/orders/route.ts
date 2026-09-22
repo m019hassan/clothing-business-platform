@@ -25,10 +25,25 @@ export async function GET(request: Request) {
   }
 }
 
-export async function POST() {
+export async function POST(request: Request) {
   try {
     const account = await requireAuthenticated();
-    const order = await createOrderFromCart(account);
+
+    // The body is optional: `{ addressId }` links a delivery address to the order.
+    let payload: unknown = {};
+
+    try {
+      payload = await request.json();
+    } catch {
+      payload = {};
+    }
+
+    const body = (payload ?? {}) as Record<string, unknown>;
+    const addressId = typeof body.addressId === "string" && body.addressId.length > 0
+      ? body.addressId
+      : undefined;
+
+    const order = await createOrderFromCart(account, addressId ? { addressId } : {});
 
     return NextResponse.json({ order }, { status: 201 });
   } catch (error) {

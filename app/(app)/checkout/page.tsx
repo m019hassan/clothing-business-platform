@@ -5,6 +5,8 @@ import { CheckoutButton } from "@/components/cart/checkout-button";
 import { getCurrentAccount } from "@/modules/auth/infrastructure/session";
 import { getCart } from "@/modules/cart/application/cart-service";
 import type { CartView } from "@/modules/cart/types";
+import { listAddresses } from "@/modules/customers/application/addresses";
+import type { AddressView } from "@/modules/customers/application/addresses";
 import { AuthorizationError } from "@/src/lib/errors";
 import { formatMoney } from "@/src/lib/format";
 
@@ -41,6 +43,14 @@ export default async function CheckoutPage() {
         </Link>
       </section>
     );
+  }
+
+  let addresses: AddressView[] = [];
+
+  try {
+    addresses = await listAddresses(account);
+  } catch {
+    addresses = [];
   }
 
   const itemCount = cart.items.reduce((sum, item) => sum + item.quantity, 0);
@@ -144,7 +154,7 @@ export default async function CheckoutPage() {
             </div>
           </dl>
 
-          <CheckoutButton />
+          <CheckoutButton addresses={addresses} />
 
           <p className="text-xs text-slate-500">
             The order starts in draft status and inventory stays reserved until the payment outcome is recorded.

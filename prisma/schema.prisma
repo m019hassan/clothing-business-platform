@@ -106,8 +106,9 @@ model CustomerProfile {
 
   classification CustomerClassification @relation(fields: [classificationId], references: [id], onDelete: Restrict)
 
-  carts Cart[]
-  orders Order[]
+  carts     Cart[]
+  orders    Order[]
+  addresses Address[]
 
   @@index([classificationId], map: "idx_customer_profile_classification")
 }
@@ -395,6 +396,36 @@ model InventoryItem {
   @@index([warehouseId], map: "idx_inventory_item_warehouse")
 }
 
+model Address {
+  id String @id @default(uuid()) @db.Uuid
+
+  customerProfileId String @db.Uuid
+
+  label String? @db.VarChar(50)
+
+  recipientName String @db.VarChar(100)
+  phone         String @db.VarChar(30)
+
+  line1      String  @db.VarChar(200)
+  line2      String? @db.VarChar(200)
+  city       String  @db.VarChar(100)
+  region     String? @db.VarChar(100)
+  postalCode String? @db.VarChar(20)
+  country    String  @default("SA") @db.VarChar(2)
+
+  isDefault Boolean @default(false)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  customerProfile CustomerProfile @relation(fields: [customerProfileId], references: [id], onDelete: Cascade)
+  orders          Order[]
+
+  @@index([customerProfileId], map: "idx_address_customer")
+  @@index([customerProfileId, isDefault], map: "idx_address_customer_default")
+}
+
 enum StockMovementType {
   ADJUSTMENT
   INTAKE
@@ -493,16 +524,24 @@ model Order {
   totalAmount    Decimal @db.Decimal(12, 2)
   currency       String  @db.VarChar(10)
 
+  addressId String? @db.Uuid
+
+  // Immutable copy of the address at checkout time: later edits or deletion of
+  // the Address row must not rewrite where an order was shipped.
+  deliveryAddress Json?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   customerProfile CustomerProfile @relation(fields: [customerProfileId], references: [id], onDelete: Restrict)
+  address         Address?         @relation(fields: [addressId], references: [id], onDelete: SetNull)
   items           OrderItem[]
   payments        Payment[]
   stockMovements  StockMovement[]
 
   @@index([status], map: "idx_order_status")
   @@index([customerProfileId], map: "idx_order_customer")
+  @@index([addressId], map: "idx_order_address")
 }
 
 model OrderItem {

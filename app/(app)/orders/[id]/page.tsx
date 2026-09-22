@@ -195,6 +195,46 @@ export default async function OrderDetailPage({ params }: OrderDetailProps) {
       {/* Payment */}
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h3 className="text-base font-semibold text-slate-900">Payment</h3>
+        {order.deliveryAddress ? (
+          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h3 className="text-base font-semibold text-slate-900">Delivery address</h3>
+            <dl className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <div>
+                <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">Recipient</dt>
+                <dd className="mt-1 text-sm text-slate-800">{order.deliveryAddress.recipientName}</dd>
+              </div>
+              <div>
+                <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">Phone</dt>
+                <dd className="mt-1 text-sm text-slate-800">{order.deliveryAddress.phone}</dd>
+              </div>
+              <div>
+                <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">City</dt>
+                <dd className="mt-1 text-sm text-slate-800">{order.deliveryAddress.city}</dd>
+              </div>
+              <div>
+                <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">Country</dt>
+                <dd className="mt-1 text-sm text-slate-800">{order.deliveryAddress.country}</dd>
+              </div>
+              <div className="sm:col-span-2 lg:col-span-4">
+                <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">Address</dt>
+                <dd className="mt-1 text-sm text-slate-800">
+                  {order.deliveryAddress.line1}
+                  {order.deliveryAddress.line2 ? `, ${order.deliveryAddress.line2}` : ""}
+                  {order.deliveryAddress.region ? `, ${order.deliveryAddress.region}` : ""}
+                  {order.deliveryAddress.postalCode ? ` ${order.deliveryAddress.postalCode}` : ""}
+                </dd>
+              </div>
+            </dl>
+          </section>
+        ) : (
+          <section className="rounded-2xl border border-dashed border-slate-300 bg-white p-5">
+            <h3 className="text-sm font-semibold text-slate-800">Delivery address</h3>
+            <p className="mt-1 text-sm text-slate-500">
+              No delivery address was recorded for this order.
+            </p>
+          </section>
+        )}
+
         {order.payment ? (
           <>
             <div className="mt-4 flex flex-wrap items-center gap-3">

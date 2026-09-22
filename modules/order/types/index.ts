@@ -42,6 +42,18 @@ export type OrderPaymentView = {
   method: PaymentMethod | null;
 };
 
+export type OrderDeliveryAddressView = {
+  label: string | null;
+  recipientName: string;
+  phone: string;
+  line1: string;
+  line2: string | null;
+  city: string;
+  region: string | null;
+  postalCode: string | null;
+  country: string;
+};
+
 export type OrderView = {
   id: string;
   orderNumber: string;
@@ -50,6 +62,8 @@ export type OrderView = {
   subtotalAmount: string;
   totalAmount: string;
   createdAt: string;
+  addressId: string | null;
+  deliveryAddress: OrderDeliveryAddressView | null;
   items: OrderItemView[];
   payment: OrderPaymentView | null;
 };
