@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { getCurrentPermissions } from "@/modules/auth/application/authorization";
 import { PERMISSIONS } from "@/modules/auth/application/permissions";
 import { getCurrentAccount } from "@/modules/auth/infrastructure/session";
+import { resolveBranchScope, scopeDescription } from "@/modules/branches/application/scope";
 import {
   DELIVERY_TRANSITIONS,
   listDeliveries,
@@ -68,6 +69,7 @@ export default async function DeliveriesPage({ searchParams }: DeliveriesPagePro
     );
   }
 
+  const scope = await resolveBranchScope(account);
   const params = await searchParams;
   const offset = parseOffset(params.offset);
   const limit = parseLimit(params.limit);
@@ -109,7 +111,7 @@ export default async function DeliveriesPage({ searchParams }: DeliveriesPagePro
         <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">Fulfilment</p>
         <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-950">Deliveries</h2>
         <p className="mt-1 text-sm text-slate-600">
-          Confirmed orders appear here automatically. Move each one from processing to delivered; shipping requires a
+          {scopeDescription(scope)} — confirmed orders appear here automatically. Move each one from processing to delivered; shipping requires a
           carrier and a tracking number.
         </p>
       </section>

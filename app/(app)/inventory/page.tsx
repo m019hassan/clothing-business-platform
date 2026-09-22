@@ -6,6 +6,12 @@ import { getCurrentPermissions } from "@/modules/auth/application/authorization"
 import { PERMISSIONS } from "@/modules/auth/application/permissions";
 import { getCurrentAccount } from "@/modules/auth/infrastructure/session";
 import { getInventoryPage } from "@/modules/inventory/application/inventory";
+import {
+  GLOBAL_BRANCH_SCOPE,
+  resolveBranchScope,
+  scopeDescription,
+  type BranchScope,
+} from "@/modules/branches/application/scope";
 import { listStockMovements } from "@/modules/inventory/application/movements";
 import { StockAdjustForm } from "@/modules/inventory/components/stock-adjust-form";
 import type { InventoryPageView, StockMovementView } from "@/modules/inventory/types";
@@ -54,10 +60,12 @@ export default async function InventoryPage({ searchParams }: InventoryPageProps
   else searchParamsObject.set("limit", String(PAGE_SIZE));
 
   let page: InventoryPageView | null = null;
+  let scope: BranchScope = GLOBAL_BRANCH_SCOPE;
   let loadError = false;
 
   try {
-    page = await getInventoryPage(parsePaginationParams(searchParamsObject));
+    scope = await resolveBranchScope(account);
+    page = await getInventoryPage(parsePaginationParams(searchParamsObject), scope);
   } catch {
     loadError = true;
   }
@@ -94,7 +102,7 @@ export default async function InventoryPage({ searchParams }: InventoryPageProps
         <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">Operations</p>
         <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-950">Inventory</h2>
         <p className="mt-1 text-sm text-slate-600">
-          Stock balances per warehouse with the full movement ledger. Reservations, cancellations and payments move
+          {scopeDescription(scope)} — stock balances per warehouse with the full movement ledger. Reservations, cancellations and payments move
           stock automatically; permitted staff can record manual corrections.
         </p>
       </section>

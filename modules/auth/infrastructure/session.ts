@@ -29,7 +29,7 @@ const accountSelection = {
   updatedAt: true,
   deletedAt: true,
   customerProfile: { select: { id: true } },
-  employeeProfile: { select: { id: true } },
+  employeeProfile: { select: { id: true, branchId: true } },
 } as const;
 
 export type SafeAccount = Awaited<ReturnType<typeof getCurrentAccount>>;

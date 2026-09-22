@@ -1,5 +1,7 @@
 import "server-only";
 
+import { GLOBAL_BRANCH_SCOPE, type BranchScope } from "@/modules/branches/application/scope";
+
 import { Prisma } from "@prisma/client";
 
 import type {
@@ -59,11 +61,19 @@ function mapRow(row: InventoryRecord): InventoryRowView {
  * All quantities are backend values; the frontend never recalculates stock rules
  * beyond the documented available = on-hand - reserved definition.
  */
-export async function getInventorySummary(): Promise<InventorySummaryView> {
+/** Branch scoping: an unscoped account sees every warehouse. */
+function scopeWhere(scope: BranchScope): Prisma.InventoryItemWhereInput {
+  return scope.warehouseIds === null ? {} : { warehouseId: { in: scope.warehouseIds } };
+}
+
+export async function getInventorySummary(scope: BranchScope = GLOBAL_BRANCH_SCOPE): Promise<InventorySummaryView> {
   return withDatabaseError(async () => {
+    const where = scopeWhere(scope);
+
     const [total, items] = await Promise.all([
-      prisma.inventoryItem.count(),
+      prisma.inventoryItem.count({ where }),
       prisma.inventoryItem.findMany({
+        where,
         select: { quantityOnHand: true, quantityReserved: true },
       }),
     ]);
@@ -93,10 +103,16 @@ export async function getInventorySummary(): Promise<InventorySummaryView> {
   });
 }
 
-export async function getInventoryPage(pagination: Pagination): Promise<InventoryPageView> {
+export async function getInventoryPage(
+  pagination: Pagination,
+  scope: BranchScope = GLOBAL_BRANCH_SCOPE,
+): Promise<InventoryPageView> {
   return withDatabaseError(async () => {
+    const where = scopeWhere(scope);
+
     const [records, total, summary] = await Promise.all([
       prisma.inventoryItem.findMany({
+        where,
         select: inventorySelection,
         orderBy: [
           { variant: { product: { name: "asc" } } },
@@ -106,8 +122,8 @@ export async function getInventoryPage(pagination: Pagination): Promise<Inventor
         take: pagination.limit,
         skip: pagination.offset,
       }),
-      prisma.inventoryItem.count(),
-      getInventorySummary(),
+      prisma.inventoryItem.count({ where }),
+      getInventorySummary(scope),
     ]);
 
     return {

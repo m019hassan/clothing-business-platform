@@ -1,0 +1,30 @@
+
+> clothing-business-platform@0.1.0 start
+> next start --port 3100
+
+▲ Next.js 16.2.12
+- Local:         http://localhost:3100
+- Network:       http://10.1.0.45:3100
+✓ Ready in 113ms
+⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of /Users/mohammedhassan/package-lock.json as the root directory.
+ To silence this warning, set `outputFileTracingRoot` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/output#caveats for more information.
+ Detected additional lockfiles: 
+   * /Users/mohammedhassan/My-Work/clothing-business-platform/package-lock.json
+
+prisma:error 
+Invalid `prisma.inventoryItem.groupBy()` invocation:
+
+
+Can't reach database server at `localhost:51214`
+
+Please make sure your database server is running at `localhost:51214`.
+prisma:error Error in PostgreSQL connection: Error { kind: Closed, cause: None }
+prisma:error Error in PostgreSQL connection: Error { kind: Closed, cause: None }
+prisma:error Error in PostgreSQL connection: Error { kind: Closed, cause: None }
+prisma:error Error in PostgreSQL connection: Error { kind: Closed, cause: None }
+prisma:error Error in PostgreSQL connection: Error { kind: Closed, cause: None }
+prisma:error Error in PostgreSQL connection: Error { kind: Closed, cause: None }
+prisma:error Error in PostgreSQL connection: Error { kind: Closed, cause: None }
+prisma:error Error in PostgreSQL connection: Error { kind: Closed, cause: None }

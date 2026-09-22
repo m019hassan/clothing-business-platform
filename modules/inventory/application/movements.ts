@@ -3,6 +3,7 @@ import "server-only";
 import { Prisma } from "@prisma/client";
 
 import { requirePermission } from "@/modules/auth/application/authorization";
+import { resolveBranchScope } from "@/modules/branches/application/scope";
 import { PERMISSIONS } from "@/modules/auth/application/permissions";
 import type { SafeAccount } from "@/modules/auth/infrastructure/session";
 import { recordMovement } from "@/modules/inventory/application/ledger";
@@ -259,9 +260,11 @@ export async function listStockMovements(
 ): Promise<StockMovementPage> {
   await requirePermission(PERMISSIONS.INVENTORY_VIEW);
 
-  const where: Prisma.StockMovementWhereInput = filters.variantId
-    ? { variantId: filters.variantId }
-    : {};
+  const scope = await resolveBranchScope(account);
+  const where: Prisma.StockMovementWhereInput = {
+    ...(filters.variantId ? { variantId: filters.variantId } : {}),
+    ...(scope.warehouseIds === null ? {} : { warehouseId: { in: scope.warehouseIds } }),
+  };
 
   return withDatabaseError(async () => {
     const [records, total] = await prisma.$transaction([

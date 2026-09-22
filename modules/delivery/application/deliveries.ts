@@ -3,6 +3,7 @@ import "server-only";
 import { DeliveryStatus, Prisma } from "@prisma/client";
 
 import { requirePermission } from "@/modules/auth/application/authorization";
+import { resolveBranchScope } from "@/modules/branches/application/scope";
 import { PERMISSIONS } from "@/modules/auth/application/permissions";
 import type { SafeAccount } from "@/modules/auth/infrastructure/session";
 import { createNotification } from "@/modules/notification/application/notifications";
@@ -197,7 +198,11 @@ export async function listDeliveries(
 ): Promise<DeliveryListPage> {
   await requirePermission(PERMISSIONS.SHIPPING_MANAGE);
 
-  const where: Prisma.DeliveryWhereInput = filters.status ? { status: filters.status } : {};
+  const scope = await resolveBranchScope(account);
+  const where: Prisma.DeliveryWhereInput = {
+    ...(filters.status ? { status: filters.status } : {}),
+    ...(scope.branchId === null ? {} : { order: { branchId: scope.branchId } }),
+  };
 
   return withDatabaseError(async () => {
     const [records, total] = await prisma.$transaction([
