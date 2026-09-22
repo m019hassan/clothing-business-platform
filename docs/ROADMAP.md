@@ -112,7 +112,7 @@ TypeScript/ESLint/Build/Prisma validate: **PASS** · 6/6 migrations مطبّقة
 - **I1 (✅ منجز)**: كيان `Branch` (+migration) و`Warehouse.branchId`، صلاحيات `branches.view/manage` و`users.view/manage` (أصبحت 29 كوداً)، وخدمة ومسارات `/api/branches` (CRUD + إسناد/فصل المستودعات)، ومصنع مسجَّل كفرع `FACTORY` مربوط بمستودع `MAIN`.
 - **I2**: ربط الموظف/الموزّع بفرعه + **عزل القراءات بالفرع** (مخزون/طلبات/توصيل/تقارير).
 - **I3 (🟡 جزئي)**: **لوحة الأدمن** `/admin` + `GET/POST /api/users` و`GET/PUT /api/users/:id` و`POST /api/users/:id/password`: إنشاء/تعديل/تعطيل موظف و عميل، تعيين الأدوار والفرع، إعادة كلمة المرور (مع إبطال الجلسات)، بحث وفلاتر، وسكربت `npm run make-admin` لبناء دور Admin بكل الصلاحيات (29). **المتبقي**: واجهة CRUD للفروع + نوع الموزّع (مع I4) + محرر صلاحيات أدق للأدوار.
-- **I4**: الموزّع ونقطة البيع — `DISTRIBUTOR` كنوع حساب + بروفايل، وطلب قناة `POS` على فرعه بدفعة `CASH` معتمدة تُستهلك المخزون فوراً (مع عميل نقدي لكل فرع).
+- **I4 (✅ منجز)**: نوع حساب `DISTRIBUTOR` + `DistributorProfile` (فرع، كود)، قناة `Order.POS` مع `branchId`/`soldByAccountId` و`PaymentMethod.CASH`، و`GET /api/pos/catalog` + `POST /api/pos/sales` (بيع فوري: طلب `CONFIRMED` بدفعة كاش معتمدة، عميل زائر لكل فرع، خصم مخزون الفرع مع حركة `CONSUMPTION`). شاشة `/pos` للموزّع + إنشاء حساب الموزّع من `/admin`.
 - **I5**: لوحة الموزّع — مبيعات اليوم/الشهر، مخزون فرعه، النواقص، الأكثر طلباً.
 - **I6**: تقارير وإشعارات واعية بالفرع.
 

@@ -29,6 +29,7 @@ export function UserCreateForm({
           <select id="accountType" name="accountType" defaultValue="CUSTOMER" className={inputClass}>
             <option value="CUSTOMER">Customer</option>
             <option value="EMPLOYEE">Employee</option>
+            <option value="DISTRIBUTOR">Distributor (point of sale)</option>
           </select>
         </div>
         <div>
@@ -69,7 +70,7 @@ export function UserCreateForm({
         </div>
         <div>
           <label htmlFor="branchId" className={labelClass}>
-            Branch (employees)
+            Branch (employees and distributors — required for distributors)
           </label>
           <select id="branchId" name="branchId" defaultValue="" className={inputClass}>
             <option value="">No branch</option>

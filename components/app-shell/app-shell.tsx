@@ -16,6 +16,7 @@ const NAV_ITEMS = [
   { href: "/account", label: "Account", customerOnly: false },
   { href: "/inventory", label: "Inventory", customerOnly: false, requiresInventory: true },
   { href: "/payments", label: "Payments", customerOnly: false, requiresPayments: true },
+  { href: "/pos", label: "Point of sale", customerOnly: false, distributorOnly: true },
   { href: "/admin", label: "Admin", customerOnly: false, requiresUsers: true },
   { href: "/deliveries", label: "Deliveries", customerOnly: false, requiresShipping: true },
   { href: "/customers", label: "Customers", customerOnly: false, requiresCustomers: true },
@@ -67,6 +68,15 @@ function NavIcon({ href }: { href: string }) {
       <svg {...common}>
         <path d="M4 19V5M4 19h16" />
         <path d="M8 16v-5M12 16V7M16 16v-8" />
+      </svg>
+    );
+  }
+
+  if (href === "/pos") {
+    return (
+      <svg {...common}>
+        <rect x="4" y="3" width="16" height="12" rx="2" />
+        <path d="M8 15h8M9 19h6M12 15v4" />
       </svg>
     );
   }
@@ -159,6 +169,7 @@ function SidebarContent({
   pathname,
   userLabel,
   isCustomer,
+  isDistributor,
   canViewInventory,
   canViewPayments,
   canViewEmployees,
@@ -172,6 +183,7 @@ function SidebarContent({
   pathname: string;
   userLabel: string;
   isCustomer: boolean;
+  isDistributor: boolean;
   canViewInventory: boolean;
   canViewPayments: boolean;
   canViewEmployees: boolean;
@@ -208,6 +220,10 @@ function SidebarContent({
     }
 
     if ("requiresUsers" in item && item.requiresUsers && !canViewUsers) {
+      return false;
+    }
+
+    if ("distributorOnly" in item && item.distributorOnly && !isDistributor) {
       return false;
     }
 
@@ -286,6 +302,7 @@ export function AppShell({
   userLabel,
   unreadNotificationCount,
   isCustomer,
+  isDistributor,
   canViewInventory,
   canViewPayments,
   canViewEmployees,
@@ -299,6 +316,7 @@ export function AppShell({
   userLabel: string;
   unreadNotificationCount: number;
   isCustomer: boolean;
+  isDistributor: boolean;
   canViewInventory: boolean;
   canViewPayments: boolean;
   canViewEmployees: boolean;
@@ -327,6 +345,7 @@ export function AppShell({
           canViewCustomers={canViewCustomers}
           canViewShipping={canViewShipping}
           canViewUsers={canViewUsers}
+          isDistributor={isDistributor}
           canViewRoles={canViewRoles}
           canViewReports={canViewReports}
         />
@@ -351,6 +370,7 @@ export function AppShell({
               canViewCustomers={canViewCustomers}
               canViewShipping={canViewShipping}
               canViewUsers={canViewUsers}
+              isDistributor={isDistributor}
               canViewRoles={canViewRoles}
               canViewReports={canViewReports}
               onNavigate={() => setMobileOpen(false)}

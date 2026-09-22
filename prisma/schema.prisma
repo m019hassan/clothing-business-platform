@@ -10,6 +10,12 @@ datasource db {
 enum AccountType {
   CUSTOMER
   EMPLOYEE
+  DISTRIBUTOR
+}
+
+enum OrderChannel {
+  ONLINE
+  POS
 }
 
 enum AccountStatus {
@@ -50,8 +56,11 @@ model Account {
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
-  customerProfile CustomerProfile?
-  employeeProfile EmployeeProfile?
+  customerProfile   CustomerProfile?
+  employeeProfile   EmployeeProfile?
+  distributorProfile DistributorProfile?
+
+  soldOrders Order[] @relation("OrderSoldBy")
 
   stockMovements StockMovement[] @relation("StockMovementActor")
 
@@ -89,6 +98,10 @@ model CustomerProfile {
 
   classificationId String @db.Uuid
 
+  /** Walk-in customer used by point-of-sale sales, one per branch. */
+  isWalkIn Boolean @default(false)
+  branchId String? @db.Uuid
+
   firstName String  @db.VarChar(100)
   lastName  String? @db.VarChar(100)
 
@@ -105,12 +118,14 @@ model CustomerProfile {
   account Account @relation(fields: [accountId], references: [id], onDelete: Restrict)
 
   classification CustomerClassification @relation(fields: [classificationId], references: [id], onDelete: Restrict)
+  branch         Branch?                 @relation(fields: [branchId], references: [id], onDelete: SetNull)
 
   carts     Cart[]
   orders    Order[]
   addresses Address[]
 
   @@index([classificationId], map: "idx_customer_profile_classification")
+  @@index([branchId, isWalkIn], map: "idx_customer_profile_walkin")
 }
 
 model Department {
@@ -433,6 +448,28 @@ model Delivery {
   @@index([status], map: "idx_delivery_status")
 }
 
+model DistributorProfile {
+  id String @id @default(uuid()) @db.Uuid
+
+  accountId String @unique @db.Uuid
+  branchId  String @db.Uuid
+
+  distributorCode String @unique @db.VarChar(50)
+
+  firstName String  @db.VarChar(100)
+  lastName  String? @db.VarChar(100)
+
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  branch  Branch  @relation(fields: [branchId], references: [id], onDelete: Restrict)
+
+  @@index([branchId], map: "idx_distributor_branch")
+}
+
 model Branch {
   id String @id @default(uuid()) @db.Uuid
 
@@ -448,8 +485,11 @@ model Branch {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  warehouses Warehouse[]
-  employees  EmployeeProfile[]
+  warehouses   Warehouse[]
+  employees    EmployeeProfile[]
+  distributors DistributorProfile[]
+  orders       Order[]
+  customers    CustomerProfile[]
 
   @@index([isActive], map: "idx_branch_active")
 }
@@ -584,6 +624,11 @@ model Order {
 
   addressId String? @db.Uuid
 
+  channel OrderChannel @default(ONLINE)
+
+  branchId       String? @db.Uuid
+  soldByAccountId String? @db.Uuid
+
   // Immutable copy of the address at checkout time: later edits or deletion of
   // the Address row must not rewrite where an order was shipped.
   deliveryAddress Json?
@@ -593,6 +638,8 @@ model Order {
 
   customerProfile CustomerProfile @relation(fields: [customerProfileId], references: [id], onDelete: Restrict)
   address         Address?         @relation(fields: [addressId], references: [id], onDelete: SetNull)
+  branch          Branch?          @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  soldBy          Account?         @relation("OrderSoldBy", fields: [soldByAccountId], references: [id], onDelete: SetNull)
   delivery        Delivery?
   items           OrderItem[]
   payments        Payment[]
@@ -601,6 +648,8 @@ model Order {
   @@index([status], map: "idx_order_status")
   @@index([customerProfileId], map: "idx_order_customer")
   @@index([addressId], map: "idx_order_address")
+  @@index([branchId], map: "idx_order_branch")
+  @@index([channel], map: "idx_order_channel")
 }
 
 model OrderItem {
@@ -636,6 +685,7 @@ enum PaymentStatus {
 }
 
 enum PaymentMethod {
+  CASH
   CASH_ON_DELIVERY
   BANK_TRANSFER
   MANUAL_TRANSFER_VERIFICATION

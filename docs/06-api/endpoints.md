@@ -166,6 +166,26 @@ branch owns one or more warehouses (`Branch 1-* Warehouse`); today the factory
 warehouse serves the branches, and giving a branch its own warehouse is how stock
 becomes branch-specific. Duplicate codes -> 409, unknown warehouses -> 404.
 
+## Point of sale (distributor accounts)
+| Method | Path | Auth | Response |
+| --- | --- | --- | --- |
+| GET | `/api/pos/catalog` | distributor account | `{ catalog }` (branch stock + prices) |
+| POST | `/api/pos/sales` | distributor account | `{ receipt }` (201) |
+
+Access is by **account type**, not by permission: the distributor profile carries the
+branch, and any other account type is rejected with 403. The catalog aggregates the
+branch's warehouses (a branch without its own warehouse uses the active central one)
+and only lists active products with active variants.
+
+`POST /api/pos/sales` takes `{ items: [{ variantId, quantity }] }` (max 20 lines,
+quantities 1-999, repeated variants merged) and completes the sale in one
+transaction: the order is created `CONFIRMED` with `channel = POS`, the branch and
+the selling account, the buyer is the branch's **walk-in customer** (created on
+first use), a `CASH` payment is recorded as `APPROVED`, the branch stock is
+decremented and a `CONSUMPTION` ledger row is written with the reason
+"POS sale at <branch>". Insufficient stock -> 409, unknown or inactive products ->
+404, malformed payloads -> 400, and an audit row (`POS_SALE`) is written.
+
 ## Deliveries (staff)
 | Method | Path | Auth | Response |
 | --- | --- | --- | --- |

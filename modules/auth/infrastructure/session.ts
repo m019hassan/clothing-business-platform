@@ -16,6 +16,7 @@ const SESSION_DURATION_SECONDS = 60 * 60 * 24 * 30;
 const accountSelection = {
   id: true,
   accountType: true,
+  distributorProfile: { select: { id: true, branchId: true, distributorCode: true } },
   status: true,
   email: true,
   phone: true,

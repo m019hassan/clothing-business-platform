@@ -24,7 +24,7 @@ const MAX_NAME = 100;
 const MAX_JOB_TITLE = 100;
 const MAX_SEARCH = 100;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const MANAGED_TYPES: readonly AccountType[] = ["CUSTOMER", "EMPLOYEE"];
+const MANAGED_TYPES: readonly AccountType[] = ["CUSTOMER", "EMPLOYEE", "DISTRIBUTOR"];
 const MANAGED_STATUSES: readonly AccountStatus[] = ["ACTIVE", "SUSPENDED", "ARCHIVED"];
 
 export type UserCreateInput = {
@@ -191,6 +191,10 @@ export function parseUserCreateInput(payload: unknown): UserCreateInput {
 
   if (body.roleIds !== undefined) input.roleIds = parseIdList(body.roleIds, "roleIds");
 
+  if (input.accountType === "DISTRIBUTOR" && !input.branchId) {
+    throw new ValidationError("A distributor account needs a branchId.");
+  }
+
   return input;
 }
 
@@ -293,6 +297,9 @@ const accountSelection = {
   lastLoginAt: true,
   createdAt: true,
   customerProfile: { select: { firstName: true, lastName: true, customerCode: true } },
+  distributorProfile: {
+    select: { firstName: true, lastName: true, distributorCode: true, branchId: true },
+  },
   employeeProfile: {
     select: {
       firstName: true,
@@ -307,7 +314,7 @@ const accountSelection = {
 type AccountRecord = Prisma.AccountGetPayload<{ select: typeof accountSelection }>;
 
 function displayName(record: AccountRecord): string {
-  const profile = record.customerProfile ?? record.employeeProfile;
+  const profile = record.customerProfile ?? record.employeeProfile ?? record.distributorProfile;
 
   if (!profile) {
     return record.email ?? record.phone;
@@ -324,8 +331,12 @@ function mapUser(record: AccountRecord): UserListItemView {
     email: record.email,
     phone: record.phone,
     displayName: displayName(record),
-    profileCode: record.customerProfile?.customerCode ?? record.employeeProfile?.employeeNumber ?? null,
-    branchId: record.employeeProfile?.branchId ?? null,
+    profileCode:
+      record.customerProfile?.customerCode ??
+      record.employeeProfile?.employeeNumber ??
+      record.distributorProfile?.distributorCode ??
+      null,
+    branchId: record.employeeProfile?.branchId ?? record.distributorProfile?.branchId ?? null,
     roles:
       record.employeeProfile?.employeeRoles.map((entry) => ({
         id: entry.role.id,
@@ -497,6 +508,27 @@ export async function createUser(
           });
         }
 
+        if (input.accountType === "DISTRIBUTOR") {
+          return transaction.account.create({
+            data: {
+              accountType: "DISTRIBUTOR",
+              status: "ACTIVE",
+              email: input.email,
+              phone: input.phone,
+              passwordHash,
+              distributorProfile: {
+                create: {
+                  distributorCode: generateCode("D"),
+                  branchId: branchId as string,
+                  firstName: input.firstName,
+                  lastName: input.lastName ?? null,
+                },
+              },
+            },
+            select: accountSelection,
+          });
+        }
+
         const departmentCode = input.departmentCode ?? "OPS";
         const department = await transaction.department.upsert({
           where: { code: departmentCode },
@@ -601,7 +633,17 @@ export async function updateUser(
           await transaction.account.update({ where: { id: accountId }, data });
         }
 
-        if (target.accountType === "CUSTOMER") {
+        if (target.accountType === "DISTRIBUTOR") {
+          const distributorData: Prisma.DistributorProfileUncheckedUpdateInput = {};
+
+          if (input.firstName !== undefined) distributorData.firstName = input.firstName;
+          if (input.lastName !== undefined) distributorData.lastName = input.lastName;
+          if (input.branchId !== undefined && branchId) distributorData.branchId = branchId;
+
+          if (Object.keys(distributorData).length > 0) {
+            await transaction.distributorProfile.update({ where: { accountId }, data: distributorData });
+          }
+        } else if (target.accountType === "CUSTOMER") {
           const profileData: Prisma.CustomerProfileUpdateInput = {};
 
           if (input.firstName !== undefined) profileData.firstName = input.firstName;

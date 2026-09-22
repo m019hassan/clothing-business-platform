@@ -13,6 +13,10 @@ resolved (`modules/auth/application/authorization.ts`).
 Customer accounts have **no permissions at all**: customer access is ownership-based
 (a customer may only read/modify their own cart, orders and notifications).
 
+Distributor accounts (point of sale) hold no permissions either: their access is
+decided by the account type plus the branch on their profile, so a new permission is
+not needed to open or close that surface.
+
 ## Canonical permission codes
 The naming authority is `modules/auth/application/permissions.ts` (`PERMISSIONS`).
 

@@ -206,3 +206,80 @@ export async function consumeStock(
     throw new ReservationConflictError("Stock state changed concurrently.");
   }
 }
+
+/**
+ * Sells stock directly (point of sale): on-hand is decremented from the given
+ * warehouses without touching reservations, and a CONSUMPTION movement is written.
+ */
+export async function sellStock(
+  transaction: TransactionClient,
+  variantId: string,
+  quantity: number,
+  options: { warehouseIds?: string[]; context?: MovementContext } = {},
+): Promise<number> {
+  if (quantity <= 0) {
+    return 0;
+  }
+
+  const where = {
+    variantId,
+    ...(options.warehouseIds && options.warehouseIds.length > 0
+      ? { warehouseId: { in: options.warehouseIds } }
+      : {}),
+  };
+
+  const rows = await transaction.inventoryItem.findMany({
+    where,
+    select: { id: true, warehouseId: true, quantityOnHand: true, quantityReserved: true },
+    orderBy: { quantityOnHand: "desc" },
+  });
+
+  const available = rows.reduce((sum, row) => sum + row.quantityOnHand - row.quantityReserved, 0);
+
+  if (available < quantity) {
+    throw new ConflictError("Insufficient stock for this sale.");
+  }
+
+  let remaining = quantity;
+
+  for (const row of rows) {
+    if (remaining <= 0) {
+      break;
+    }
+
+    const sellable = row.quantityOnHand - row.quantityReserved;
+
+    if (sellable <= 0) {
+      continue;
+    }
+
+    const amount = Math.min(sellable, remaining);
+
+    const result = await transaction.inventoryItem.updateMany({
+      where: { id: row.id, quantityOnHand: row.quantityOnHand },
+      data: { quantityOnHand: { decrement: amount } },
+    });
+
+    if (result.count === 0) {
+      throw new ReservationConflictError("Stock state changed concurrently.");
+    }
+
+    await recordMovement(transaction, {
+      variantId,
+      warehouseId: row.warehouseId,
+      type: "CONSUMPTION",
+      quantityChange: -amount,
+      quantityOnHandAfter: row.quantityOnHand - amount,
+      quantityReservedAfter: row.quantityReserved,
+      context: options.context,
+    });
+
+    remaining -= amount;
+  }
+
+  if (remaining > 0) {
+    throw new ReservationConflictError("Stock state changed concurrently.");
+  }
+
+  return quantity;
+}
