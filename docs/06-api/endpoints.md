@@ -129,6 +129,28 @@ Orders can carry a delivery address: `POST /api/orders` accepts an optional
 (`deliveryAddress`), so later edits or deletion of the address never rewrite where
 an order was shipped. `GET /api/orders/:id` returns `addressId` and the snapshot.
 
+## Accounts (admin)
+| Method | Path | Auth | Response |
+| --- | --- | --- | --- |
+| GET | `/api/users?limit=&offset=&type=&status=&q=` | `users.view` | `{ users, pagination }` |
+| GET | `/api/users/:id` | `users.view` | `{ user }` (detail incl. lockout state) |
+| POST | `/api/users` | `users.manage` | `{ user }` (201) |
+| PUT | `/api/users/:id` | `users.manage` | `{ user }` |
+| POST | `/api/users/:id/password` | `users.manage` | `{ passwordReset: true, sessionsRevoked }` |
+
+`POST` creates a `CUSTOMER` or `EMPLOYEE` account (the distributor type arrives
+with phase I4) with a hashed password (8+ characters), a generated profile code,
+an optional classification/department, an optional branch and optional roles.
+`PUT` renames, changes email/phone, sets the status (`ACTIVE`/`SUSPENDED`/
+`ARCHIVED` — reactivating also clears a login lockout), replaces employee roles and
+assigns or detaches the branch; an admin cannot change the status of their own
+account. The password route re-hashes and **revokes every session** of the target.
+Duplicate email/phone -> 409, unknown roles or branches -> 404, unknown fields -> 400.
+
+Bootstrap the first administrator with `npm run make-admin` (see
+`docs/10-development/development-workflow.md`); it builds an `ADMIN` role from
+every code in `modules/auth/application/permissions.ts`.
+
 ## Branches (staff)
 | Method | Path | Auth | Response |
 | --- | --- | --- | --- |

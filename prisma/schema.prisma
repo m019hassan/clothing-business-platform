@@ -136,6 +136,7 @@ model EmployeeProfile {
   employeeNumber String @unique @db.VarChar(50)
 
   departmentId String @db.Uuid
+  branchId     String? @db.Uuid
 
   firstName String  @db.VarChar(100)
   lastName  String? @db.VarChar(100)
@@ -158,6 +159,7 @@ model EmployeeProfile {
   account Account @relation(fields: [accountId], references: [id], onDelete: Restrict)
 
   department Department @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+  branch     Branch?     @relation(fields: [branchId], references: [id], onDelete: SetNull)
 
   manager EmployeeProfile? @relation("EmployeeManager", fields: [managerId], references: [id], onDelete: SetNull)
 
@@ -447,6 +449,7 @@ model Branch {
   updatedAt DateTime @updatedAt
 
   warehouses Warehouse[]
+  employees  EmployeeProfile[]
 
   @@index([isActive], map: "idx_branch_active")
 }

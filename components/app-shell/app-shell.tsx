@@ -16,6 +16,7 @@ const NAV_ITEMS = [
   { href: "/account", label: "Account", customerOnly: false },
   { href: "/inventory", label: "Inventory", customerOnly: false, requiresInventory: true },
   { href: "/payments", label: "Payments", customerOnly: false, requiresPayments: true },
+  { href: "/admin", label: "Admin", customerOnly: false, requiresUsers: true },
   { href: "/deliveries", label: "Deliveries", customerOnly: false, requiresShipping: true },
   { href: "/customers", label: "Customers", customerOnly: false, requiresCustomers: true },
   { href: "/employees", label: "Employees", customerOnly: false, requiresEmployees: true },
@@ -66,6 +67,15 @@ function NavIcon({ href }: { href: string }) {
       <svg {...common}>
         <path d="M4 19V5M4 19h16" />
         <path d="M8 16v-5M12 16V7M16 16v-8" />
+      </svg>
+    );
+  }
+
+  if (href === "/admin") {
+    return (
+      <svg {...common}>
+        <path d="M12 3l7 3v6c0 4-3 7-7 9-4-2-7-5-7-9V6z" />
+        <path d="M12 8v4M12 15h.01" />
       </svg>
     );
   }
@@ -154,6 +164,7 @@ function SidebarContent({
   canViewEmployees,
   canViewCustomers,
   canViewShipping,
+  canViewUsers,
   canViewRoles,
   canViewReports,
   onNavigate,
@@ -166,6 +177,7 @@ function SidebarContent({
   canViewEmployees: boolean;
   canViewCustomers: boolean;
   canViewShipping: boolean;
+  canViewUsers: boolean;
   canViewRoles: boolean;
   canViewReports: boolean;
   onNavigate?: () => void;
@@ -192,6 +204,10 @@ function SidebarContent({
     }
 
     if ("requiresShipping" in item && item.requiresShipping && !canViewShipping) {
+      return false;
+    }
+
+    if ("requiresUsers" in item && item.requiresUsers && !canViewUsers) {
       return false;
     }
 
@@ -275,6 +291,7 @@ export function AppShell({
   canViewEmployees,
   canViewCustomers,
   canViewShipping,
+  canViewUsers,
   canViewRoles,
   canViewReports,
   children,
@@ -287,6 +304,7 @@ export function AppShell({
   canViewEmployees: boolean;
   canViewCustomers: boolean;
   canViewShipping: boolean;
+  canViewUsers: boolean;
   canViewRoles: boolean;
   canViewReports: boolean;
   children: ReactNode;
@@ -308,6 +326,7 @@ export function AppShell({
           canViewEmployees={canViewEmployees}
           canViewCustomers={canViewCustomers}
           canViewShipping={canViewShipping}
+          canViewUsers={canViewUsers}
           canViewRoles={canViewRoles}
           canViewReports={canViewReports}
         />
@@ -331,6 +350,7 @@ export function AppShell({
               canViewEmployees={canViewEmployees}
               canViewCustomers={canViewCustomers}
               canViewShipping={canViewShipping}
+              canViewUsers={canViewUsers}
               canViewRoles={canViewRoles}
               canViewReports={canViewReports}
               onNavigate={() => setMobileOpen(false)}

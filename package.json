@@ -10,7 +10,8 @@
     "seed": "node prisma/seed.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
-    "expire-reservations": "node scripts/expire-reservations.mjs"
+    "expire-reservations": "node scripts/expire-reservations.mjs",
+    "make-admin": "node scripts/make-admin.mjs"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",

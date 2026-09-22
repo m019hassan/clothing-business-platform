@@ -37,3 +37,18 @@ Schedule it hourly with cron (adjust the path):
 ```
 0 * * * * cd /path/to/clothing-business-platform && npm run expire-reservations -- --quiet >> /tmp/cbp-expiry.log 2>&1
 ```
+
+## Administrator account
+
+The first admin is created (or refreshed) from the code, so the permission list
+stays in one place:
+
+```bash
+npm run make-admin                                   # admin@example.com / Admin12345!
+npm run make-admin -- --email me@store.com --password 'A-strong-password' --branch FACTORY
+```
+
+It upserts the `ADMIN` role with **every** permission found in
+`modules/auth/application/permissions.ts`, creates the employee account when it is
+missing, attaches the role and (optionally) a branch. The admin can then create
+employees, customers, roles and branches from `/admin`.
