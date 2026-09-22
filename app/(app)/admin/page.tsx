@@ -22,6 +22,7 @@ const TYPE_OPTIONS = [
   { value: "", label: "All types" },
   { value: "CUSTOMER", label: "Customers" },
   { value: "EMPLOYEE", label: "Employees" },
+  { value: "DISTRIBUTOR", label: "Distributors" },
 ] as const;
 
 const STATUS_OPTIONS = [
