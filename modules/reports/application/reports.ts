@@ -3,6 +3,7 @@ import "server-only";
 import { OrderStatus, PaymentStatus, Prisma } from "@prisma/client";
 
 import { PERMISSIONS } from "@/modules/auth/application/permissions";
+import { GLOBAL_BRANCH_SCOPE, type BranchScope } from "@/modules/branches/application/scope";
 import { getInventorySummary } from "@/modules/inventory/application/inventory";
 import type {
   PaymentsReportBlock,
@@ -62,6 +63,7 @@ type SalesRow = { status: OrderStatus; count: number; total: Prisma.Decimal };
 export async function getReportsOverview(
   permissions: ReadonlySet<string>,
   period: ReportPeriod,
+  scope: BranchScope = GLOBAL_BRANCH_SCOPE,
 ): Promise<ReportsOverviewView> {
   const canViewOrders = permissions.has(PERMISSIONS.ORDERS_VIEW);
   const canViewPayments = permissions.has(PERMISSIONS.PAYMENTS_VIEW);
@@ -78,20 +80,24 @@ export async function getReportsOverview(
               SELECT "status", COUNT(*)::int AS count, SUM("totalAmount") AS total
               FROM "Order"
               WHERE "createdAt" >= ${since}
+                AND (${scope.branchId}::uuid IS NULL OR "branchId" = ${scope.branchId}::uuid)
               GROUP BY "status"
             `
           : Promise.resolve(null),
         canViewPayments
           ? prisma.payment.groupBy({
               by: ["status"],
-              where: { createdAt: { gte: since } },
+              where: {
+                createdAt: { gte: since },
+                ...(scope.branchId ? { order: { branchId: scope.branchId } } : {}),
+              },
               _count: { _all: true },
               _sum: { amount: true },
             })
           : Promise.resolve(null),
-        canViewOrders ? getTopProducts(since) : Promise.resolve(null),
-        canViewOrders && canViewCustomers ? getTopCustomers(since) : Promise.resolve(null),
-        canViewInventory ? getInventorySummary() : Promise.resolve(null),
+        canViewOrders ? getTopProducts(since, scope.branchId) : Promise.resolve(null),
+        canViewOrders && canViewCustomers ? getTopCustomers(since, scope.branchId) : Promise.resolve(null),
+        canViewInventory ? getInventorySummary(scope) : Promise.resolve(null),
       ]);
 
     let sales: SalesReportBlock | null = null;
@@ -163,7 +169,7 @@ export async function getReportsOverview(
   });
 }
 
-async function getTopProducts(since: Date): Promise<TopProductRow[]> {
+async function getTopProducts(since: Date, branchId: string | null): Promise<TopProductRow[]> {
   const rows = await prisma.$queryRaw<
     { productId: string; quantity: number; revenue: Prisma.Decimal }[]
   >`
@@ -174,6 +180,7 @@ async function getTopProducts(since: Date): Promise<TopProductRow[]> {
     JOIN "Order" o ON o.id = oi."orderId"
     JOIN "ProductVariant" v ON v.id = oi."variantId"
     WHERE o."status"::text IN (${Prisma.join(REVENUE_STATUSES)}) AND o."createdAt" >= ${since}
+      AND (${branchId}::uuid IS NULL OR o."branchId" = ${branchId}::uuid)
     GROUP BY v."productId"
     ORDER BY revenue DESC
     LIMIT 5
@@ -201,7 +208,7 @@ async function getTopProducts(since: Date): Promise<TopProductRow[]> {
   });
 }
 
-async function getTopCustomers(since: Date): Promise<TopCustomerRow[]> {
+async function getTopCustomers(since: Date, branchId: string | null): Promise<TopCustomerRow[]> {
   const rows = await prisma.$queryRaw<
     { customerProfileId: string; orders: number; revenue: Prisma.Decimal }[]
   >`
@@ -210,6 +217,7 @@ async function getTopCustomers(since: Date): Promise<TopCustomerRow[]> {
            SUM(o."totalAmount") AS revenue
     FROM "Order" o
     WHERE o."status"::text IN (${Prisma.join(REVENUE_STATUSES)}) AND o."createdAt" >= ${since}
+      AND (${branchId}::uuid IS NULL OR o."branchId" = ${branchId}::uuid)
     GROUP BY o."customerProfileId"
     ORDER BY revenue DESC
     LIMIT 5

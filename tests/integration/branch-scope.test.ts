@@ -10,9 +10,11 @@ import { Prisma } from "@prisma/client";
 
 import type { SafeAccount } from "@/modules/auth/infrastructure/session";
 import { GLOBAL_BRANCH_SCOPE, resolveBranchScope } from "@/modules/branches/application/scope";
+import { getDashboardOperations } from "@/modules/dashboard/application/summary";
 import { listDeliveries } from "@/modules/delivery/application/deliveries";
 import { getInventoryPage, getInventorySummary } from "@/modules/inventory/application/inventory";
 import { listStockMovements } from "@/modules/inventory/application/movements";
+import { getReportsOverview } from "@/modules/reports/application/reports";
 import { prisma } from "@/src/lib/db";
 
 type TestAccount = NonNullable<SafeAccount>;
@@ -272,6 +274,33 @@ describe("scoped reads", () => {
     expect(reasons).toContain("scope test A");
     expect(reasons).not.toContain("scope test B");
     expect(movements.movements.every((movement) => movement.warehouseId === branchA.warehouseId)).toBe(true);
+  });
+
+  it("scopes the dashboard counters to the branch", async () => {
+    const scope = await resolveBranchScope(employeeA);
+    const permissions = new Set(["orders.view", "payments.view", "inventory.view", "customers.view"]);
+
+    const scoped = await getDashboardOperations(permissions, scope);
+    const global = await getDashboardOperations(permissions);
+
+    expect(scoped.orders?.total ?? 0).toBeLessThan(global.orders?.total ?? 0);
+    expect(scoped.payments?.total ?? 0).toBeLessThan(global.payments?.total ?? 0);
+    expect(scoped.inventory?.trackedRows ?? 0).toBeLessThan(global.inventory?.trackedRows ?? 0);
+  });
+
+  it("scopes the reports sales and inventory blocks to the branch", async () => {
+    const scope = await resolveBranchScope(employeeA);
+    const permissions = new Set(["orders.view", "payments.view", "inventory.view", "customers.view"]);
+
+    const scoped = await getReportsOverview(permissions, "all", scope);
+    const global = await getReportsOverview(permissions, "all");
+
+    expect(scoped.sales?.placedCount ?? 0).toBeLessThan(global.sales?.placedCount ?? 0);
+    expect(scoped.inventory?.trackedRows ?? 0).toBeLessThan(global.inventory?.trackedRows ?? 0);
+
+    // the branch fixture order must be inside the scoped figure
+    const branchOrders = await prisma.order.count({ where: { branchId: branchA.id } });
+    expect(scoped.sales?.placedCount).toBe(branchOrders);
   });
 
   it("limits the delivery queue to the branch orders", async () => {

@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { getCurrentAccount } from "@/modules/auth/infrastructure/session";
+import { resolveBranchScope } from "@/modules/branches/application/scope";
 import { OrderStatusBadge } from "@/components/orders/order-status-badge";
 import { OperationsOverview } from "@/components/dashboard/operations-overview";
 import { getCurrentPermissions } from "@/modules/auth/application/authorization";
@@ -33,6 +34,8 @@ export default async function DashboardPage() {
     redirect("/login");
   }
 
+  const scope = await resolveBranchScope(account);
+
   let summary: DashboardSummary | null = null;
   let loadError = false;
 
@@ -47,7 +50,7 @@ export default async function DashboardPage() {
 
     return (
       <OperationsOverview
-        operations={await getDashboardOperations(permissions)}
+        operations={await getDashboardOperations(permissions, scope)}
         recentOrders={summary?.recentOrders ?? []}
       />
     );

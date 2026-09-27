@@ -4,6 +4,11 @@ import { OrderStatus, PaymentStatus, Prisma, ProductStatus } from "@prisma/clien
 
 import type { SafeAccount } from "@/modules/auth/infrastructure/session";
 import { PERMISSIONS } from "@/modules/auth/application/permissions";
+import {
+  GLOBAL_BRANCH_SCOPE,
+  resolveBranchScope,
+  type BranchScope,
+} from "@/modules/branches/application/scope";
 import type {
   DashboardOperationsView,
   DashboardSummary,
@@ -36,6 +41,7 @@ const IN_PROGRESS_STATUSES: OrderStatus[] = [
  */
 export async function getDashboardOperations(
   permissions: ReadonlySet<string>,
+  scope: BranchScope = GLOBAL_BRANCH_SCOPE,
 ): Promise<DashboardOperationsView> {
   const canViewOrders = permissions.has(PERMISSIONS.ORDERS_VIEW);
   const canViewPayments = permissions.has(PERMISSIONS.PAYMENTS_VIEW);
@@ -45,12 +51,20 @@ export async function getDashboardOperations(
   return withDatabaseError(async () => {
     const [orderStatusCounts, paymentStatusCounts, inventory, customerCount] = await Promise.all([
       canViewOrders
-        ? prisma.order.groupBy({ by: ["status"], _count: { _all: true } })
+        ? prisma.order.groupBy({
+            by: ["status"],
+            where: scope.branchId ? { branchId: scope.branchId } : {},
+            _count: { _all: true },
+          })
         : Promise.resolve(null),
       canViewPayments
-        ? prisma.payment.groupBy({ by: ["status"], _count: { _all: true } })
+        ? prisma.payment.groupBy({
+            by: ["status"],
+            where: scope.branchId ? { order: { branchId: scope.branchId } } : {},
+            _count: { _all: true },
+          })
         : Promise.resolve(null),
-      canViewInventory ? getInventorySummary() : Promise.resolve(null),
+      canViewInventory ? getInventorySummary(scope) : Promise.resolve(null),
       canViewCustomers ? prisma.customerProfile.count() : Promise.resolve(null),
     ]);
 
@@ -88,10 +102,13 @@ export async function getDashboardSummary(
 ): Promise<DashboardSummary> {
   const customerProfile = account.customerProfile;
   const customerScoped = customerProfile !== null;
+  const scope = customerScoped ? GLOBAL_BRANCH_SCOPE : await resolveBranchScope(account);
 
   const orderWhere: Prisma.OrderWhereInput = customerScoped
     ? { customerProfileId: customerProfile.id }
-    : {};
+    : scope.branchId
+      ? { branchId: scope.branchId }
+      : {};
 
   return withDatabaseError(async () => {
     const [orderCount, pendingOrderCount, productCount, inventoryBalances, recentOrders] =
@@ -105,6 +122,7 @@ export async function getDashboardSummary(
         }),
         prisma.inventoryItem.groupBy({
           by: ["variantId"],
+          where: scope.warehouseIds === null ? {} : { warehouseId: { in: scope.warehouseIds } },
           _sum: { quantityOnHand: true, quantityReserved: true },
         }),
         prisma.order.findMany({

@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { getCurrentPermissions } from "@/modules/auth/application/authorization";
 import { PERMISSIONS } from "@/modules/auth/application/permissions";
 import { getCurrentAccount } from "@/modules/auth/infrastructure/session";
+import { resolveBranchScope } from "@/modules/branches/application/scope";
 import { getReportsOverview, parseReportPeriod } from "@/modules/reports/application/reports";
 import type { ReportPeriod, ReportsOverviewView } from "@/modules/reports/types";
 import { formatMoney } from "@/src/lib/format";
@@ -36,6 +37,8 @@ export default async function ReportsPage({
     redirect("/login");
   }
 
+  const scope = await resolveBranchScope(account);
+
   const permissions = await getCurrentPermissions();
   const canViewOrders = permissions.has(PERMISSIONS.ORDERS_VIEW);
   const canViewPayments = permissions.has(PERMISSIONS.PAYMENTS_VIEW);
@@ -62,7 +65,7 @@ export default async function ReportsPage({
   let loadError = false;
 
   try {
-    overview = await getReportsOverview(permissions, period);
+    overview = await getReportsOverview(permissions, period, scope);
   } catch {
     loadError = true;
   }
