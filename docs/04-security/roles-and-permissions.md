@@ -44,6 +44,19 @@ database but not in the constant is a documentation bug.
   they are approved in the order state machine; it does not bypass the state
   machine and does not replace `orders.cancel`.
 
+## Branch scoping
+Data reads are additionally scoped to the branch on the account:
+`EmployeeProfile.branchId` (employees) or `DistributorProfile.branchId`
+(distributors). `resolveBranchScope` turns that into a branch and its warehouses,
+and the inventory page, the inventory summary, the stock-movement ledger and the
+delivery queue are filtered with it. **An account without a branch keeps the global
+view** (administration and head office), which is the documented rule; the pages
+print the active scope ("Branch: …" or "All branches") so nobody is surprised by
+the numbers.
+
+Remaining gap: the sales/payment aggregates of the reports and dashboard screens
+are still global rather than per branch.
+
 ## Enforcement
 - Service layer: `simulatePaymentOutcome` requires `payments.verify` for employee
   actors (customers act on their own orders), and `updateOrderStatus` requires
