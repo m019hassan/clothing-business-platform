@@ -14,6 +14,7 @@ import {
 
 import type { SafeAccount } from "@/modules/auth/infrastructure/session";
 import { resolveDeliveryAddress } from "@/modules/customers/application/addresses";
+import { parseCustomerPaymentMethod } from "@/modules/payment/application/methods";
 import type {
   OrderDeliveryAddressView,
   OrderListPage,
@@ -251,7 +252,7 @@ async function runOrderTransaction<T>(
 
 export async function createOrderFromCart(
   account: AuthenticatedAccount,
-  input: { addressId?: string } = {},
+  input: { addressId?: string; paymentMethod?: unknown } = {},
 ): Promise<OrderView> {
   const profile = requireCustomerProfile(account);
 
@@ -260,6 +261,7 @@ export async function createOrderFromCart(
   const delivery = input.addressId
     ? await resolveDeliveryAddress(account, input.addressId)
     : null;
+  const paymentMethod = parseCustomerPaymentMethod(input.paymentMethod);
 
   return withDatabaseError(() =>
     runOrderTransaction(() =>
@@ -371,6 +373,7 @@ export async function createOrderFromCart(
               create: [
                 {
                   status: PaymentStatus.PENDING,
+                  method: paymentMethod,
                   amount: subtotalAmount,
                   currency: cart.items[0].variant.product.currency,
                 },

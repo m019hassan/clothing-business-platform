@@ -270,6 +270,13 @@ invalid quantities, 404 for unknown items).
 | --- | --- | --- | --- |
 | GET | `/api/orders?limit=&offset=` | customer only (own orders; staff get 403) | `{ orders, pagination: { limit, offset, total } }` |
 | POST | `/api/orders` | customer | `{ order }` (201) |
+
+`POST /api/orders` takes an optional `{ addressId, paymentMethod }`. The payment
+method is chosen by the customer and stored on the payment record created with the
+order: `CASH_ON_DELIVERY` (default) or `BANK_TRANSFER`; anything else, including the
+staff-side `MANUAL_TRANSFER_VERIFICATION` and the counter `CASH`, is rejected with
+400. The order page explains the next step per method (pay the courier, or transfer
+and wait for the store to confirm).
 | GET | `/api/orders/:id` | owner customer or permitted staff | `{ order }` |
 | PUT | `/api/orders/:id/status` | owner customer, or staff with the matching permission | `{ order }` |
 

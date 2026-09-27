@@ -136,6 +136,35 @@ describe("order lifecycle", () => {
   });
 });
 
+describe("order payment method", () => {
+  it("records the method the customer chose", async () => {
+    await addItem(customer, { variantId, quantity: 1 });
+    const order = await createOrderFromCart(customer, { paymentMethod: "BANK_TRANSFER" });
+
+    const payment = await prisma.payment.findFirstOrThrow({ where: { orderId: order.id } });
+    expect(payment.method).toBe("BANK_TRANSFER");
+    expect(order.payment?.method).toBe("BANK_TRANSFER");
+  });
+
+  it("defaults to cash on delivery when nothing is sent", async () => {
+    const order = await createOrderFor(customer, 1);
+
+    const payment = await prisma.payment.findFirstOrThrow({ where: { orderId: order.id } });
+    expect(payment.method).toBe("CASH_ON_DELIVERY");
+  });
+
+  it("rejects methods the customer may not choose", async () => {
+    await addItem(customer, { variantId, quantity: 1 });
+
+    await expect(
+      createOrderFromCart(customer, { paymentMethod: "MANUAL_TRANSFER_VERIFICATION" }),
+    ).rejects.toMatchObject({ statusCode: 400 });
+    await expect(createOrderFromCart(customer, { paymentMethod: "CASH" })).rejects.toMatchObject({
+      statusCode: 400,
+    });
+  });
+});
+
 describe("order authorization", () => {
   it("hides other customers' orders (404 semantics)", async () => {
     const order = await createOrderFor(customer, 1);

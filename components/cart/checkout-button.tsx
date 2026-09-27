@@ -15,6 +15,7 @@ export function CheckoutButton({ addresses }: { addresses: AddressView[] }) {
   const [createdOrder, setCreatedOrder] = useState<OrderView | null>(null);
   const defaultAddress = addresses.find((address) => address.isDefault) ?? addresses[0];
   const [addressId, setAddressId] = useState<string>(defaultAddress?.id ?? "");
+  const [paymentMethod, setPaymentMethod] = useState<string>("CASH_ON_DELIVERY");
 
   async function createOrder() {
     setPending(true);
@@ -23,7 +24,10 @@ export function CheckoutButton({ addresses }: { addresses: AddressView[] }) {
     try {
       const result = await apiRequest<{ order: OrderView }>("/api/orders", {
         method: "POST",
-        body: addressId ? JSON.stringify({ addressId }) : undefined,
+        body: JSON.stringify({
+          ...(addressId ? { addressId } : {}),
+          paymentMethod,
+        }),
       });
       setCreatedOrder(result.order);
       router.refresh();
@@ -109,6 +113,24 @@ export function CheckoutButton({ addresses }: { addresses: AddressView[] }) {
           No delivery address saved yet. You can add one from the account page, or continue without one.
         </p>
       )}
+
+      <div>
+        <label htmlFor="paymentMethod" className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
+          Payment method
+        </label>
+        <select
+          id="paymentMethod"
+          value={paymentMethod}
+          onChange={(event) => setPaymentMethod(event.target.value)}
+          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none ring-blue-500 focus:ring-2"
+        >
+          <option value="CASH_ON_DELIVERY">Cash on delivery</option>
+          <option value="BANK_TRANSFER">Bank transfer</option>
+        </select>
+        <p className="mt-1 text-xs text-slate-400">
+          Cash on delivery is paid to the courier; a bank transfer is confirmed by the store once it arrives.
+        </p>
+      </div>
 
       <button
         type="button"

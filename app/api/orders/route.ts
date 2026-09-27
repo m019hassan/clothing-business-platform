@@ -43,7 +43,10 @@ export async function POST(request: Request) {
       ? body.addressId
       : undefined;
 
-    const order = await createOrderFromCart(account, addressId ? { addressId } : {});
+    const order = await createOrderFromCart(account, {
+      ...(addressId ? { addressId } : {}),
+      ...(body.paymentMethod !== undefined ? { paymentMethod: body.paymentMethod } : {}),
+    });
 
     return NextResponse.json({ order }, { status: 201 });
   } catch (error) {

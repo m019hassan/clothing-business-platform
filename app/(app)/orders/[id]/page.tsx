@@ -301,13 +301,21 @@ export default async function OrderDetailPage({ params }: OrderDetailProps) {
                   ? "Payment approved. The order is confirmed and stock has been consumed."
                   : "This payment was not completed; the order was cancelled and the reservation released."}
             </p>
+            <p className="mt-2 text-xs text-slate-500">
+              {order.payment.method === "BANK_TRANSFER"
+                ? "Bank transfer: complete the transfer to the store account; the team confirms the payment once the funds arrive."
+                : order.payment.method === "CASH_ON_DELIVERY"
+                  ? "Cash on delivery: pay the courier when the order arrives."
+                  : order.payment.method === "CASH"
+                    ? "Cash paid at the counter."
+                    : "No payment method was recorded for this order."}
+            </p>
           </>
         ) : (
           <p className="mt-3 text-sm text-slate-500">No payment record exists for this order.</p>
         )}
         <p className="mt-3 text-xs text-slate-400">
-          Payment methods (bank transfer, cash on delivery, online payment) are not selectable in the UI yet;
-          only the recorded outcome is shown here.
+          The method is chosen at checkout (cash on delivery or bank transfer); the store records the outcome here.
         </p>
       </section>
 
