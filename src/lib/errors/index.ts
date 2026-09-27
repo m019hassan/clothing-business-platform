@@ -1,3 +1,5 @@
+import { logger } from "@/src/lib/logger";
+
 import { Prisma } from "@prisma/client";
 
 export type AppErrorCode =
@@ -110,14 +112,57 @@ export type ErrorResponseBody = {
     code: AppErrorCode;
     message: string;
     retryAfterSeconds?: number;
+    /**
+     * Correlation id present for server-side failures only; the matching detail
+     * (stack, cause) is written to the structured log under the same id, so a
+     * report from a user can be traced without leaking internals in the response.
+     */
+    errorId?: string;
   };
 };
 
+/** Short, readable correlation id for a server-side failure. */
+export function createErrorId(): string {
+  return crypto.randomUUID().replaceAll("-", "").slice(0, 12);
+}
+
+/**
+ * Turns any thrown value into the response body, and logs it once:
+ * server-side failures are logged with a correlation id that is also returned to
+ * the client (never the internals themselves), client mistakes at warn for the
+ * interesting codes and at debug for ordinary validation misses.
+ */
 export function toErrorResponse(error: unknown): {
   status: number;
   body: ErrorResponseBody;
 } {
   const appError = toAppError(error);
+  const isServerFailure = appError.statusCode >= 500;
+
+  if (isServerFailure) {
+    const errorId = createErrorId();
+
+    logger.error("request failed", {
+      errorId,
+      code: appError.code,
+      detail: appError.message,
+      details: appError.details,
+      stack: error instanceof Error ? error.stack : undefined,
+    });
+
+    return {
+      status: appError.statusCode,
+      body: { error: { code: appError.code, message: appError.message, errorId } },
+    };
+  }
+
+  const context = { code: appError.code, status: appError.statusCode, detail: appError.message };
+
+  if (appError.statusCode === 401 || appError.statusCode === 403 || appError.statusCode === 409) {
+    logger.warn("request rejected", context);
+  } else {
+    logger.debug("request rejected", context);
+  }
 
   return {
     status: appError.statusCode,
