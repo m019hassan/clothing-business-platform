@@ -85,7 +85,14 @@ export function parseAdjustmentInput(payload: unknown): AdjustmentInput {
   return input;
 }
 
-async function resolveWarehouseId(warehouseId?: string): Promise<string> {
+/**
+ * Warehouse for a manual adjustment: an explicit id wins, otherwise the branch of
+ * the signed-in account decides, then the central MAIN warehouse.
+ */
+async function resolveWarehouseId(
+  account: AuthenticatedAccount,
+  warehouseId?: string,
+): Promise<string> {
   if (warehouseId) {
     const warehouse = await withDatabaseError(() =>
       prisma.warehouse.findFirst({ where: { id: warehouseId, isActive: true }, select: { id: true } }),
@@ -98,19 +105,29 @@ async function resolveWarehouseId(warehouseId?: string): Promise<string> {
     return warehouse.id;
   }
 
-  const warehouse = await withDatabaseError(() =>
-    prisma.warehouse.findFirst({
-      where: { isActive: true },
-      select: { id: true },
-      orderBy: { code: "asc" },
-    }),
+  const scope = await resolveBranchScope(account);
+
+  if (scope.warehouseIds && scope.warehouseIds.length > 0) {
+    return scope.warehouseIds[0];
+  }
+
+  const central = await withDatabaseError(() =>
+    prisma.warehouse.findFirst({ where: { code: "MAIN", isActive: true }, select: { id: true } }),
   );
 
-  if (!warehouse) {
+  if (central) {
+    return central.id;
+  }
+
+  const fallback = await withDatabaseError(() =>
+    prisma.warehouse.findFirst({ where: { isActive: true }, select: { id: true }, orderBy: { code: "asc" } }),
+  );
+
+  if (!fallback) {
     throw new NotFoundError("No active warehouse is configured.");
   }
 
-  return warehouse.id;
+  return fallback.id;
 }
 
 const itemSelection = {
@@ -135,7 +152,7 @@ export async function adjustStock(
   await requirePermission(PERMISSIONS.INVENTORY_ADJUST);
 
   const input = parseAdjustmentInput(payload);
-  const warehouseId = await resolveWarehouseId(input.warehouseId);
+  const warehouseId = await resolveWarehouseId(account, input.warehouseId);
 
   const runAdjustment = () =>
     prisma.$transaction(async (transaction) => {

@@ -184,7 +184,12 @@ describe("notification preferences", () => {
   it("defaults every type to in-app on", async () => {
     const preferences = await getNotificationPreferences(customer);
 
-    expect(preferences.map((preference) => preference.type).sort()).toEqual(["DELIVERY", "ORDER", "PAYMENT"]);
+    expect(preferences.map((preference) => preference.type).sort()).toEqual([
+      "DELIVERY",
+      "INVENTORY",
+      "ORDER",
+      "PAYMENT",
+    ]);
     expect(preferences.every((preference) => preference.inApp)).toBe(true);
   });
 

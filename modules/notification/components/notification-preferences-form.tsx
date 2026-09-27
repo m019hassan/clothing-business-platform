@@ -11,6 +11,7 @@ const TYPE_LABELS: Record<string, string> = {
   ORDER: "Order updates",
   PAYMENT: "Payment updates",
   DELIVERY: "Delivery updates",
+  INVENTORY: "Inventory alerts",
 };
 
 export function NotificationPreferencesForm({

@@ -16,6 +16,7 @@ const TYPE_LABELS: Record<string, string> = {
   ORDER: "Order",
   PAYMENT: "Payment",
   DELIVERY: "Delivery",
+  INVENTORY: "Inventory",
 };
 
 type NotificationsPageProps = {

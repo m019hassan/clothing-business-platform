@@ -6,6 +6,7 @@ import { requirePermission } from "@/modules/auth/application/authorization";
 import { resolveBranchScope } from "@/modules/branches/application/scope";
 import { PERMISSIONS } from "@/modules/auth/application/permissions";
 import type { SafeAccount } from "@/modules/auth/infrastructure/session";
+import { notifyBranchPermissionHolders } from "@/modules/notification/application/branch-notifications";
 import { createNotification } from "@/modules/notification/application/notifications";
 import type {
   DeliveryListPage,
@@ -297,6 +298,7 @@ export async function updateDelivery(
           order: {
             select: {
               orderNumber: true,
+              branchId: true,
               customerProfile: { select: { accountId: true } },
             },
           },
@@ -387,6 +389,20 @@ export async function updateDelivery(
           entityType: "Order",
           entityId: current.orderId,
         });
+
+        // The branch that fulfils the order follows the same status change.
+        if (current.order.branchId) {
+          await notifyBranchPermissionHolders(transaction, {
+            branchId: current.order.branchId,
+            permission: "shipping.manage",
+            type: "DELIVERY",
+            title: `Order ${current.order.orderNumber} is now ${label}`,
+            body: details.length > 0 ? details : undefined,
+            entityType: "Order",
+            entityId: current.orderId,
+            excludeAccountId: account.id,
+          });
+        }
       }
 
       return mapDelivery(updated);

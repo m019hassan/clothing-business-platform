@@ -17,6 +17,7 @@ import {
   ReservationConflictError,
 } from "@/modules/inventory/application/reservations";
 import { ensureDeliveryForOrder } from "@/modules/delivery/application/deliveries";
+import { notifyBranchPermissionHolders } from "@/modules/notification/application/branch-notifications";
 import { createNotification } from "@/modules/notification/application/notifications";
 import { mapOrder, orderSelection } from "@/modules/order/application/orders";
 import type {
@@ -202,6 +203,7 @@ export async function simulatePaymentOutcome(
             id: true,
             orderNumber: true,
             status: true,
+            branchId: true,
             items: { select: { variantId: true, quantity: true } },
             customerProfile: { select: { accountId: true } },
           },
@@ -242,6 +244,19 @@ export async function simulatePaymentOutcome(
         if (outcome === "success") {
           // A confirmed order always gets a fulfilment record.
           await ensureDeliveryForOrder(transaction, order.id);
+
+          if (order.branchId) {
+            await notifyBranchPermissionHolders(transaction, {
+              branchId: order.branchId,
+              permission: "shipping.manage",
+              type: "ORDER",
+              title: `New order to fulfil: ${order.orderNumber}`,
+              body: "Open the deliveries screen to start processing it.",
+              entityType: "Order",
+              entityId: order.id,
+              excludeAccountId: account.id,
+            });
+          }
         }
 
         for (const item of order.items) {

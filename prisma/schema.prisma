@@ -696,6 +696,7 @@ enum NotificationType {
   ORDER
   PAYMENT
   DELIVERY
+  INVENTORY
 }
 
 model Notification {

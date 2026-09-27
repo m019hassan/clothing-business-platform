@@ -4,6 +4,7 @@ import { OrderChannel, OrderStatus, PaymentMethod, PaymentStatus, Prisma, Produc
 
 import type { SafeAccount } from "@/modules/auth/infrastructure/session";
 import { sellStock } from "@/modules/inventory/application/reservations";
+import { notifyBranchPermissionHolders } from "@/modules/notification/application/branch-notifications";
 import type { PosCatalogView, PosReceiptView } from "@/modules/pos/types";
 import { prisma } from "@/src/lib/db";
 import {
@@ -14,6 +15,7 @@ import {
   withDatabaseError,
 } from "@/src/lib/errors";
 import { isUuid } from "@/src/lib/validation";
+import { stockLevel } from "@/src/lib/inventory/stock-level";
 
 type AuthenticatedAccount = NonNullable<SafeAccount>;
 
@@ -344,6 +346,54 @@ export async function createPosSale(
         },
         select: { id: true, orderNumber: true, status: true, createdAt: true },
       });
+
+      // Branch staff responsible for stock hear about shortages caused by the sale.
+      if (warehouseIds.length > 0) {
+        const balances = await transaction.inventoryItem.findMany({
+          where: { variantId: { in: input.items.map((item) => item.variantId) }, warehouseId: { in: warehouseIds } },
+          select: {
+            variantId: true,
+            quantityOnHand: true,
+            quantityReserved: true,
+            variant: { select: { sku: true, product: { select: { name: true } } } },
+          },
+        });
+
+        const perVariant = new Map<string, { sku: string; productName: string; available: number }>();
+
+        for (const balance of balances) {
+          const entry = perVariant.get(balance.variantId) ?? {
+            sku: balance.variant.sku,
+            productName: balance.variant.product.name,
+            available: 0,
+          };
+
+          entry.available += balance.quantityOnHand - balance.quantityReserved;
+          perVariant.set(balance.variantId, entry);
+        }
+
+        const runningLow = [...perVariant.values()].filter(
+          (entry) => stockLevel(entry.available) !== "IN_STOCK",
+        );
+
+        if (runningLow.length > 0) {
+          await notifyBranchPermissionHolders(transaction, {
+            branchId: branch.id,
+            permission: "inventory.view",
+            type: "INVENTORY",
+            title: `Low stock at ${branch.code}: ${runningLow.map((entry) => entry.sku).join(", ")}`,
+            body: runningLow
+              .map(
+                (entry) =>
+                  `${entry.productName} (${entry.sku}): ${entry.available <= 0 ? "out of stock" : `${entry.available} left`}`,
+              )
+              .join(" · "),
+            entityType: "Branch",
+            entityId: branch.id,
+            excludeAccountId: account.id,
+          });
+        }
+      }
 
       await transaction.auditLog.create({
         data: {
