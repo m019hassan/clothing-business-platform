@@ -93,7 +93,7 @@ TypeScript/ESLint/Build/Prisma validate: **PASS** · 6/6 migrations مطبّقة
 
 ### المرحلة G — الدفع الحقيقي
 - **G1 (✅ منجز)**: اختيار طريقة الدفع عند الطلب — `CASH_ON_DELIVERY` (افتراضي) أو `BANK_TRANSFER` عبر `POST /api/orders { paymentMethod }` ومنتقٍ في الـcheckout، مع رفض طرق الموظفين/الكاش للعميل (400) وشرح الخطوة التالية لكل طريقة في صفحة الطلب.
-- **G2**: تعليمات التحويل + رفع الإيصال (يحتاج قرار تخزين ملفات) + تدفّق التحقق للموظفين (بديل المحاكاة) بصلاحيات `payments.verify/approve/reject`.
+- **G2 (جزئي)**: ✅ **تدفّق التحقق للموظفين منفّذ**: `GET /api/payments` (طابور المدفوعات مع `paymentId`) · `POST /api/payments/:id/verify` (PENDING → PENDING_VERIFICATION) · `/approve` (CONFIRMED + استهلاك + توصيل) · `/reject` (CANCELLED + تحرير الحجز) بصلاحيات `payments.verify/approve/reject`، مع AuditLog وإشعار العميل، ومن مسار كود واحد مع المحاكاة؛ واجهة القرار في `/payments` بأزرار حسب كل صلاحية. **متبقٍ**: رفع الإيصال (`POST /api/payments/:id/proof`) بانتظار قرار تخزين الملفات، وبيانات تحويل بنكية حقيقية للعرض للعميل (تحتاج تهيئة من المتجر).
 - **G3**: الاسترداد كحدث مالي منفصل عند المرتجعات.
 
 ### المرحلة H — تحصين وتشغيل

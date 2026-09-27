@@ -8,7 +8,7 @@ import {
   Prisma,
 } from "@prisma/client";
 
-import { hasPermission } from "@/modules/auth/application/authorization";
+import { hasPermission, requirePermission } from "@/modules/auth/application/authorization";
 import { PERMISSIONS } from "@/modules/auth/application/permissions";
 import type { SafeAccount } from "@/modules/auth/infrastructure/session";
 import {
@@ -87,9 +87,11 @@ async function runPaymentTransaction<T>(operation: () => Promise<T>): Promise<T>
   }
 }
 
+const SETTLABLE_PAYMENT_STATUSES = [PaymentStatus.PENDING, PaymentStatus.PENDING_VERIFICATION];
+
 const pendingPaymentWhere = {
   status: OrderStatus.PENDING_PAYMENT,
-  payments: { some: { status: PaymentStatus.PENDING } },
+  payments: { some: { status: { in: SETTLABLE_PAYMENT_STATUSES } } },
 } satisfies Prisma.OrderWhereInput;
 
 /**
@@ -122,18 +124,21 @@ export async function listPendingPayments(
             },
           },
           payments: {
-            where: { status: PaymentStatus.PENDING },
+            where: { status: { in: SETTLABLE_PAYMENT_STATUSES } },
             orderBy: { createdAt: "desc" },
             take: 1,
-            select: { status: true, amount: true, method: true },
+            select: { id: true, status: true, amount: true, method: true },
           },
         },
       }),
       prisma.order.count({ where: pendingPaymentWhere }),
     ]);
 
-    const rows: PendingPaymentRow[] = records.map((order) => ({
+    const rows: PendingPaymentRow[] = records
+      .filter((order) => order.payments[0] !== undefined)
+      .map((order) => ({
       orderId: order.id,
+      paymentId: order.payments[0].id,
       orderNumber: order.orderNumber,
       totalAmount: order.totalAmount.toString(),
       currency: order.currency,
@@ -144,9 +149,9 @@ export async function listPendingPayments(
         .join(" "),
       customerCode: order.customerProfile.customerCode,
       customerContact: order.customerProfile.account.email ?? order.customerProfile.account.phone,
-      paymentStatus: order.payments[0]?.status ?? PaymentStatus.PENDING,
-      paymentMethod: order.payments[0]?.method ?? null,
-      paymentAmount: order.payments[0]?.amount.toString() ?? order.totalAmount.toString(),
+      paymentStatus: order.payments[0].status,
+      paymentMethod: order.payments[0].method,
+      paymentAmount: order.payments[0].amount.toString(),
     }));
 
     return {
@@ -159,41 +164,22 @@ export async function listPendingPayments(
 /**
  * Simulates an external payment outcome for lifecycle testing.
  * This is an internal application simulation, not an integration with a real
- * payment provider; the documented verification flow (proof upload plus staff
- * payments.verify / payments.reject) replaces it in a later slice.
+ * payment provider: the staff flow (recordPaymentVerification / approvePayment /
+ * rejectPayment, exposed under /api/payments) is the real path. Receipt upload is
+ * still pending a storage decision, so the simulation stays available for local
+ * lifecycle testing.
  */
-export async function simulatePaymentOutcome(
+/**
+ * Shared payment outcome path: both the development simulation and the staff
+ * verification endpoints move an order through it, so stock, delivery, the audit
+ * trail and the customer notification can never drift between the two.
+ */
+async function applyPaymentOutcome(
   account: AuthenticatedAccount,
   orderId: string,
-  outcomeValue: unknown,
+  outcome: PaymentOutcome,
+  ownerFilter: Prisma.OrderWhereInput = {},
 ): Promise<PaymentSimulationResult> {
-  if (!isUuid(orderId)) {
-    throw new NotFoundError("Order not found.");
-  }
-
-  if (!isPaymentOutcome(outcomeValue)) {
-    throw new ValidationError('The payment outcome must be "success" or "failure".');
-  }
-
-  const outcome = outcomeValue;
-  const customerProfile = account.customerProfile;
-
-  if (account.accountType !== AccountType.CUSTOMER && account.accountType !== AccountType.EMPLOYEE) {
-    throw new AuthorizationError("A customer or employee account is required.");
-  }
-
-  let ownerFilter: Prisma.OrderWhereInput = {};
-
-  if (account.accountType === AccountType.CUSTOMER) {
-    if (!customerProfile) {
-      throw new AuthorizationError("A customer account is required.");
-    }
-
-    ownerFilter = { customerProfileId: customerProfile.id };
-  } else if (!(await hasPermission(PERMISSIONS.PAYMENTS_VERIFY))) {
-    throw new AuthorizationError("You do not have permission to process payments.");
-  }
-
   return withDatabaseError(() =>
     runPaymentTransaction(() =>
       prisma.$transaction(async (transaction) => {
@@ -218,7 +204,8 @@ export async function simulatePaymentOutcome(
         }
 
         const payment = await transaction.payment.findFirst({
-          where: { orderId, status: PaymentStatus.PENDING },
+          // A transfer waiting for verification is still settleable.
+          where: { orderId, status: { in: [PaymentStatus.PENDING, PaymentStatus.PENDING_VERIFICATION] } },
           orderBy: { createdAt: "desc" },
           select: paymentSelection,
         });
@@ -283,6 +270,16 @@ export async function simulatePaymentOutcome(
           select: paymentSelection,
         });
 
+        await transaction.auditLog.create({
+          data: {
+            accountId: account.id,
+            action: outcome === "success" ? "PAYMENT_APPROVED" : "PAYMENT_REJECTED",
+            entity: "Order",
+            entityId: order.id,
+            newValue: updatedPayment.status,
+          },
+        });
+
         await createNotification(transaction, {
           accountId: order.customerProfile.accountId,
           type: NotificationType.PAYMENT,
@@ -311,4 +308,129 @@ export async function simulatePaymentOutcome(
       }),
     ),
   );
+}
+
+/** Development helper: the customer (or a verifier) records the outcome directly. */
+export async function simulatePaymentOutcome(
+  account: AuthenticatedAccount,
+  orderId: string,
+  outcomeValue: unknown,
+): Promise<PaymentSimulationResult> {
+  if (!isUuid(orderId)) {
+    throw new NotFoundError("Order not found.");
+  }
+
+  if (!isPaymentOutcome(outcomeValue)) {
+    throw new ValidationError('The payment outcome must be "success" or "failure".');
+  }
+
+  if (account.accountType !== AccountType.CUSTOMER && account.accountType !== AccountType.EMPLOYEE) {
+    throw new AuthorizationError("A customer or employee account is required.");
+  }
+
+  let ownerFilter: Prisma.OrderWhereInput = {};
+
+  if (account.accountType === AccountType.CUSTOMER) {
+    if (!account.customerProfile) {
+      throw new AuthorizationError("A customer account is required.");
+    }
+
+    ownerFilter = { customerProfileId: account.customerProfile.id };
+  } else if (!(await hasPermission(PERMISSIONS.PAYMENTS_VERIFY))) {
+    throw new AuthorizationError("You do not have permission to process payments.");
+  }
+
+  return applyPaymentOutcome(account, orderId, outcomeValue, ownerFilter);
+}
+
+async function paymentOrderId(paymentId: string): Promise<string> {
+  if (!isUuid(paymentId)) {
+    throw new NotFoundError("Payment not found.");
+  }
+
+  const payment = await withDatabaseError(() =>
+    prisma.payment.findUnique({ where: { id: paymentId }, select: { orderId: true } }),
+  );
+
+  if (!payment) {
+    throw new NotFoundError("Payment not found.");
+  }
+
+  return payment.orderId;
+}
+
+/**
+ * Records that a transfer was received and checked (payments.verify): the payment
+ * moves to PENDING_VERIFICATION and still needs an approval decision.
+ */
+export async function recordPaymentVerification(
+  account: AuthenticatedAccount,
+  paymentId: string,
+): Promise<PaymentView> {
+  await requirePermission(PERMISSIONS.PAYMENTS_VERIFY);
+
+  if (!isUuid(paymentId)) {
+    throw new NotFoundError("Payment not found.");
+  }
+
+  return withDatabaseError(() =>
+    prisma.$transaction(async (transaction) => {
+      const payment = await transaction.payment.findUnique({
+        where: { id: paymentId },
+        select: { id: true, status: true, order: { select: { id: true, status: true } } },
+      });
+
+      if (!payment) {
+        throw new NotFoundError("Payment not found.");
+      }
+
+      if (payment.status !== PaymentStatus.PENDING) {
+        throw new ConflictError(`Only a pending payment can be verified (this one is ${payment.status}).`);
+      }
+
+      if (payment.order.status !== OrderStatus.PENDING_PAYMENT) {
+        throw new ConflictError("The order is not awaiting payment.");
+      }
+
+      const updated = await transaction.payment.update({
+        where: { id: paymentId },
+        data: { status: PaymentStatus.PENDING_VERIFICATION },
+        select: paymentSelection,
+      });
+
+      await transaction.auditLog.create({
+        data: {
+          accountId: account.id,
+          action: "PAYMENT_VERIFIED",
+          entity: "Payment",
+          entityId: paymentId,
+          newValue: PaymentStatus.PENDING_VERIFICATION,
+        },
+      });
+
+      return mapPayment(updated);
+    }),
+  );
+}
+
+/** Approves a payment (payments.approve): confirms the order and consumes stock. */
+export async function approvePayment(
+  account: AuthenticatedAccount,
+  paymentId: string,
+): Promise<PaymentSimulationResult> {
+  await requirePermission(PERMISSIONS.PAYMENTS_APPROVE);
+  const orderId = await paymentOrderId(paymentId);
+
+  return applyPaymentOutcome(account, orderId, "success");
+}
+
+/** Rejects a payment (payments.reject): cancels the order and releases stock. */
+export async function rejectPayment(
+  account: AuthenticatedAccount,
+  paymentId: string,
+): Promise<PaymentSimulationResult> {
+  await requirePermission(PERMISSIONS.PAYMENTS_REJECT);
+  const orderId = await paymentOrderId(paymentId);
+
+  return applyPaymentOutcome(account, orderId, "failure");
 }

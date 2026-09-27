@@ -289,21 +289,43 @@ requires `orders.cancel`; the other staff transitions are not implemented yet
 ## Payments
 | Method | Path | Auth | Response |
 | --- | --- | --- | --- |
+| GET | `/api/payments` | `payments.view` | `{ rows, pagination }` |
+| POST | `/api/payments/:id/verify` | `payments.verify` | payment view |
+| POST | `/api/payments/:id/approve` | `payments.approve` | `{ order, payment }` |
+| POST | `/api/payments/:id/reject` | `payments.reject` | `{ order, payment }` |
 | POST | `/api/orders/:id/payment-simulation` | order owner, or staff with `payments.verify` | `{ order, payment }` |
-
-Body: `{ outcome: "success" | "failure" }`. Success -> payment APPROVED, order
-CONFIRMED, stock consumed. Failure -> payment REJECTED, order CANCELLED, reserved
-stock released.
 
 A payment record is created as PENDING automatically when an order is created; there
 is no separate "create payment" endpoint.
+
+**Staff decision flow.** `GET /api/payments` returns the queue of orders still
+awaiting a payment decision (order status `PENDING_PAYMENT`) with the settlable
+payment of each row, including its `paymentId`. Each decision endpoint takes no body
+and acts on the payment itself:
+
+| From | Decision | To | Order effect |
+| --- | --- | --- | --- |
+| PENDING | `verify` | PENDING_VERIFICATION | none (the transfer was received and checked) |
+| PENDING, PENDING_VERIFICATION | `approve` | APPROVED | CONFIRMED, stock consumed, delivery created |
+| PENDING, PENDING_VERIFICATION | `reject` | REJECTED | CANCELLED, reserved stock released |
+
+A decision on a payment whose order is no longer `PENDING_PAYMENT`, or a second
+`verify` after verification, is rejected with 409. Every decision writes an
+`AuditLog` row (`PAYMENT_VERIFIED`, `PAYMENT_APPROVED`, `PAYMENT_REJECTED`) and the
+customer is notified with the same titles the simulation uses.
+
+**Simulation.** `POST /api/orders/:id/payment-simulation` remains available for
+local lifecycle testing: body `{ outcome: "success" | "failure" }`. Success ->
+payment APPROVED, order CONFIRMED, stock consumed. Failure -> payment REJECTED,
+order CANCELLED, reserved stock released. It shares one code path with the staff
+endpoints, so a simulated outcome and a real decision can never diverge.
 
 ## GAP summary (documented previously, not implemented)
 - `POST /api/auth/login`, `POST /api/auth/logout`, `POST /api/auth/forgot-password`
 - `GET/POST/PUT /api/users*` (employee data is read through the app routes, not a REST API)
 - `GET /api/categories`
 - `GET /api/inventory/balances`, `POST /api/inventory/reservations`, `POST /api/inventory/releases`
-- `GET /api/payments`, `POST /api/payments/:id/verify`, `POST /api/payments/:id/reject`, `POST /api/payments/:id/proof`
+- `POST /api/payments/:id/proof` (receipt upload: pending a file storage decision)
 - `GET /api/shipping`, `PUT /api/shipping/:id/status`
 - `PUT /api/notifications/preferences` (the implemented path is `/api/notification-preferences`)
 - `POST /api/orders/:id/cancel` (superseded by `PUT /api/orders/:id/status` with `CANCELLED`)

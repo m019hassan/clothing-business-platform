@@ -61,9 +61,11 @@ sees another branch's numbers.
 
 ## Enforcement
 - Service layer: `simulatePaymentOutcome` requires `payments.verify` for employee
-  actors (customers act on their own orders), and `updateOrderStatus` requires
-  `orders.cancel` for staff-side cancellation. These are the service-level checks
-  today.
+  actors (customers act on their own orders), each payment decision endpoint carries
+  its own code (`verify` -> `payments.verify`, `approve` -> `payments.approve`,
+  `reject` -> `payments.reject`), the payment queue requires `payments.view`, and
+  `updateOrderStatus` requires `orders.cancel` for staff-side cancellation. These are
+  the service-level checks today.
 - Staff screens without an API surface (inventory, payments, employees, roles,
   reports) gate access inside the server component with `getCurrentPermissions()`
   before any data is read, and render an "access denied" panel instead.

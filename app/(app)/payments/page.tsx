@@ -27,6 +27,11 @@ export default async function PaymentsPage({ searchParams }: PaymentsPageProps) 
   const permissions = await getCurrentPermissions();
   const canViewPayments = permissions.has(PERMISSIONS.PAYMENTS_VIEW);
   const canProcessPayments = permissions.has(PERMISSIONS.PAYMENTS_VERIFY);
+  const canApprovePayments = permissions.has(PERMISSIONS.PAYMENTS_APPROVE);
+  const canRejectPayments = permissions.has(PERMISSIONS.PAYMENTS_REJECT);
+  // The decision column appears when the account can make at least one decision;
+  // each button keeps its own permission inside the component.
+  const canDecidePayments = canProcessPayments || canApprovePayments || canRejectPayments;
 
   if (!canViewPayments) {
     return (
@@ -83,9 +88,10 @@ export default async function PaymentsPage({ searchParams }: PaymentsPageProps) 
         <p className="mt-1 text-sm text-slate-600">
           {pagination.total} order{pagination.total === 1 ? "" : "s"} awaiting a payment outcome.
         </p>
-        {!canProcessPayments ? (
+        {!canDecidePayments ? (
           <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">
-            You can view payments but not record outcomes. Recording requires the payments.verify permission.
+            You can view payments but not decide on them. Confirming a transfer needs payments.verify, approving
+            needs payments.approve and rejecting needs payments.reject.
           </p>
         ) : null}
       </section>
@@ -108,7 +114,7 @@ export default async function PaymentsPage({ searchParams }: PaymentsPageProps) 
                   <th scope="col" className="px-6 py-3">Payment</th>
                   <th scope="col" className="px-6 py-3 text-right">Amount</th>
                   <th scope="col" className="px-6 py-3">Placed</th>
-                  {canProcessPayments ? (
+                  {canDecidePayments ? (
                     <th scope="col" className="px-6 py-3 text-right">Actions</th>
                   ) : null}
                 </tr>
@@ -136,9 +142,14 @@ export default async function PaymentsPage({ searchParams }: PaymentsPageProps) 
                       {formatMoney(row.paymentAmount, row.currency)}
                     </td>
                     <td className="whitespace-nowrap px-6 py-4 text-slate-500">{formatDate(row.createdAt)}</td>
-                    {canProcessPayments ? (
+                    {canDecidePayments ? (
                       <td className="whitespace-nowrap px-6 py-4 text-right">
-                        <PaymentActions orderId={row.orderId} />
+                        <PaymentActions
+                          payment={row}
+                        canVerify={canProcessPayments}
+                        canApprove={canApprovePayments}
+                        canReject={canRejectPayments}
+                      />
                       </td>
                     ) : null}
                   </tr>
@@ -175,9 +186,14 @@ export default async function PaymentsPage({ searchParams }: PaymentsPageProps) 
                     <dd className="text-slate-800">{formatDate(row.createdAt)}</dd>
                   </div>
                 </dl>
-                {canProcessPayments ? (
+                {canDecidePayments ? (
                   <div className="mt-4">
-                    <PaymentActions orderId={row.orderId} />
+                    <PaymentActions
+                      payment={row}
+                        canVerify={canProcessPayments}
+                        canApprove={canApprovePayments}
+                        canReject={canRejectPayments}
+                      />
                   </div>
                 ) : null}
               </div>

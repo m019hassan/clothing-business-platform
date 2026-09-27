@@ -25,7 +25,9 @@ Payments represent the financial handling of an order. They are separate from th
 - pending -> rejected when the payment fails or is rejected: the order moves from pending_payment to cancelled.
 - pending -> cancelled when the order is cancelled before a payment outcome is recorded.
 - Confirming the order consumes the inventory reservation; a rejected or cancelled payment releases it.
-- An internal simulation endpoint (POST /api/orders/:id/payment-simulation with outcome success or failure) exercises this lifecycle for testing. It is an application simulation, not a payment provider integration; the documented proof upload plus payments.verify / payments.reject flow replaces it in a later slice.
+- pending -> pending_verification when a staff member records that a transfer was received and checked (`POST /api/payments/:id/verify`, needs payments.verify); the order is untouched at this point.
+- The staff decision endpoints (`POST /api/payments/:id/approve` with payments.approve, `POST /api/payments/:id/reject` with payments.reject) accept both pending and pending_verification, so a decision can be recorded with or without a prior verification step.
+- An internal simulation endpoint (POST /api/orders/:id/payment-simulation with outcome success or failure) exercises this lifecycle for testing. It is an application simulation, not a payment provider integration, and it shares one code path with the staff decisions above. Receipt upload (`POST /api/payments/:id/proof`) is still pending a file storage decision.
 
 ## Payment lifecycle rules
 - The payment state is independent from the order state.

@@ -16,6 +16,8 @@ export type PaymentView = {
 
 export type PendingPaymentRow = {
   orderId: string;
+  /** The settlable payment of the order; the staff endpoints act on this id. */
+  paymentId: string;
   orderNumber: string;
   totalAmount: string;
   currency: string;
