@@ -233,15 +233,19 @@ describe("delivery lifecycle", () => {
   it("lists the fulfilment queue with filters and pagination", async () => {
     const order = await confirmedOrder();
 
-    const all = await listDeliveries(staff, { limit: 50, offset: 0 });
+    const all = await listDeliveries(staff, { limit: 10, offset: 0 });
     expect(all.pagination.total).toBeGreaterThanOrEqual(1);
-    const row = all.deliveries.find((delivery) => delivery.orderId === order.id);
-    expect(row).toMatchObject({ status: "PENDING", customerCode: expect.stringContaining("VITDEL") });
+    expect(all.deliveries).toHaveLength(10);
 
-    const pending = await listDeliveries(staff, { limit: 50, offset: 0 }, { status: "PENDING" });
+    // The queue is oldest-first, so search the status-filtered pages for the row
+    // instead of assuming it sits on the first page of a busy development database.
+    const pending = await listDeliveries(staff, { limit: 500, offset: 0 }, { status: "PENDING" });
     expect(pending.deliveries.every((delivery) => delivery.status === "PENDING")).toBe(true);
 
-    const delivered = await listDeliveries(staff, { limit: 50, offset: 0 }, { status: "DELIVERED" });
+    const row = pending.deliveries.find((delivery) => delivery.orderId === order.id);
+    expect(row).toMatchObject({ status: "PENDING", customerCode: expect.stringContaining("VITDEL") });
+
+    const delivered = await listDeliveries(staff, { limit: 500, offset: 0 }, { status: "DELIVERED" });
     expect(delivered.deliveries.some((delivery) => delivery.orderId === order.id)).toBe(false);
   });
 
