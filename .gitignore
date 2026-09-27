@@ -46,3 +46,6 @@ yarn-error.log*
 next-env.d.ts
 
 /generated/prisma
+
+# Local helper log written when the app server runs in the background.
+.openclaw-server.log
