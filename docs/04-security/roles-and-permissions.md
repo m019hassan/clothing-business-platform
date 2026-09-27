@@ -48,14 +48,16 @@ database but not in the constant is a documentation bug.
 Data reads are additionally scoped to the branch on the account:
 `EmployeeProfile.branchId` (employees) or `DistributorProfile.branchId`
 (distributors). `resolveBranchScope` turns that into a branch and its warehouses,
-and the inventory page, the inventory summary, the stock-movement ledger and the
-delivery queue are filtered with it. **An account without a branch keeps the global
+and the inventory page, the inventory summary, the stock-movement ledger, the
+delivery queue, the dashboard counters (orders, payments, inventory) and the report
+aggregates (sales by status, payments, top products, top customers, inventory) are
+filtered with it. **An account without a branch keeps the global
 view** (administration and head office), which is the documented rule; the pages
 print the active scope ("Branch: …" or "All branches") so nobody is surprised by
 the numbers.
 
-Remaining gap: the sales/payment aggregates of the reports and dashboard screens
-are still global rather than per branch.
+Every screen that prints a figure is therefore branch-aware: a scoped account never
+sees another branch's numbers.
 
 ## Enforcement
 - Service layer: `simulatePaymentOutcome` requires `payments.verify` for employee

@@ -26,6 +26,10 @@ is the first thing to break when several pools compete (test workers plus the
 Next.js server plus Prisma Studio).
 
 Mitigations in place:
+- `tests/setup.ts` caps the pool of the test client (`connection_limit=2`), because
+  a Prisma client otherwise opens up to ten connections on its own and a single
+  client can exhaust the whole ceiling. The cap is applied to the test process
+  only, never to the application runtime.
 - `tests/setup.ts` disconnects the client in `afterAll`, so each test file
   releases its connection instead of keeping one for the whole run.
 - Stop Prisma Studio (`lsof -ti tcp:5555 | xargs kill`) or the app server while
