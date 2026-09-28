@@ -25,7 +25,8 @@ export function StockAdjustForm({
   labels,
 }: {
   variantId: string;
-  warehouseId: string;
+  /** Optional: without it the service uses the account's branch warehouse. */
+  warehouseId?: string;
   sku: string;
   labels: StockAdjustLabels;
 }) {
@@ -34,7 +35,7 @@ export function StockAdjustForm({
   return (
     <form action={formAction} className="flex flex-wrap items-center gap-2">
       <input type="hidden" name="variantId" value={variantId} />
-      <input type="hidden" name="warehouseId" value={warehouseId} />
+      {warehouseId ? <input type="hidden" name="warehouseId" value={warehouseId} /> : null}
       <input
         name="quantityChange"
         type="number"

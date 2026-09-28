@@ -137,3 +137,39 @@ export async function getInventoryPage(
     };
   });
 }
+
+export type VariantWithoutBalance = {
+  variantId: string;
+  sku: string;
+  productId: string;
+  productName: string;
+};
+
+/**
+ * Variants of active products that have no inventory row at all. They cannot appear
+ * in the balances table (which lists rows), so the inventory screen offers them
+ * separately: the first adjustment creates the row.
+ */
+export async function listVariantsWithoutBalances(limit = 20): Promise<VariantWithoutBalance[]> {
+  const variants = await prisma.productVariant.findMany({
+    where: {
+      status: "ACTIVE",
+      inventoryItems: { none: {} },
+      product: { status: "ACTIVE" },
+    },
+    orderBy: [{ product: { name: "asc" } }, { sku: "asc" }],
+    take: limit,
+    select: {
+      id: true,
+      sku: true,
+      product: { select: { id: true, name: true } },
+    },
+  });
+
+  return variants.map((variant) => ({
+    variantId: variant.id,
+    sku: variant.sku,
+    productId: variant.product.id,
+    productName: variant.product.name,
+  }));
+}

@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { AddToCart } from "@/components/cart/add-to-cart";
 import { ProductStatusBadge } from "@/components/products/product-status-badge";
 import { StockBadge } from "@/components/products/stock-badge";
+import { StockAdjustForm } from "@/modules/inventory/components/stock-adjust-form";
 import { getCurrentPermissions } from "@/modules/auth/application/authorization";
 import { PERMISSIONS } from "@/modules/auth/application/permissions";
 import { getCurrentAccount } from "@/modules/auth/infrastructure/session";
@@ -35,6 +36,7 @@ export default async function ProductDetailPage({ params }: ProductDetailProps) 
 
   const permissionSet = await getCurrentPermissions();
   const canUpdateProduct = permissionSet.has(PERMISSIONS.PRODUCTS_UPDATE);
+  const canAdjustInventory = permissionSet.has(PERMISSIONS.INVENTORY_ADJUST);
   const { t } = await getInterfaceLanguage();
 
   const { id } = await params;
@@ -200,6 +202,7 @@ export default async function ProductDetailPage({ params }: ProductDetailProps) 
                     <th scope="col" className="px-6 py-3 text-end">{t.catalog.detail.reserved}</th>
                     <th scope="col" className="px-6 py-3 text-end">{t.catalog.detail.available}</th>
                     <th scope="col" className="px-6 py-3">{t.catalog.detail.stock}</th>
+                    {canAdjustInventory ? <th scope="col" className="px-6 py-3">{t.inventory.adjust}</th> : null}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -225,6 +228,15 @@ export default async function ProductDetailPage({ params }: ProductDetailProps) 
                       <td className="whitespace-nowrap px-6 py-4">
                         <StockBadge availableQuantity={variant.availableQuantity} labels={t.catalog.stockLabels} />
                       </td>
+                      {canAdjustInventory ? (
+                        <td className="whitespace-nowrap px-6 py-4">
+                          <StockAdjustForm
+                            variantId={variant.id}
+                            sku={variant.sku}
+                            labels={{ ...t.inventory, saving: t.catalog.form.saving }}
+                          />
+                        </td>
+                      ) : null}
                     </tr>
                   ))}
                 </tbody>
@@ -264,6 +276,15 @@ export default async function ProductDetailPage({ params }: ProductDetailProps) 
                       <dd className="font-medium text-slate-900">{variant.availableQuantity}</dd>
                     </div>
                   </dl>
+                  {canAdjustInventory ? (
+                    <div className="mt-4">
+                      <StockAdjustForm
+                        variantId={variant.id}
+                        sku={variant.sku}
+                        labels={{ ...t.inventory, saving: t.catalog.form.saving }}
+                      />
+                    </div>
+                  ) : null}
                 </div>
               ))}
             </div>

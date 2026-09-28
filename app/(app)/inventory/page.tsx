@@ -17,6 +17,7 @@ import { StockAdjustForm } from "@/modules/inventory/components/stock-adjust-for
 import type { InventoryPageView, StockMovementView } from "@/modules/inventory/types";
 import { formatDate, formatVariantAttributes } from "@/src/lib/format";
 import { parsePaginationParams } from "@/src/lib/validation";
+import { listVariantsWithoutBalances } from "@/modules/inventory/application/inventory";
 import { getInterfaceLanguage } from "@/src/lib/i18n/server";
 
 const PAGE_SIZE = 10;
@@ -92,6 +93,8 @@ export default async function InventoryPage({ searchParams }: InventoryPageProps
     }
   }
 
+  const variantsWithoutBalances = canAdjustInventory ? await listVariantsWithoutBalances() : [];
+
   const { rows, summary, pagination } = page;
   const rangeStart = rows.length === 0 ? pagination.offset : pagination.offset + 1;
   const rangeEnd = pagination.offset + rows.length;
@@ -132,6 +135,35 @@ export default async function InventoryPage({ searchParams }: InventoryPageProps
           <p className="mt-1 text-xs text-slate-400">{t.inventory.lowOrOutHint}</p>
         </div>
       </section>
+
+      {canAdjustInventory ? (
+        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h3 className="text-base font-semibold text-slate-900">{t.inventory.noBalanceTitle}</h3>
+          <p className="mt-1 text-sm text-slate-500">{t.inventory.noBalanceHint}</p>
+
+          {variantsWithoutBalances.length === 0 ? (
+            <p className="mt-3 text-sm text-slate-500">{t.inventory.noBalanceEmpty}</p>
+          ) : (
+            <ul className="mt-4 divide-y divide-slate-100">
+              {variantsWithoutBalances.map((variant) => (
+                <li key={variant.variantId} className="flex flex-wrap items-center justify-between gap-3 py-3">
+                  <div className="min-w-0">
+                    <Link href={`/products/${variant.productId}`} className="text-sm font-medium text-slate-900 hover:text-blue-700">
+                      {variant.productName}
+                    </Link>
+                    <p className="text-xs text-slate-500">{variant.sku}</p>
+                  </div>
+                  <StockAdjustForm
+                    variantId={variant.variantId}
+                    sku={variant.sku}
+                    labels={{ ...t.inventory, saving: t.catalog.form.saving }}
+                  />
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      ) : null}
 
       {rows.length === 0 ? (
         <section className="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center">

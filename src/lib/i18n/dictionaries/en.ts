@@ -565,6 +565,9 @@ export const en = {
     stockHint: "{products} product(s) · {onHand} on hand",
   },
   inventory: {
+    noBalanceTitle: "Variants without a balance",
+    noBalanceHint: "These active variants have no inventory row yet. Record a quantity here and the row is created.",
+    noBalanceEmpty: "Every active variant already has a balance row.",
     subtitle: "stock balances per warehouse with the full movement ledger. Reservations, cancellations and payments move stock automatically; permitted staff can record manual corrections.",
     ledgerNote: "The 20 most recent ledger entries. Every entry stores the resulting on-hand and reserved quantities.",
     permissionTitle: "Inventory access requires a staff role",
@@ -802,7 +805,7 @@ export const en = {
       stock: "Stock",
       override: "override",
       footnote:
-        "Available = on hand − reserved. Stock adjustments are recorded from the inventory screen. Low stock follows the documented threshold of fewer than 10 available units (docs/01-product/business-rules.md).",
+        "Available = on hand − reserved. Staff with inventory.adjust can record stock here or from the inventory screen; the first adjustment creates the balance row. Low stock follows the documented threshold of fewer than 10 available units (docs/01-product/business-rules.md).",
     },
     form: {
       slugHint: "Lowercase letters, digits and single hyphens. Leave it empty and the platform generates one from the name.",
