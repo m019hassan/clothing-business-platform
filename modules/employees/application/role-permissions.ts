@@ -303,3 +303,174 @@ export async function createRole(
 
   return created;
 }
+
+export type RoleUpdateInput = { name?: string; description?: string; isActive?: boolean };
+
+/** Validates a role-update payload. Unknown keys are rejected. */
+export function parseRoleUpdateInput(payload: unknown): RoleUpdateInput {
+  if (typeof payload !== "object" || payload === null || Array.isArray(payload)) {
+    throw new ValidationError("Request body must be a JSON object.");
+  }
+
+  const body = payload as Record<string, unknown>;
+  const unknown = Object.keys(body).filter((key) => !["name", "description", "isActive"].includes(key));
+
+  if (unknown.length > 0) {
+    throw new ValidationError(`Unknown field(s): ${unknown.join(", ")}.`);
+  }
+
+  const input: RoleUpdateInput = {};
+
+  if (body.name !== undefined) {
+    if (typeof body.name !== "string" || body.name.trim().length === 0) {
+      throw new ValidationError("name must be a non-empty string when provided.");
+    }
+
+    const name = body.name.trim();
+
+    if (name.length > 100) {
+      throw new ValidationError("name must be at most 100 characters.");
+    }
+
+    input.name = name;
+  }
+
+  if (body.description !== undefined) {
+    if (body.description !== null && typeof body.description !== "string") {
+      throw new ValidationError("description must be a string or null when provided.");
+    }
+
+    const description = typeof body.description === "string" ? body.description.trim() : "";
+
+    if (description.length > 300) {
+      throw new ValidationError("description must be at most 300 characters.");
+    }
+
+    input.description = description;
+  }
+
+  if (body.isActive !== undefined) {
+    if (typeof body.isActive !== "boolean") {
+      throw new ValidationError("isActive must be true or false.");
+    }
+
+    input.isActive = body.isActive;
+  }
+
+  if (Object.keys(input).length === 0) {
+    throw new ValidationError("Provide at least one of name, description or isActive.");
+  }
+
+  return input;
+}
+
+async function loadEditableRole(roleId: string, accountId: string) {
+  const role = await prisma.role.findUnique({
+    where: { id: roleId },
+    select: { id: true, code: true, isSystem: true },
+  });
+
+  if (!role) {
+    throw new NotFoundError("Role not found.");
+  }
+
+  if (role.isSystem) {
+    throw new ConflictError(
+      `${role.code} is a system role maintained by the platform (see npm run make-admin) and cannot be changed here.`,
+    );
+  }
+
+  if (!accountId) {
+    throw new ValidationError("An acting account is required.");
+  }
+
+  return role;
+}
+
+/** Renames a role, edits its description or activates/deactivates it (roles.update). */
+export async function updateRole(
+  account: AuthenticatedAccount,
+  roleId: string,
+  payload: unknown,
+): Promise<RoleWithPermissionsView> {
+  await requirePermission(PERMISSIONS.ROLES_UPDATE);
+
+  if (!isUuid(roleId)) {
+    throw new NotFoundError("Role not found.");
+  }
+
+  const input = parseRoleUpdateInput(payload);
+
+  await withDatabaseError(() =>
+    prisma.$transaction(async (transaction) => {
+      await loadEditableRole(roleId, account.id);
+
+      await transaction.role.update({
+        where: { id: roleId },
+        data: {
+          ...(input.name !== undefined ? { name: input.name } : {}),
+          ...(input.description !== undefined ? { description: input.description || null } : {}),
+          ...(input.isActive !== undefined ? { isActive: input.isActive } : {}),
+        },
+      });
+
+      await transaction.auditLog.create({
+        data: {
+          accountId: account.id,
+          action: "ROLE_UPDATED",
+          entity: "Role",
+          entityId: roleId,
+          newValue: input.name ?? (input.isActive === undefined ? null : String(input.isActive)),
+        },
+      });
+    }),
+  );
+
+  const roles = await listRolesWithPermissions();
+  const updated = roles.find((entry) => entry.id === roleId);
+
+  if (!updated) {
+    throw new NotFoundError("Role not found.");
+  }
+
+  return updated;
+}
+
+/**
+ * Deletes a role that nobody holds. A role in use is refused instead of silently
+ * detaching employees - the message says how many accounts still have it.
+ */
+export async function deleteRole(account: AuthenticatedAccount, roleId: string): Promise<void> {
+  await requirePermission(PERMISSIONS.ROLES_DELETE);
+
+  if (!isUuid(roleId)) {
+    throw new NotFoundError("Role not found.");
+  }
+
+  await withDatabaseError(() =>
+    prisma.$transaction(async (transaction) => {
+      const role = await loadEditableRole(roleId, account.id);
+
+      const holders = await transaction.employeeRole.count({ where: { roleId } });
+
+      if (holders > 0) {
+        throw new ConflictError(
+          `${holders} employee(s) still hold ${role.code}. Remove it from them first, or deactivate the role instead.`,
+        );
+      }
+
+      await transaction.rolePermission.deleteMany({ where: { roleId } });
+      await transaction.role.delete({ where: { id: roleId } });
+
+      await transaction.auditLog.create({
+        data: {
+          accountId: account.id,
+          action: "ROLE_DELETED",
+          entity: "Role",
+          entityId: roleId,
+          newValue: role.code,
+        },
+      });
+    }),
+  );
+}

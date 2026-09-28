@@ -421,6 +421,17 @@ export const ar: Dictionary = {
     assignedRoles: "الأدوار الممنوحة",
   },
   roles: {
+    settingsTitle: "إعدادات الدور",
+    settings: {
+      name: "اسم الدور",
+      description: "الوصف",
+      active: "نشط",
+      save: "حفظ الإعدادات",
+      saving: "جارٍ الحفظ…",
+      saved: "تم الحفظ.",
+      remove: "حذف الدور",
+      removeConfirm: "حذف هذا الدور؟ يجب ألا يحمله أي موظف، ولا يمكن التراجع.",
+    },
     createTitle: "دور جديد",
     summaryRoles: "{count} دور",
     summaryPermissions: "{count} صلاحية نشطة",

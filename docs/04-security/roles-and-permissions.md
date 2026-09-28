@@ -77,7 +77,7 @@ Roles are data, not code. Development seeds such as "Finance Officer",
 "Inventory Officer" or "Order Manager" are examples. No role name is referenced in
 application code, so renaming or adding roles requires no code change.
 
-Roles are created from `/roles` by accounts holding `roles.create` (an empty role, permissions are granted from the matrix afterwards), and role permissions are editable by accounts holding `roles.update`
+Roles are created from `/roles` by accounts holding `roles.create` (an empty role, permissions are granted from the matrix afterwards); `roles.update` renames a role, edits its description or activates/deactivates it, and `roles.delete` removes a role that no employee holds. System roles are refused by all three beyond the matrix.
 (`PUT /api/roles/:id/permissions`); the page falls back to a read-only matrix
 without that permission. **System roles are locked**: the `ADMIN` role is
 maintained by `npm run make-admin`, so the API refuses to edit it (409) and an

@@ -11,6 +11,7 @@ import {
   listRolesWithPermissions,
 } from "@/modules/employees/application/role-permissions";
 import { RoleCreateForm } from "@/modules/employees/components/role-create-form";
+import { RoleSettingsForm } from "@/modules/employees/components/role-settings-form";
 import { RolePermissionsEditor } from "@/modules/employees/components/role-permissions-editor";
 import type {
   AccessOverviewView,
@@ -44,6 +45,7 @@ export default async function RolesPage() {
   }
 
   const canEditRoles = permissions.has(PERMISSIONS.ROLES_UPDATE);
+  const canDeleteRoles = permissions.has(PERMISSIONS.ROLES_DELETE);
   let editableRoles: RoleWithPermissionsView[] = [];
   let permissionCatalog: PermissionCatalogEntry[] = [];
 
@@ -205,6 +207,11 @@ export default async function RolesPage() {
                     <p className="text-xs text-slate-500">{role.permissionCodes.length} permission(s)</p>
                   </div>
                   <RolePermissionsEditor labels={{ ...t.roles, saving: t.catalog.form.saving }} role={role} catalog={permissionCatalog} />
+                  <RoleSettingsForm
+                    role={role}
+                    canDelete={canDeleteRoles}
+                    labels={{ ...t.roles.settings, errors: t.errors }}
+                  />
                 </div>
               ))
             : null}

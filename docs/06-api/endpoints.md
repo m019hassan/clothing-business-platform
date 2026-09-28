@@ -164,6 +164,8 @@ every code in `modules/auth/application/permissions.ts`.
 | --- | --- | --- | --- |
 | GET | `/api/roles` | `roles.view` | `{ roles, catalog }` (codes per role + every active permission grouped by module) |
 | POST | `/api/roles` | `roles.create` | `{ role }` (empty role; grant permissions from the matrix) |
+| PUT | `/api/roles/:id` | `roles.update` | `{ role }` (`name`, `description`, `isActive`; system roles are refused) |
+| DELETE | `/api/roles/:id` | `roles.delete` | `{ ok: true }` (only a role nobody holds; system roles are refused) |
 | PUT | `/api/roles/:id/permissions` | `roles.update` | `{ role }` |
 
 Replaces the permission set of a role (`{ permissionCodes: [...] }`, an empty array

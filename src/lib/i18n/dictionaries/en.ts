@@ -421,6 +421,17 @@ export const en = {
     assignedRoles: "Assigned roles",
   },
   roles: {
+    settingsTitle: "Role settings",
+    settings: {
+      name: "Role name",
+      description: "Description",
+      active: "Active",
+      save: "Save settings",
+      saving: "Saving…",
+      saved: "Saved.",
+      remove: "Delete role",
+      removeConfirm: "Delete this role? Employees must not hold it; this cannot be undone.",
+    },
     createTitle: "New role",
     summaryRoles: "{count} role(s)",
     summaryPermissions: "{count} active permissions",
