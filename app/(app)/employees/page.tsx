@@ -6,6 +6,9 @@ import { getCurrentPermissions } from "@/modules/auth/application/authorization"
 import { PERMISSIONS } from "@/modules/auth/application/permissions";
 import { getCurrentAccount } from "@/modules/auth/infrastructure/session";
 import { listEmployees } from "@/modules/employees/application/employees";
+import { listBranchOptions, listDepartmentOptions, listRoleOptions } from "@/modules/employees/application/lookups";
+import { EmployeeCreateForm } from "@/modules/users/components/employee-create-form";
+import { EmployeeRowActions } from "@/modules/users/components/employee-row-actions";
 import type { EmployeePageView } from "@/modules/employees/types";
 import { formatDate } from "@/src/lib/format";
 import { parsePaginationParams } from "@/src/lib/validation";
@@ -26,6 +29,7 @@ export default async function EmployeesPage({ searchParams }: EmployeesPageProps
   }
 
   const permissions = await getCurrentPermissions();
+  const canManageUsers = permissions.has(PERMISSIONS.USERS_MANAGE);
 
   if (!permissions.has(PERMISSIONS.EMPLOYEES_VIEW)) {
     return (
@@ -65,6 +69,11 @@ export default async function EmployeesPage({ searchParams }: EmployeesPageProps
     );
   }
 
+  const canManageEmployees = permissions.has(PERMISSIONS.USERS_MANAGE);
+  const [departmentOptions, roleOptions, branchOptions] = canManageEmployees
+    ? await Promise.all([listDepartmentOptions(), listRoleOptions(), listBranchOptions()])
+    : [[], [], []];
+
   const { rows, pagination } = page;
   const rangeStart = rows.length === 0 ? pagination.offset : pagination.offset + 1;
   const rangeEnd = pagination.offset + rows.length;
@@ -78,18 +87,24 @@ export default async function EmployeesPage({ searchParams }: EmployeesPageProps
           <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">{t.employees.kicker}</p>
           <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-950">{t.employees.title}</h2>
           <p className="mt-1 text-sm text-slate-600">
-            {pagination.total} employee account{pagination.total === 1 ? "" : "s"}.
+            {t.employees.summary.replace("{count}", String(pagination.total))}
           </p>
         </div>
-        <button
-          type="button"
-          disabled
-          title={t.employees.manageTooltip}
-          className="cursor-not-allowed rounded-lg border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-400"
-        >
-          Add employee
-        </button>
+
       </section>
+
+      {canManageEmployees ? (
+        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h3 className="text-base font-semibold text-slate-900">{t.employees.createTitle}</h3>
+          <p className="mt-1 text-sm text-slate-500">{t.employees.createHint}</p>
+          <EmployeeCreateForm
+            departments={departmentOptions}
+            branches={branchOptions}
+            roles={roleOptions}
+            labels={{ ...t.employees.editor, errors: t.errors }}
+          />
+        </section>
+      ) : null}
 
       {rows.length === 0 ? (
         <section className="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center">
@@ -141,6 +156,25 @@ export default async function EmployeesPage({ searchParams }: EmployeesPageProps
                       >
                         View
                       </Link>
+
+                      {canManageEmployees ? (
+                        <div className="mt-2">
+                          <EmployeeRowActions
+                            employee={{
+                              accountId: row.id,
+                              firstName: row.firstName,
+                              lastName: row.lastName,
+                              jobTitle: row.jobTitle,
+                              accountStatus: row.accountStatus,
+                              departmentName: row.departmentName,
+                              roleIds: row.roleIds,
+                            }}
+                            departments={departmentOptions}
+                            roles={roleOptions}
+                            labels={{ ...t.employees.editor, statusLabels: t.accountStatus, errors: t.errors }}
+                          />
+                        </div>
+                      ) : null}
                     </td>
                   </tr>
                 ))}

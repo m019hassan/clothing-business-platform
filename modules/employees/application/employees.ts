@@ -37,7 +37,7 @@ const employeeSelection = {
       hireDate: true,
       department: { select: { name: true } },
       employeeRoles: {
-        select: { role: { select: { name: true, isActive: true } } },
+        select: { role: { select: { id: true, name: true, isActive: true } } },
       },
     },
   },
@@ -68,6 +68,7 @@ function mapEmployee(record: EmployeeRecord): EmployeeRowView {
       profile?.employeeRoles
         .filter((entry) => entry.role.isActive)
         .map((entry) => entry.role.name) ?? [],
+    roleIds: profile?.employeeRoles.filter((entry) => entry.role.isActive).map((entry) => entry.role.id) ?? [],
   };
 }
 

@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 
 import { requireAuthenticated } from "@/modules/auth/infrastructure/session";
-import { getUser, updateUser } from "@/modules/users/application/users";
+import {
+  deleteUser,
+  getUser,
+  updateUser,
+} from "@/modules/users/application/users";
 import { toErrorResponse, ValidationError } from "@/src/lib/errors";
 
 export const dynamic = "force-dynamic";
@@ -38,6 +42,21 @@ export async function PUT(request: Request, context: RouteContext) {
     const user = await updateUser(account, id, payload);
 
     return NextResponse.json({ user });
+  } catch (error) {
+    const { status, body } = toErrorResponse(error);
+
+    return NextResponse.json(body, { status });
+  }
+}
+
+/** DELETE /api/users/:id - archives an account with history, deletes an empty one (users.manage). */
+export async function DELETE(_request: Request, context: RouteContext) {
+  try {
+    const account = await requireAuthenticated();
+    const { id } = await context.params;
+    const result = await deleteUser(account, id);
+
+    return NextResponse.json(result);
   } catch (error) {
     const { status, body } = toErrorResponse(error);
 

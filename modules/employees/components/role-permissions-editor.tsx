@@ -40,7 +40,7 @@ export function RolePermissionsEditor({
     <form action={formAction} className="mt-4 space-y-4">
       <input type="hidden" name="roleId" value={role.id} />
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {catalog.map((group) => (
           <fieldset key={group.module} className="rounded-xl border border-slate-200 p-3">
             <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-slate-500">

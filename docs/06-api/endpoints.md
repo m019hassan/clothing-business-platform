@@ -347,6 +347,16 @@ payment APPROVED, order CONFIRMED, stock consumed. Failure -> payment REJECTED,
 order CANCELLED, reserved stock released. It shares one code path with the staff
 endpoints, so a simulated outcome and a real decision can never diverge.
 
+## Removing accounts
+
+`DELETE /api/users/:id` never destroys history. An account that appears in orders,
+audit rows, counter sales, refunds, notifications or addresses is **archived**
+(`deletedAt` set, status ARCHIVED): every list filters it out and its records stay
+intact. An account with no history at all - a typo, for example - is deleted
+outright. Deleting your own account is refused, and so is removing the last active
+administrator. Employee fields (`jobTitle`, `departmentId`, `roleIds`) are updated
+through `PUT /api/users/:id`.
+
 ## Catalog identifiers
 
 Product and category **slugs are optional**. When one is omitted (or blank) the

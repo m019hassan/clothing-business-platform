@@ -10,6 +10,8 @@ export type EmployeeRowView = {
   departmentName: string | null;
   hireDate: string | null;
   roles: string[];
+  /** The ids behind the names, for the management editor. */
+  roleIds: string[];
 };
 
 export type EmployeeDetailView = EmployeeRowView & {

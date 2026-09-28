@@ -10,6 +10,9 @@ export type UserListItemView = {
   profileCode: string | null;
   branchId: string | null;
   roles: { id: string; code: string; name: string }[];
+  /** Employee-only fields; null for other account types. */
+  jobTitle: string | null;
+  departmentName: string | null;
   lastLoginAt: string | null;
   createdAt: string;
 };

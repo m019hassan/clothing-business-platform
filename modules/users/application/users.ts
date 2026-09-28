@@ -48,6 +48,7 @@ export type UserUpdateInput = {
   phone?: string;
   status?: AccountStatus;
   jobTitle?: string | null;
+  departmentId?: string;
   branchId?: string | null;
   roleIds?: string[];
 };
@@ -201,7 +202,17 @@ export function parseUserCreateInput(payload: unknown): UserCreateInput {
 /** Validates an account update payload. Unknown keys are rejected. */
 export function parseUserUpdateInput(payload: unknown): UserUpdateInput {
   const body = asRecord(payload);
-  const allowed = ["firstName", "lastName", "email", "phone", "status", "jobTitle", "branchId", "roleIds"];
+  const allowed = [
+    "firstName",
+    "lastName",
+    "email",
+    "phone",
+    "status",
+    "jobTitle",
+    "departmentId",
+    "branchId",
+    "roleIds",
+  ];
   const unknown = Object.keys(body).filter((key) => !allowed.includes(key));
 
   if (unknown.length > 0) {
@@ -230,6 +241,15 @@ export function parseUserUpdateInput(payload: unknown): UserUpdateInput {
     }
 
     input.branchId = body.branchId as string | null;
+  }
+
+  if (body.departmentId !== undefined) {
+    // An employee always belongs to a department, so the field takes an id only.
+    if (typeof body.departmentId !== "string" || !isUuid(body.departmentId)) {
+      throw new ValidationError("departmentId must be a department id.");
+    }
+
+    input.departmentId = body.departmentId;
   }
 
   if (body.roleIds !== undefined) input.roleIds = parseIdList(body.roleIds, "roleIds");
@@ -305,7 +325,9 @@ const accountSelection = {
       firstName: true,
       lastName: true,
       employeeNumber: true,
+      jobTitle: true,
       branchId: true,
+      department: { select: { name: true } },
       employeeRoles: { select: { role: { select: { id: true, code: true, name: true } } } },
     },
   },
@@ -331,6 +353,8 @@ function mapUser(record: AccountRecord): UserListItemView {
     email: record.email,
     phone: record.phone,
     displayName: displayName(record),
+    jobTitle: record.employeeProfile?.jobTitle ?? null,
+    departmentName: record.employeeProfile?.department?.name ?? null,
     profileCode:
       record.customerProfile?.customerCode ??
       record.employeeProfile?.employeeNumber ??
@@ -659,6 +683,7 @@ export async function updateUser(
           if (input.firstName !== undefined) profileData.firstName = input.firstName;
           if (input.lastName !== undefined) profileData.lastName = input.lastName;
           if (input.jobTitle !== undefined) profileData.jobTitle = input.jobTitle;
+          if (input.departmentId !== undefined) profileData.departmentId = input.departmentId;
           // updateMany cannot express relation changes, so the FK scalar is set directly.
           const employeeData: Prisma.EmployeeProfileUncheckedUpdateInput = {
             ...profileData,
@@ -756,4 +781,117 @@ export async function resetUserPassword(
       return { id: accountId, sessionsRevoked: revoked.count };
     }),
   );
+}
+
+export type UserDeleteResult = { mode: "archived" | "deleted" };
+
+/**
+ * Removes an account.
+ *
+ * An account that appears in any history - orders, audit rows, counter sales,
+ * refunds, notifications or addresses - is **archived**: it disappears from the
+ * lists (every query filters `deletedAt`) and its records stay intact. An account
+ * with no history at all (a typo, for example) is deleted outright.
+ */
+export async function deleteUser(
+  account: AuthenticatedAccount,
+  accountId: string,
+): Promise<UserDeleteResult> {
+  await requirePermission(PERMISSIONS.USERS_MANAGE);
+
+  if (!isUuid(accountId)) {
+    throw new NotFoundError("Account not found.");
+  }
+
+  if (accountId === account.id) {
+    throw new ConflictError("You cannot delete your own account.");
+  }
+
+  const target = await withDatabaseError(() =>
+    prisma.account.findFirst({
+      where: { id: accountId, deletedAt: null },
+      select: {
+        id: true,
+        accountType: true,
+        status: true,
+        customerProfile: { select: { id: true } },
+        employeeProfile: {
+          select: { id: true, employeeRoles: { select: { role: { select: { code: true } } } } },
+        },
+      },
+    }),
+  );
+
+  if (!target) {
+    throw new NotFoundError("Account not found.");
+  }
+
+  const isAdmin = target.employeeProfile?.employeeRoles.some((entry) => entry.role.code === "ADMIN") ?? false;
+
+  if (isAdmin) {
+    const admins = await withDatabaseError(() =>
+      prisma.employeeRole.count({
+        where: { role: { code: "ADMIN" }, employee: { account: { status: "ACTIVE", deletedAt: null } } },
+      }),
+    );
+
+    if (admins <= 1) {
+      throw new ConflictError("This is the only active administrator. Grant ADMIN to another employee first.");
+    }
+  }
+
+  const profileId = target.customerProfile?.id ?? null;
+
+  const history = await withDatabaseError(() =>
+    prisma.$transaction([
+      prisma.order.count({ where: { OR: [{ soldByAccountId: accountId }, ...(profileId ? [{ customerProfileId: profileId }] : [])] } }),
+      prisma.auditLog.count({ where: { accountId } }),
+      prisma.refund.count({ where: { refundedByAccountId: accountId } }),
+      prisma.notification.count({ where: { accountId } }),
+      ...(profileId ? [prisma.address.count({ where: { customerProfileId: profileId } })] : []),
+    ]),
+  );
+
+  const hasHistory = history.some((count) => count > 0);
+
+  if (hasHistory) {
+    await withDatabaseError(() =>
+      prisma.$transaction(async (transaction) => {
+        await transaction.account.update({
+          where: { id: accountId },
+          data: { status: "ARCHIVED", deletedAt: new Date() },
+        });
+
+        await transaction.session.deleteMany({ where: { accountId } });
+
+        await transaction.auditLog.create({
+          data: {
+            accountId: account.id,
+            action: "USER_ARCHIVED",
+            entity: "Account",
+            entityId: accountId,
+          },
+        });
+      }),
+    );
+
+    return { mode: "archived" };
+  }
+
+  await withDatabaseError(() =>
+    prisma.$transaction(async (transaction) => {
+      await transaction.session.deleteMany({ where: { accountId } });
+
+      if (target.employeeProfile) {
+        await transaction.employeeRole.deleteMany({ where: { employeeId: target.employeeProfile.id } });
+      }
+
+      await transaction.cart.deleteMany({ where: { customerProfileId: profileId ?? undefined } });
+      await transaction.customerProfile.deleteMany({ where: { accountId } });
+      await transaction.employeeProfile.deleteMany({ where: { accountId } });
+      await transaction.account.delete({ where: { id: accountId } });
+    }),
+  );
+
+  return { mode: "deleted" };
 }
