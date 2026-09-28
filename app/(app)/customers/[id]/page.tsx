@@ -120,11 +120,11 @@ export default async function CustomerDetailPage({ params }: CustomerDetailPageP
           <p className="px-6 py-8 text-sm text-slate-500">This customer has no orders yet.</p>
         ) : (
           <table className="min-w-full divide-y divide-slate-200 text-sm">
-            <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <thead className="bg-slate-50 text-start text-xs font-semibold uppercase tracking-wide text-slate-500">
               <tr>
                 <th scope="col" className="px-6 py-3">Order</th>
                 <th scope="col" className="px-6 py-3">Status</th>
-                <th scope="col" className="px-6 py-3 text-right">Total</th>
+                <th scope="col" className="px-6 py-3 text-end">Total</th>
                 <th scope="col" className="px-6 py-3">Placed</th>
               </tr>
             </thead>
@@ -139,7 +139,7 @@ export default async function CustomerDetailPage({ params }: CustomerDetailPageP
                   <td className="px-6 py-4">
                     <OrderStatusBadge status={order.status} />
                   </td>
-                  <td className="px-6 py-4 text-right text-slate-700">
+                  <td className="px-6 py-4 text-end text-slate-700">
                     {formatMoney(order.totalAmount, order.currency)}
                   </td>
                   <td className="px-6 py-4 text-slate-600">{formatDate(order.createdAt)}</td>

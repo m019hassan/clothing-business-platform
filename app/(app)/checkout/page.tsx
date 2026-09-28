@@ -91,12 +91,12 @@ export default async function CheckoutPage() {
 
           <div className="hidden overflow-x-auto sm:block">
             <table className="min-w-full divide-y divide-slate-200 text-sm">
-              <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+              <thead className="bg-slate-50 text-start text-xs font-semibold uppercase tracking-wide text-slate-500">
                 <tr>
                   <th scope="col" className="px-6 py-3">Item</th>
-                  <th scope="col" className="px-6 py-3 text-right">Qty</th>
-                  <th scope="col" className="px-6 py-3 text-right">Unit price</th>
-                  <th scope="col" className="px-6 py-3 text-right">Line total</th>
+                  <th scope="col" className="px-6 py-3 text-end">Qty</th>
+                  <th scope="col" className="px-6 py-3 text-end">Unit price</th>
+                  <th scope="col" className="px-6 py-3 text-end">Line total</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -106,11 +106,11 @@ export default async function CheckoutPage() {
                       <p className="font-medium text-slate-900">{item.productName}</p>
                       <p className="text-xs text-slate-500">{item.sku}</p>
                     </td>
-                    <td className="px-6 py-4 text-right text-slate-700">{item.quantity}</td>
-                    <td className="px-6 py-4 text-right text-slate-700">
+                    <td className="px-6 py-4 text-end text-slate-700">{item.quantity}</td>
+                    <td className="px-6 py-4 text-end text-slate-700">
                       {formatMoney(item.unitPrice, item.currency)}
                     </td>
-                    <td className="px-6 py-4 text-right font-medium text-slate-900">
+                    <td className="px-6 py-4 text-end font-medium text-slate-900">
                       {formatMoney(item.lineTotal, item.currency)}
                     </td>
                   </tr>

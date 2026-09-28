@@ -157,13 +157,13 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
           <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
             <div className="hidden overflow-x-auto sm:block">
               <table className="min-w-full divide-y divide-slate-200 text-sm">
-                <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                <thead className="bg-slate-50 text-start text-xs font-semibold uppercase tracking-wide text-slate-500">
                   <tr>
                     <th scope="col" className="px-6 py-3">Customer</th>
                     <th scope="col" className="px-6 py-3">Contact</th>
                     <th scope="col" className="px-6 py-3">Classification</th>
                     <th scope="col" className="px-6 py-3">Status</th>
-                    <th scope="col" className="px-6 py-3 text-right">Orders</th>
+                    <th scope="col" className="px-6 py-3 text-end">Orders</th>
                     <th scope="col" className="px-6 py-3">Joined</th>
                   </tr>
                 </thead>
@@ -187,7 +187,7 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
                         <td className="px-6 py-4">
                           <AccountStatusBadge status={customer.accountStatus} />
                         </td>
-                        <td className="px-6 py-4 text-right text-slate-700">{customer.orderCount}</td>
+                        <td className="px-6 py-4 text-end text-slate-700">{customer.orderCount}</td>
                         <td className="px-6 py-4 text-slate-600">{formatDate(customer.createdAt)}</td>
                       </tr>
                     );

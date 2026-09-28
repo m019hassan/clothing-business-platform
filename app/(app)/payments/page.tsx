@@ -107,15 +107,15 @@ export default async function PaymentsPage({ searchParams }: PaymentsPageProps) 
         <>
           <section className="hidden overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm lg:block">
             <table className="min-w-full divide-y divide-slate-200 text-sm">
-              <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+              <thead className="bg-slate-50 text-start text-xs font-semibold uppercase tracking-wide text-slate-500">
                 <tr>
                   <th scope="col" className="px-6 py-3">Order</th>
                   <th scope="col" className="px-6 py-3">Customer</th>
                   <th scope="col" className="px-6 py-3">Payment</th>
-                  <th scope="col" className="px-6 py-3 text-right">Amount</th>
+                  <th scope="col" className="px-6 py-3 text-end">Amount</th>
                   <th scope="col" className="px-6 py-3">Placed</th>
                   {canDecidePayments ? (
-                    <th scope="col" className="px-6 py-3 text-right">Actions</th>
+                    <th scope="col" className="px-6 py-3 text-end">Actions</th>
                   ) : null}
                 </tr>
               </thead>
@@ -138,12 +138,12 @@ export default async function PaymentsPage({ searchParams }: PaymentsPageProps) 
                         {row.paymentMethod ? row.paymentMethod.replaceAll("_", " ") : "Method not selected"}
                       </p>
                     </td>
-                    <td className="whitespace-nowrap px-6 py-4 text-right text-slate-700">
+                    <td className="whitespace-nowrap px-6 py-4 text-end text-slate-700">
                       {formatMoney(row.paymentAmount, row.currency)}
                     </td>
                     <td className="whitespace-nowrap px-6 py-4 text-slate-500">{formatDate(row.createdAt)}</td>
                     {canDecidePayments ? (
-                      <td className="whitespace-nowrap px-6 py-4 text-right">
+                      <td className="whitespace-nowrap px-6 py-4 text-end">
                         <PaymentActions
                           payment={row}
                         canVerify={canProcessPayments}

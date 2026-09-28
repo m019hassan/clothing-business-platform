@@ -74,7 +74,7 @@ export default async function AdminBranchesPage() {
                 {branch.name}{" "}
                 <span className="text-sm font-normal text-slate-500">({branch.code})</span>
                 {branch.isActive ? null : (
-                  <span className="ml-2 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                  <span className="ms-2 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
                     inactive
                   </span>
                 )}

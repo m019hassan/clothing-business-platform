@@ -147,11 +147,11 @@ export default async function ReportsPage({
             </div>
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-slate-200 text-sm">
-                <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                <thead className="bg-slate-50 text-start text-xs font-semibold uppercase tracking-wide text-slate-500">
                   <tr>
                     <th scope="col" className="px-6 py-3">Status</th>
-                    <th scope="col" className="px-6 py-3 text-right">Orders</th>
-                    <th scope="col" className="px-6 py-3 text-right">Value</th>
+                    <th scope="col" className="px-6 py-3 text-end">Orders</th>
+                    <th scope="col" className="px-6 py-3 text-end">Value</th>
                     <th scope="col" className="px-6 py-3">Share</th>
                   </tr>
                 </thead>
@@ -163,8 +163,8 @@ export default async function ReportsPage({
                         <td className="whitespace-nowrap px-6 py-3 font-medium text-slate-800">
                           {row.status.replaceAll("_", " ")}
                         </td>
-                        <td className="whitespace-nowrap px-6 py-3 text-right text-slate-700">{row.count}</td>
-                        <td className="whitespace-nowrap px-6 py-3 text-right text-slate-700">
+                        <td className="whitespace-nowrap px-6 py-3 text-end text-slate-700">{row.count}</td>
+                        <td className="whitespace-nowrap px-6 py-3 text-end text-slate-700">
                           {formatMoney(row.total, "SAR")}
                         </td>
                         <td className="px-6 py-3">
@@ -197,11 +197,11 @@ export default async function ReportsPage({
                 </div>
                 {topProducts.length > 0 ? (
                   <table className="min-w-full divide-y divide-slate-200 text-sm">
-                    <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    <thead className="bg-slate-50 text-start text-xs font-semibold uppercase tracking-wide text-slate-500">
                       <tr>
                         <th scope="col" className="px-6 py-3">Product</th>
-                        <th scope="col" className="px-6 py-3 text-right">Units</th>
-                        <th scope="col" className="px-6 py-3 text-right">Revenue</th>
+                        <th scope="col" className="px-6 py-3 text-end">Units</th>
+                        <th scope="col" className="px-6 py-3 text-end">Revenue</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
@@ -212,8 +212,8 @@ export default async function ReportsPage({
                               {row.productName}
                             </Link>
                           </td>
-                          <td className="px-6 py-3 text-right text-slate-700">{row.quantity}</td>
-                          <td className="px-6 py-3 text-right text-slate-700">
+                          <td className="px-6 py-3 text-end text-slate-700">{row.quantity}</td>
+                          <td className="px-6 py-3 text-end text-slate-700">
                             {formatMoney(row.revenue, row.currency)}
                           </td>
                         </tr>
@@ -234,11 +234,11 @@ export default async function ReportsPage({
                 </div>
                 {topCustomers && topCustomers.length > 0 ? (
                   <table className="min-w-full divide-y divide-slate-200 text-sm">
-                    <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    <thead className="bg-slate-50 text-start text-xs font-semibold uppercase tracking-wide text-slate-500">
                       <tr>
                         <th scope="col" className="px-6 py-3">Customer</th>
-                        <th scope="col" className="px-6 py-3 text-right">Orders</th>
-                        <th scope="col" className="px-6 py-3 text-right">Revenue</th>
+                        <th scope="col" className="px-6 py-3 text-end">Orders</th>
+                        <th scope="col" className="px-6 py-3 text-end">Revenue</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
@@ -248,8 +248,8 @@ export default async function ReportsPage({
                             <p className="font-medium text-slate-800">{row.customerName}</p>
                             <p className="text-xs text-slate-500">{row.customerCode}</p>
                           </td>
-                          <td className="px-6 py-3 text-right text-slate-700">{row.orders}</td>
-                          <td className="px-6 py-3 text-right text-slate-700">
+                          <td className="px-6 py-3 text-end text-slate-700">{row.orders}</td>
+                          <td className="px-6 py-3 text-end text-slate-700">
                             {formatMoney(row.revenue, row.currency)}
                           </td>
                         </tr>
@@ -283,11 +283,11 @@ export default async function ReportsPage({
             </Link>
           </div>
           <table className="min-w-full divide-y divide-slate-200 text-sm">
-            <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <thead className="bg-slate-50 text-start text-xs font-semibold uppercase tracking-wide text-slate-500">
               <tr>
                 <th scope="col" className="px-6 py-3">Status</th>
-                <th scope="col" className="px-6 py-3 text-right">Count</th>
-                <th scope="col" className="px-6 py-3 text-right">Amount</th>
+                <th scope="col" className="px-6 py-3 text-end">Count</th>
+                <th scope="col" className="px-6 py-3 text-end">Amount</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -298,8 +298,8 @@ export default async function ReportsPage({
                     <td className="whitespace-nowrap px-6 py-3 font-medium text-slate-800">
                       {row.status.replaceAll("_", " ")}
                     </td>
-                    <td className="whitespace-nowrap px-6 py-3 text-right text-slate-700">{row.count}</td>
-                    <td className="whitespace-nowrap px-6 py-3 text-right text-slate-700">
+                    <td className="whitespace-nowrap px-6 py-3 text-end text-slate-700">{row.count}</td>
+                    <td className="whitespace-nowrap px-6 py-3 text-end text-slate-700">
                       {formatMoney(row.amount, "SAR")}
                     </td>
                   </tr>

@@ -130,12 +130,12 @@ export default async function AccountPage() {
                 >
                   Edit profile
                 </a>
-                <p className="max-w-[220px] text-right text-xs text-slate-400">
+                <p className="max-w-[220px] text-end text-xs text-slate-400">
                   Update your name, gender and birth date.
                 </p>
               </>
             ) : (
-              <p className="max-w-[220px] text-right text-xs text-slate-400">
+              <p className="max-w-[220px] text-end text-xs text-slate-400">
                 Employee details are maintained by the store&apos;s administrator.
               </p>
             )}

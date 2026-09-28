@@ -184,16 +184,16 @@ export default async function ProductDetailPage({ params }: ProductDetailProps) 
             {/* Desktop table */}
             <div className="hidden overflow-x-auto lg:block">
               <table className="min-w-full divide-y divide-slate-200 text-sm">
-                <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                <thead className="bg-slate-50 text-start text-xs font-semibold uppercase tracking-wide text-slate-500">
                   <tr>
                     <th scope="col" className="px-6 py-3">SKU</th>
                     <th scope="col" className="px-6 py-3">Size</th>
                     <th scope="col" className="px-6 py-3">Color</th>
                     <th scope="col" className="px-6 py-3">Status</th>
                     <th scope="col" className="px-6 py-3">Unit price</th>
-                    <th scope="col" className="px-6 py-3 text-right">On hand</th>
-                    <th scope="col" className="px-6 py-3 text-right">Reserved</th>
-                    <th scope="col" className="px-6 py-3 text-right">Available</th>
+                    <th scope="col" className="px-6 py-3 text-end">On hand</th>
+                    <th scope="col" className="px-6 py-3 text-end">Reserved</th>
+                    <th scope="col" className="px-6 py-3 text-end">Available</th>
                     <th scope="col" className="px-6 py-3">Stock</th>
                   </tr>
                 </thead>
@@ -209,12 +209,12 @@ export default async function ProductDetailPage({ params }: ProductDetailProps) 
                       <td className="whitespace-nowrap px-6 py-4 text-slate-700">
                         {formatMoney(variant.priceOverride ?? product.basePrice, product.currency)}
                         {variant.priceOverride ? (
-                          <span className="ml-2 text-xs text-slate-400">override</span>
+                          <span className="ms-2 text-xs text-slate-400">override</span>
                         ) : null}
                       </td>
-                      <td className="whitespace-nowrap px-6 py-4 text-right text-slate-700">{variant.quantityOnHand}</td>
-                      <td className="whitespace-nowrap px-6 py-4 text-right text-slate-700">{variant.quantityReserved}</td>
-                      <td className="whitespace-nowrap px-6 py-4 text-right font-medium text-slate-900">
+                      <td className="whitespace-nowrap px-6 py-4 text-end text-slate-700">{variant.quantityOnHand}</td>
+                      <td className="whitespace-nowrap px-6 py-4 text-end text-slate-700">{variant.quantityReserved}</td>
+                      <td className="whitespace-nowrap px-6 py-4 text-end font-medium text-slate-900">
                         {variant.availableQuantity}
                       </td>
                       <td className="whitespace-nowrap px-6 py-4">

@@ -98,7 +98,7 @@ export default async function EmployeesPage({ searchParams }: EmployeesPageProps
         <>
           <section className="hidden overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm lg:block">
             <table className="min-w-full divide-y divide-slate-200 text-sm">
-              <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+              <thead className="bg-slate-50 text-start text-xs font-semibold uppercase tracking-wide text-slate-500">
                 <tr>
                   <th scope="col" className="px-6 py-3">Employee</th>
                   <th scope="col" className="px-6 py-3">Contact</th>
@@ -106,7 +106,7 @@ export default async function EmployeesPage({ searchParams }: EmployeesPageProps
                   <th scope="col" className="px-6 py-3">Roles</th>
                   <th scope="col" className="px-6 py-3">Status</th>
                   <th scope="col" className="px-6 py-3">Hired</th>
-                  <th scope="col" className="px-6 py-3 text-right">Actions</th>
+                  <th scope="col" className="px-6 py-3 text-end">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -132,7 +132,7 @@ export default async function EmployeesPage({ searchParams }: EmployeesPageProps
                     <td className="whitespace-nowrap px-6 py-4 text-slate-500">
                       {row.hireDate ? formatDate(row.hireDate) : "—"}
                     </td>
-                    <td className="whitespace-nowrap px-6 py-4 text-right">
+                    <td className="whitespace-nowrap px-6 py-4 text-end">
                       <Link
                         href={`/employees/${row.id}`}
                         className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-100"

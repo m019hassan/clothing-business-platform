@@ -258,14 +258,14 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
           {/* Desktop table */}
           <section className="hidden overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm lg:block">
             <table className="min-w-full divide-y divide-slate-200 text-sm">
-              <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+              <thead className="bg-slate-50 text-start text-xs font-semibold uppercase tracking-wide text-slate-500">
                 <tr>
                   <th scope="col" className="px-6 py-3">Product</th>
                   <th scope="col" className="px-6 py-3">Variants</th>
                   <th scope="col" className="px-6 py-3">Status</th>
                   <th scope="col" className="px-6 py-3">Base price</th>
                   <th scope="col" className="px-6 py-3">Available</th>
-                  <th scope="col" className="px-6 py-3 text-right">Actions</th>
+                  <th scope="col" className="px-6 py-3 text-end">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -288,7 +288,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                       {formatMoney(product.basePrice, product.currency)}
                     </td>
                     <td className="whitespace-nowrap px-6 py-4 text-slate-700">{totalAvailable(product)}</td>
-                    <td className="whitespace-nowrap px-6 py-4 text-right">
+                    <td className="whitespace-nowrap px-6 py-4 text-end">
                       <Link
                         href={`/products/${product.id}`}
                         className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-100"

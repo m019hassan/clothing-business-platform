@@ -130,13 +130,13 @@ export default async function OrderDetailPage({ params }: OrderDetailProps) {
 
         <div className="hidden overflow-x-auto sm:block">
           <table className="min-w-full divide-y divide-slate-200 text-sm">
-            <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <thead className="bg-slate-50 text-start text-xs font-semibold uppercase tracking-wide text-slate-500">
               <tr>
                 <th scope="col" className="px-6 py-3">Item</th>
-                <th scope="col" className="px-6 py-3 text-right">Qty</th>
-                <th scope="col" className="px-6 py-3 text-right">Unit price</th>
-                <th scope="col" className="px-6 py-3 text-right">Discount</th>
-                <th scope="col" className="px-6 py-3 text-right">Subtotal</th>
+                <th scope="col" className="px-6 py-3 text-end">Qty</th>
+                <th scope="col" className="px-6 py-3 text-end">Unit price</th>
+                <th scope="col" className="px-6 py-3 text-end">Discount</th>
+                <th scope="col" className="px-6 py-3 text-end">Subtotal</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -153,14 +153,14 @@ export default async function OrderDetailPage({ params }: OrderDetailProps) {
                         : ""}
                     </p>
                   </td>
-                  <td className="px-6 py-4 text-right text-slate-700">{item.quantity}</td>
-                  <td className="px-6 py-4 text-right text-slate-700">
+                  <td className="px-6 py-4 text-end text-slate-700">{item.quantity}</td>
+                  <td className="px-6 py-4 text-end text-slate-700">
                     {formatMoney(item.unitPrice, order.currency)}
                   </td>
-                  <td className="px-6 py-4 text-right text-slate-700">
+                  <td className="px-6 py-4 text-end text-slate-700">
                     {formatMoney(item.discountAmount, order.currency)}
                   </td>
-                  <td className="px-6 py-4 text-right font-medium text-slate-900">
+                  <td className="px-6 py-4 text-end font-medium text-slate-900">
                     {formatMoney(item.lineTotal, order.currency)}
                   </td>
                 </tr>
@@ -320,7 +320,7 @@ export default async function OrderDetailPage({ params }: OrderDetailProps) {
       </section>
 
       {/* Summary */}
-      <section className="ml-auto w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <section className="ms-auto w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h3 className="text-base font-semibold text-slate-900">Summary</h3>
         <dl className="mt-4 space-y-3 text-sm">
           <div className="flex items-center justify-between">

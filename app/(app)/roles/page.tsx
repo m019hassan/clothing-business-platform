@@ -105,9 +105,9 @@ export default async function RolesPage() {
           {/* Desktop matrix */}
           <section className="hidden overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm lg:block">
             <table className="min-w-full divide-y divide-slate-200 text-sm">
-              <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+              <thead className="bg-slate-50 text-start text-xs font-semibold uppercase tracking-wide text-slate-500">
                 <tr>
-                  <th scope="col" className="sticky left-0 bg-slate-50 px-6 py-3">Permission</th>
+                  <th scope="col" className="sticky start-0 bg-slate-50 px-6 py-3">Permission</th>
                   {roles.map((role) => (
                     <th key={role.id} scope="col" className="px-4 py-3 text-center">
                       {role.name}
@@ -128,7 +128,7 @@ export default async function RolesPage() {
                     </tr>
                     {entry.permissions.map((permission) => (
                       <tr key={permission.code} className="transition-colors hover:bg-slate-50">
-                        <td className="sticky left-0 bg-white px-6 py-3">
+                        <td className="sticky start-0 bg-white px-6 py-3">
                           <p className="font-medium text-slate-800">{permission.name}</p>
                           <p className="text-xs text-slate-500">{permission.code}</p>
                         </td>

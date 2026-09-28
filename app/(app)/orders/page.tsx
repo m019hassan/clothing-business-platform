@@ -104,13 +104,13 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
           {/* Desktop table */}
           <section className="hidden overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm lg:block">
             <table className="min-w-full divide-y divide-slate-200 text-sm">
-              <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+              <thead className="bg-slate-50 text-start text-xs font-semibold uppercase tracking-wide text-slate-500">
                 <tr>
                   <th scope="col" className="px-6 py-3">Order</th>
                   <th scope="col" className="px-6 py-3">Status</th>
-                  <th scope="col" className="px-6 py-3 text-right">Total</th>
+                  <th scope="col" className="px-6 py-3 text-end">Total</th>
                   <th scope="col" className="px-6 py-3">Created</th>
-                  <th scope="col" className="px-6 py-3 text-right">Actions</th>
+                  <th scope="col" className="px-6 py-3 text-end">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -127,11 +127,11 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
                     <td className="whitespace-nowrap px-6 py-4">
                       <OrderStatusBadge status={order.status} />
                     </td>
-                    <td className="whitespace-nowrap px-6 py-4 text-right text-slate-700">
+                    <td className="whitespace-nowrap px-6 py-4 text-end text-slate-700">
                       {formatMoney(order.totalAmount, order.currency)}
                     </td>
                     <td className="whitespace-nowrap px-6 py-4 text-slate-500">{formatDate(order.createdAt)}</td>
-                    <td className="whitespace-nowrap px-6 py-4 text-right">
+                    <td className="whitespace-nowrap px-6 py-4 text-end">
                       <Link
                         href={`/orders/${order.id}`}
                         className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-100"

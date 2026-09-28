@@ -103,7 +103,7 @@ export default async function DashboardPage() {
             {summary && summary.recentOrders.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-slate-200 text-sm">
-                  <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  <thead className="bg-slate-50 text-start text-xs font-semibold uppercase tracking-wide text-slate-500">
                     <tr>
                       <th scope="col" className="px-6 py-3">Order</th>
                       <th scope="col" className="px-6 py-3">Status</th>

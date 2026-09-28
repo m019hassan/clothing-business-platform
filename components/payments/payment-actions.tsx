@@ -109,7 +109,7 @@ export function PaymentActions({
       )}
 
       {error ? (
-        <p role="alert" className="max-w-xs text-right text-xs text-rose-700">
+        <p role="alert" className="max-w-xs text-end text-xs text-rose-700">
           {error}
         </p>
       ) : null}

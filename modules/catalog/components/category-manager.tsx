@@ -22,7 +22,7 @@ function CategoryRow({ category }: { category: CategoryView }) {
         <p className="truncate text-sm font-medium text-slate-900">
           {category.name}
           {category.isActive ? null : (
-            <span className="ml-2 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+            <span className="ms-2 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
               inactive
             </span>
           )}

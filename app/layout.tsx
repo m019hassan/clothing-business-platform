@@ -26,7 +26,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   // The document language and direction follow the account preference or the
-  // visitor's choice, so Arabic renders right-to-left everywhere.
+  // visitor's choice, so Arabic renders end-to-left everywhere.
   const { tag, dir } = await getInterfaceLanguage();
 
   return (

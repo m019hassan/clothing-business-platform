@@ -173,11 +173,11 @@ export default async function DeliveriesPage({ searchParams }: DeliveriesPagePro
           <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-slate-200 text-sm">
-                <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                <thead className="bg-slate-50 text-start text-xs font-semibold uppercase tracking-wide text-slate-500">
                   <tr>
                     <th scope="col" className="px-6 py-3">Order</th>
                     <th scope="col" className="px-6 py-3">Customer</th>
-                    <th scope="col" className="px-6 py-3 text-right">Total</th>
+                    <th scope="col" className="px-6 py-3 text-end">Total</th>
                     <th scope="col" className="px-6 py-3">Status</th>
                     <th scope="col" className="px-6 py-3">Ship / deliver</th>
                   </tr>
@@ -197,7 +197,7 @@ export default async function DeliveriesPage({ searchParams }: DeliveriesPagePro
                         <p>{delivery.customerName}</p>
                         <p className="text-xs text-slate-500">{delivery.customerCode}</p>
                       </td>
-                      <td className="whitespace-nowrap px-6 py-4 text-right text-slate-700">
+                      <td className="whitespace-nowrap px-6 py-4 text-end text-slate-700">
                         {formatMoney(delivery.totalAmount, delivery.currency)}
                       </td>
                       <td className="px-6 py-4">

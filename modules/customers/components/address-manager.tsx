@@ -26,7 +26,7 @@ function AddressRow({ address }: { address: AddressView }) {
         <p className="font-medium text-slate-900">
           {address.label ?? "Address"}
           {address.isDefault ? (
-            <span className="ml-2 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-emerald-700">
+            <span className="ms-2 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-emerald-700">
               default
             </span>
           ) : null}
