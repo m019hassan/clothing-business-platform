@@ -36,12 +36,20 @@ describe("parseProductWriteInput", () => {
   });
 
   it("requires the mandatory fields on create", () => {
-    for (const field of ["name", "slug", "basePrice", "categoryId"]) {
+    for (const field of ["name", "basePrice", "categoryId"]) {
       const payload: Record<string, unknown> = { ...valid };
       delete payload[field];
 
       expect(() => parseProductWriteInput(payload, { partial: false })).toThrowError();
     }
+  });
+
+  it("treats the slug as optional on create (the service generates one)", () => {
+    const payload: Record<string, unknown> = { ...valid };
+    delete payload.slug;
+
+    expect(parseProductWriteInput(payload, { partial: false }).slug).toBeUndefined();
+    expect(parseProductWriteInput({ ...valid, slug: "   " }, { partial: false }).slug).toBeUndefined();
   });
 
   it("rejects an empty update payload", () => {
@@ -80,8 +88,8 @@ describe("parseVariantWriteInput", () => {
     expect(input).toEqual({ sku: "SHIRT-XL", size: null, color: "Blue" });
   });
 
-  it("requires a SKU on create and rejects bad SKUs", () => {
-    expect(() => parseVariantWriteInput({ size: "M" }, { partial: false })).toThrowError();
+  it("treats the SKU as optional on create and still rejects bad ones", () => {
+    expect(parseVariantWriteInput({ size: "M" }, { partial: false }).sku).toBeUndefined();
     expect(() => parseVariantWriteInput({ sku: "bad sku!" }, { partial: false })).toThrowError();
   });
 

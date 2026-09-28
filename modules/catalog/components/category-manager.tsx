@@ -108,13 +108,13 @@ export function CategoryManager({
           <input name="name" required placeholder={labels.namePlaceholder} aria-label={labels.ariaName} className={inputClass} />
           <input
             name="slug"
-            required
             pattern="[a-z0-9]+(-[a-z0-9]+)*"
             title={labels.slugHint}
             placeholder={labels.slugPlaceholder}
             aria-label={labels.ariaSlug}
             className={inputClass}
           />
+          <p className="mt-1 text-xs text-slate-400">{labels.slugHint}</p>
           <input name="description" placeholder={labels.descriptionPlaceholder} aria-label={labels.ariaDescription} className={inputClass} />
         </div>
         <div className="mt-3 flex flex-wrap items-center gap-3">

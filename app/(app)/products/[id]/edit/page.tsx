@@ -140,6 +140,7 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
               newPrice: t.catalog.variantsAdmin.newPrice,
               newStatus: t.catalog.variantsAdmin.newStatus,
               skuPlaceholder: t.catalog.detail.sku,
+              skuHint: t.catalog.variantsAdmin.skuHint,
               sizePlaceholder: t.catalog.detail.size,
               colorPlaceholder: t.catalog.detail.color,
               pricePlaceholder: t.catalog.form.priceOverride,

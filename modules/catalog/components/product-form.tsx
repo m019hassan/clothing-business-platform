@@ -84,9 +84,8 @@ export function ProductForm({
             id="slug"
             name="slug"
             type="text"
-            required
-            // The server enforces this too; the pattern stops the round trip and the
-            // browser reports it in the interface language.
+            // Optional: the server generates one from the name when it is empty. The
+            // pattern still checks a value the user did type.
             pattern="[a-z0-9]+(-[a-z0-9]+)*"
             title={labels.slugHint}
             defaultValue={product?.slug ?? ""}

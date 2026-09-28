@@ -141,6 +141,7 @@ export function VariantManager({
     newPrice: string;
     newStatus: string;
     skuPlaceholder: string;
+    skuHint: string;
     sizePlaceholder: string;
     colorPlaceholder: string;
     pricePlaceholder: string;
@@ -171,7 +172,7 @@ export function VariantManager({
         <input type="hidden" name="productId" value={productId} />
         <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{newLabels.addTitle}</p>
         <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-5">
-          <input name="sku" required placeholder={newLabels.skuPlaceholder} aria-label={newLabels.newSku} className={inputClass} />
+          <input name="sku" placeholder={newLabels.skuPlaceholder} aria-label={newLabels.newSku} className={inputClass} />
           <input name="size" placeholder={newLabels.sizePlaceholder} aria-label={newLabels.newSize} className={inputClass} />
           <input name="color" placeholder={newLabels.colorPlaceholder} aria-label={newLabels.newColor} className={inputClass} />
           <input
@@ -189,6 +190,7 @@ export function VariantManager({
             ))}
           </select>
         </div>
+        <p className="mt-2 text-xs text-slate-400">{newLabels.skuHint}</p>
         <div className="mt-3 flex flex-wrap items-center gap-3">
           <button
             type="submit"

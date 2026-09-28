@@ -15,6 +15,7 @@ import {
   withDatabaseError,
 } from "@/src/lib/errors";
 import { isUuid } from "@/src/lib/validation";
+import { autoSlug, autoSku } from "@/modules/catalog/application/identifiers";
 
 type AuthenticatedAccount = NonNullable<SafeAccount>;
 
@@ -72,6 +73,21 @@ function parseRequiredString(value: unknown, field: string, max: number): string
   }
 
   return trimmed;
+}
+
+/** The field a unique-constraint violation was about, when Prisma reports it. */
+function uniqueFieldOf(error: unknown): string | null {
+  if (!(error instanceof Prisma.PrismaClientKnownRequestError) || error.code !== "P2002") {
+    return null;
+  }
+
+  const target = (error.meta as { target?: unknown } | undefined)?.target;
+
+  if (Array.isArray(target) && typeof target[0] === "string") {
+    return target[0];
+  }
+
+  return typeof target === "string" ? target : null;
 }
 
 function parseSlug(value: unknown): string {
@@ -213,10 +229,10 @@ export function parseProductWriteInput(
     throw new ValidationError("name is required.");
   }
 
-  if (body.slug !== undefined) {
+  if (body.slug !== undefined && body.slug !== null && String(body.slug).trim() !== "") {
     input.slug = parseSlug(body.slug);
   } else if (!partial) {
-    throw new ValidationError("slug is required.");
+    // The slug is optional: a missing one is generated from the name below.
   }
 
   if (body.description !== undefined) {
@@ -274,8 +290,10 @@ export function parseVariantWriteInput(
 
   if (body.sku !== undefined) {
     input.sku = parseSku(body.sku);
+  } else if (partial) {
+    // Partial updates leave the SKU alone.
   } else if (!partial) {
-    throw new ValidationError("sku is required.");
+    // An empty SKU is fine: createVariant generates one below.
   }
 
   if (body.size !== undefined) {
@@ -347,12 +365,20 @@ export async function createProduct(
   const input = parseProductWriteInput(payload, { partial: false });
   await assertCategoryExists(input.categoryId!);
 
+  // With no slug the service generates one (from the name when it is Latin,
+  // otherwise a short token) and retries a few times if the token clashes.
+  const providedSlug = input.slug;
+  const maxAttempts = providedSlug ? 1 : 5;
+
   const product = await withDatabaseError(async () => {
-    try {
-      return await prisma.product.create({
+    for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+      const slug = providedSlug ?? autoSlug("product", input.name);
+
+      try {
+        return await prisma.product.create({
         data: {
           name: input.name!,
-          slug: input.slug!,
+          slug,
           description: input.description ?? null,
           status: input.status ?? ProductStatus.DRAFT,
           basePrice: new Prisma.Decimal(input.basePrice!),
@@ -371,10 +397,29 @@ export async function createProduct(
             : undefined,
         },
         select: { id: true },
-      });
-    } catch (error) {
-      return conflictFrom(error, "A product or variant with this slug or SKU already exists.");
+        });
+      } catch (error) {
+        const clash = uniqueFieldOf(error);
+
+        // An automatically generated slug may collide; try another token. A
+        // clash on anything the user typed is reported, naming the field.
+        if (!providedSlug && clash === "slug" && attempt < maxAttempts) {
+          continue;
+        }
+
+        if (clash === "slug") {
+          throw new ConflictError(`The slug "${slug}" is already used by another product.`);
+        }
+
+        if (clash === "sku") {
+          throw new ConflictError("A variant with one of these SKUs already exists.");
+        }
+
+        return conflictFrom(error, "A product with this slug already exists.");
+      }
     }
+
+    throw new ConflictError("A unique slug could not be generated. Please try again.");
   });
 
   return getProductInventory(product.id);
@@ -454,12 +499,18 @@ export async function createVariant(
   const input = parseVariantWriteInput(payload, { partial: false });
   await assertProductExists(productId);
 
+  const providedSku = input.sku;
+  const maxAttempts = providedSku ? 1 : 5;
+
   await withDatabaseError(async () => {
-    try {
+    for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+      const sku = providedSku ?? autoSku();
+
+      try {
       await prisma.productVariant.create({
         data: {
           productId,
-          sku: input.sku!,
+          sku,
           size: input.size ?? null,
           color: input.color ?? null,
           priceOverride: input.priceOverride ? new Prisma.Decimal(input.priceOverride) : null,
@@ -467,9 +518,24 @@ export async function createVariant(
         },
         select: { id: true },
       });
-    } catch (error) {
-      return conflictFrom(error, "A variant with this SKU already exists.");
+
+        return;
+      } catch (error) {
+        const clash = uniqueFieldOf(error);
+
+        if (clash === "sku") {
+          if (!providedSku && attempt < maxAttempts) {
+            continue;
+          }
+
+          throw new ConflictError(`The SKU "${sku}" is already used by another variant.`);
+        }
+
+        return conflictFrom(error, "A variant with this SKU already exists.");
+      }
     }
+
+    throw new ConflictError("A unique SKU could not be generated. Please try again.");
   });
 
   return getProductInventory(productId);

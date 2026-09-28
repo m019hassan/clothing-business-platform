@@ -805,7 +805,7 @@ export const en = {
         "Available = on hand − reserved. Stock adjustments are recorded from the inventory screen. Low stock follows the documented threshold of fewer than 10 available units (docs/01-product/business-rules.md).",
     },
     form: {
-      slugHint: "Lowercase letters, digits and single hyphens — for example linen-shirt.",
+      slugHint: "Lowercase letters, digits and single hyphens. Leave it empty and the platform generates one from the name.",
       name: "Name",
       slug: "Slug",
       basePrice: "Base price (SAR)",
@@ -824,6 +824,7 @@ export const en = {
       archiving: "Archiving…",
     },
     variantsAdmin: {
+      skuHint: "Leave it empty to generate a code automatically.",
       empty: "No variants yet.",
       addTitle: "Add a variant",
       add: "Add variant",

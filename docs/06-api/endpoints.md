@@ -344,6 +344,16 @@ payment APPROVED, order CONFIRMED, stock consumed. Failure -> payment REJECTED,
 order CANCELLED, reserved stock released. It shares one code path with the staff
 endpoints, so a simulated outcome and a real decision can never diverge.
 
+## Catalog identifiers
+
+Product and category **slugs are optional**. When one is omitted (or blank) the
+service generates it: a Latin name becomes its slug (`Linen Shirt` -> `linen-shirt`)
+and a name with nothing a slug can hold - Arabic names, for example - falls back to
+`product-<6 hex>` / `category-<6 hex>`, retrying if the token is taken. A duplicate
+that the user typed is answered with 409 and names the value. Variant **SKUs are
+optional in the same way** (`VAR-<6 hex>`), while a typed SKU keeps its own clash
+message.
+
 ## GAP summary (documented previously, not implemented)
 - `POST /api/auth/login`, `POST /api/auth/logout`, `POST /api/auth/forgot-password`
 - `GET/POST/PUT /api/users*` (employee data is read through the app routes, not a REST API)

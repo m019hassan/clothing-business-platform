@@ -35,12 +35,17 @@ describe("parseCategoryWriteInput", () => {
     ).toEqual({ name: "Summer", slug: "summer-wear", description: null, isActive: false });
   });
 
-  it("requires name and slug on create and rejects junk", () => {
+  it("requires a name on create and rejects junk", () => {
     expect(() => parseCategoryWriteInput({ slug: "x" }, { partial: false })).toThrowError();
-    expect(() => parseCategoryWriteInput({ name: "x" }, { partial: false })).toThrowError();
     expect(() => parseCategoryWriteInput({ name: "x", slug: "Bad Slug" }, { partial: false })).toThrowError();
     expect(() => parseCategoryWriteInput({ name: "x", slug: "ok", extra: 1 }, { partial: false })).toThrowError();
     expect(() => parseCategoryWriteInput({ isActive: "yes" }, { partial: true })).toThrowError();
+  });
+
+  it("treats the slug as optional on create (the service generates one)", () => {
+    expect(parseCategoryWriteInput({ name: "x" }, { partial: false }).slug).toBeUndefined();
+    expect(parseCategoryWriteInput({ name: "x", slug: "   " }, { partial: false }).slug).toBeUndefined();
+    expect(parseCategoryWriteInput({ name: "x", slug: "ok" }, { partial: false }).slug).toBe("ok");
   });
 
   it("rejects an empty update payload", () => {
