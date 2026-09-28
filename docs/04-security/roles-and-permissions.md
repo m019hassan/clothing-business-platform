@@ -31,7 +31,7 @@ The naming authority is `modules/auth/application/permissions.ts` (`PERMISSIONS`
 | shipping | `shipping.manage` |
 | branches | `branches.view`, `branches.manage` |
 | users | `users.view`, `users.manage` |
-| payments | `payments.view`, `payments.verify`, `payments.approve`, `payments.reject` |
+| payments | `payments.view`, `payments.verify`, `payments.approve`, `payments.reject`, `payments.refund` |
 
 New codes must be added to that constant first. A code that exists only in the
 database but not in the constant is a documentation bug.

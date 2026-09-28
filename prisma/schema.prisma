@@ -61,6 +61,7 @@ model Account {
   distributorProfile DistributorProfile?
 
   soldOrders Order[] @relation("OrderSoldBy")
+  refunds    Refund[] @relation("RefundedBy")
 
   stockMovements StockMovement[] @relation("StockMovementActor")
 
@@ -641,6 +642,7 @@ model Order {
   branch          Branch?          @relation(fields: [branchId], references: [id], onDelete: SetNull)
   soldBy          Account?         @relation("OrderSoldBy", fields: [soldByAccountId], references: [id], onDelete: SetNull)
   delivery        Delivery?
+  refunds         Refund[]
   items           OrderItem[]
   payments        Payment[]
   stockMovements  StockMovement[]
@@ -739,6 +741,31 @@ model NotificationPreference {
   @@unique([accountId, type], map: "uq_notification_preference_account_type")
 }
 
+/// A refund is a separate financial event: it records money returned to the
+/// customer for an order whose payment was collected. Stock is not restocked
+/// here; a physical return is inspected and recorded separately.
+model Refund {
+  id String @id @default(uuid()) @db.Uuid
+
+  orderId   String @db.Uuid
+  paymentId String? @db.Uuid
+
+  amount   Decimal @db.Decimal(12, 2)
+  currency String  @db.VarChar(10)
+
+  reason String? @db.Text
+
+  refundedByAccountId String? @db.Uuid
+
+  createdAt DateTime @default(now())
+
+  order   Order    @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  payment Payment? @relation(fields: [paymentId], references: [id], onDelete: SetNull)
+  refundedBy Account? @relation("RefundedBy", fields: [refundedByAccountId], references: [id], onDelete: SetNull)
+
+  @@index([orderId], map: "idx_refund_order")
+}
+
 model Payment {
   id String @id @default(uuid()) @db.Uuid
 
@@ -755,6 +782,8 @@ model Payment {
   updatedAt DateTime @updatedAt
 
   order Order @relation(fields: [orderId], references: [id], onDelete: Restrict)
+
+  refunds Refund[]
 
   @@index([orderId], map: "idx_payment_order")
   @@index([status], map: "idx_payment_status")

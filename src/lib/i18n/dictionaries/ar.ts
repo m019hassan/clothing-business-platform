@@ -338,6 +338,8 @@ export const ar: Dictionary = {
     branch: "الفرع",
   },
   deliveries: {
+    refund: "استرداد",
+    refundConfirm: "تسجيل استرداد لهذا الطلب؟ ستنتقل الدفعة والطلب إلى حالة «مُسترد».",
     subtitleIntro: "الطلبات المؤكّدة تظهر هنا تلقائياً. انقل كل طلب من التجهيز إلى التسليم؛ والشحن يتطلب ناقلاً ورقم تتبع.",
     emptyHint2: "تُنشأ التوصيلات تلقائياً عند تأكيد الطلب بدفعة معتمدة.",
     permissionTitle: "التوصيلات تتطلب دور موظف",
@@ -630,6 +632,7 @@ export const ar: Dictionary = {
     emptyHint: "ستظهر هنا الطلبات التي تنشئها.",
   },
   orderDetail: {
+    refundLine: "استرداد بقيمة {amount} سُجّل بتاريخ {date}.",
     loadErrorTitle: "تعذّر تحميل هذا الطلب",
     kicker: "الطلب",
     placed: "تاريخ الطلب",

@@ -9,6 +9,7 @@ import { getOrder } from "@/modules/order/application/orders";
 import type { OrderView } from "@/modules/order/types";
 import { AuthorizationError, NotFoundError } from "@/src/lib/errors";
 import { formatDate, formatMoney } from "@/src/lib/format";
+import { listOrderRefunds } from "@/modules/payment/application/refunds";
 import { getInterfaceLanguage } from "@/src/lib/i18n/server";
 
 type OrderDetailProps = {
@@ -37,11 +38,13 @@ export default async function OrderDetailPage({ params }: OrderDetailProps) {
   const { id } = await params;
 
   let order: OrderView | null = null;
+  let refunds: Awaited<ReturnType<typeof listOrderRefunds>> = [];
   let notCustomer = false;
   let loadError = false;
 
   try {
     order = await getOrder(account, id);
+    refunds = await listOrderRefunds(id);
   } catch (error) {
     if (error instanceof AuthorizationError) {
       notCustomer = true;
@@ -318,6 +321,18 @@ export default async function OrderDetailPage({ params }: OrderDetailProps) {
         ) : (
           <p className="mt-3 text-sm text-slate-500">{t.orderDetail.noPaymentRecord}</p>
         )}
+
+        {refunds.length > 0 ? (
+          <ul className="mt-3 space-y-1 text-xs text-slate-500">
+            {refunds.map((refund) => (
+              <li key={refund.id}>
+                {t.orderDetail.refundLine
+                  .replace("{amount}", formatMoney(refund.amount, refund.currency))
+                  .replace("{date}", formatDate(refund.createdAt))}
+              </li>
+            ))}
+          </ul>
+        ) : null}
         <p className="mt-3 text-xs text-slate-400">
           {t.orderDetail.methodFootnote}
         </p>

@@ -1,14 +1,19 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import { updateDeliveryAction, type DeliveryFormState } from "@/modules/delivery/application/actions";
+import { apiErrorMessage, apiRequest, type ApiErrorLabels } from "@/src/lib/api";
 import type { DeliveryStatus } from "@prisma/client";
 
 const initialState: DeliveryFormState = { ok: true, message: "" };
 
 export type DeliveryRowLabels = {
   saving: string;
+  refund?: string;
+  refundConfirm?: string;
+  refundFailed?: string;
   nextStatus: string;
   carrierPlaceholder: string;
   trackingPlaceholder: string;
@@ -28,21 +33,68 @@ const inputClass =
 
 export function DeliveryRowActions({
   deliveryId,
+  orderId,
   status,
   allowedTransitions,
   carrier,
   trackingNumber,
   labels,
+  canRefund,
+  errors,
 }: {
   deliveryId: string;
+  orderId: string;
   status: DeliveryStatus;
   allowedTransitions: readonly DeliveryStatus[];
   carrier: string | null;
   trackingNumber: string | null;
   labels: DeliveryRowLabels;
+  canRefund?: boolean;
+  errors?: ApiErrorLabels;
 }) {
   const [state, formAction, isPending] = useActionState(updateDeliveryAction, initialState);
+  const [refunding, setRefunding] = useState(false);
+  const [refundError, setRefundError] = useState<string | null>(null);
+  const router = useRouter();
   const isTerminal = allowedTransitions.length === 0;
+
+  async function refund() {
+    if (!window.confirm(labels.refundConfirm ?? "Record a refund for this order?")) {
+      return;
+    }
+
+    setRefunding(true);
+    setRefundError(null);
+
+    try {
+      await apiRequest(`/api/orders/${orderId}/refund`, { method: "POST", body: JSON.stringify({}) });
+      router.refresh();
+    } catch (requestError) {
+      setRefundError(apiErrorMessage(requestError, errors));
+    } finally {
+      setRefunding(false);
+    }
+  }
+
+  if (status === "DELIVERED" && canRefund) {
+    return (
+      <div className="flex flex-col items-end gap-1">
+        <button
+          type="button"
+          onClick={refund}
+          disabled={refunding}
+          className="rounded-lg border border-rose-200 px-3 py-1.5 text-xs font-medium text-rose-700 transition-colors hover:bg-rose-50 disabled:opacity-60"
+        >
+          {refunding ? labels.saving : labels.refund ?? "Refund"}
+        </button>
+        {refundError ? (
+          <p role="alert" className="text-xs text-rose-700">
+            {refundError}
+          </p>
+        ) : null}
+      </div>
+    );
+  }
 
   if (isTerminal) {
     return <span className="text-xs font-medium text-slate-400">{labels.statusLabels[status] ?? status}</span>;

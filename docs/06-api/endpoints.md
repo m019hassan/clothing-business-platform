@@ -294,6 +294,8 @@ requires `orders.cancel`; the other staff transitions are not implemented yet
 | POST | `/api/payments/:id/approve` | `payments.approve` | `{ order, payment }` |
 | POST | `/api/payments/:id/reject` | `payments.reject` | `{ order, payment }` |
 | POST | `/api/orders/:id/payment-simulation` | order owner, or staff with `payments.verify` | `{ order, payment }` |
+| GET | `/api/orders/:id/refund` | any authenticated account | `{ refunds }` |
+| POST | `/api/orders/:id/refund` | `payments.refund` | `{ order, refund }` |
 
 A payment record is created as PENDING automatically when an order is created; there
 is no separate "create payment" endpoint.
@@ -313,6 +315,16 @@ A decision on a payment whose order is no longer `PENDING_PAYMENT`, or a second
 `verify` after verification, is rejected with 409. Every decision writes an
 `AuditLog` row (`PAYMENT_VERIFIED`, `PAYMENT_APPROVED`, `PAYMENT_REJECTED`) and the
 customer is notified with the same titles the simulation uses.
+
+**Refunds.** `POST /api/orders/:id/refund` records a refund as a separate
+financial event for an order whose payment was collected (status CONFIRMED,
+SHIPPED or DELIVERED and an APPROVED payment). Body: optional `{ reason }`
+(500 characters). The refund row stores the collected amount and currency, the
+payment and the order both move to `REFUNDED`, an `AuditLog` row
+(`ORDER_REFUNDED`) is written and the customer is notified. **Stock is not
+restocked**: a physical return is inspected and recorded separately, so this
+action cannot invent inventory that was never received back. A second refund of
+the same order is rejected with 409.
 
 **Simulation.** `POST /api/orders/:id/payment-simulation` remains available for
 local lifecycle testing: body `{ outcome: "success" | "failure" }`. Success ->

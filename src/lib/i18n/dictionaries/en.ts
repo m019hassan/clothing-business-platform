@@ -337,6 +337,8 @@ export const en = {
     branch: "Branch",
   },
   deliveries: {
+    refund: "Refund",
+    refundConfirm: "Record a refund for this order? The payment and the order move to refunded.",
     subtitleIntro: "confirmed orders appear here automatically. Move each one from processing to delivered; shipping requires a carrier and a tracking number.",
     emptyHint2: "Deliveries are created automatically when an order is confirmed by an approved payment.",
     permissionTitle: "Delivery access requires a staff role",
@@ -631,6 +633,7 @@ export const en = {
     emptyHint: "Orders you place will appear here.",
   },
   orderDetail: {
+    refundLine: "Refund of {amount} recorded on {date}.",
     loadErrorTitle: "Unable to load this order",
     kicker: "Order",
     placed: "Placed",

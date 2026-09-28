@@ -52,6 +52,7 @@ export default async function DeliveriesPage({ searchParams }: DeliveriesPagePro
   }
 
   const permissions = await getCurrentPermissions();
+  const canRefundOrders = permissions.has(PERMISSIONS.PAYMENTS_REFUND);
 
   if (!permissions.has(PERMISSIONS.SHIPPING_MANAGE)) {
     return (
@@ -214,6 +215,9 @@ export default async function DeliveriesPage({ searchParams }: DeliveriesPagePro
                       </td>
                       <td className="px-6 py-4">
                         <DeliveryRowActions
+                        orderId={delivery.orderId}
+                        canRefund={canRefundOrders}
+                        errors={t.errors}
                         labels={{
                           saving: t.catalog.form.saving,
                           nextStatus: t.deliveries.nextStatus,
@@ -221,6 +225,8 @@ export default async function DeliveriesPage({ searchParams }: DeliveriesPagePro
                           trackingPlaceholder: t.deliveries.trackingPlaceholder,
                           update: t.deliveries.update,
                           statusLabels: t.deliveryStatus as Record<string, string>,
+                          refund: t.deliveries.refund,
+                          refundConfirm: t.deliveries.refundConfirm,
                           transitions: {
                             PROCESSING: t.deliveries.startProcessing,
                             READY: t.deliveries.markReady,
