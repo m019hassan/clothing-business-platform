@@ -127,7 +127,13 @@ export async function listPendingPayments(
             where: { status: { in: SETTLABLE_PAYMENT_STATUSES } },
             orderBy: { createdAt: "desc" },
             take: 1,
-            select: { id: true, status: true, amount: true, method: true },
+            select: {
+              id: true,
+              status: true,
+              amount: true,
+              method: true,
+              _count: { select: { proofs: true } },
+            },
           },
         },
       }),
@@ -152,6 +158,7 @@ export async function listPendingPayments(
       paymentStatus: order.payments[0].status,
       paymentMethod: order.payments[0].method,
       paymentAmount: order.payments[0].amount.toString(),
+      hasProof: (order.payments[0]._count?.proofs ?? 0) > 0,
     }));
 
     return {

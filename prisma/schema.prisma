@@ -62,6 +62,7 @@ model Account {
 
   soldOrders Order[] @relation("OrderSoldBy")
   refunds    Refund[] @relation("RefundedBy")
+  proofs     PaymentProof[] @relation("ProofUploadedBy")
 
   stockMovements StockMovement[] @relation("StockMovementActor")
 
@@ -741,6 +742,27 @@ model NotificationPreference {
   @@unique([accountId, type], map: "uq_notification_preference_account_type")
 }
 
+/// A receipt uploaded for a bank transfer, stored through src/lib/storage.
+model PaymentProof {
+  id String @id @default(uuid()) @db.Uuid
+
+  paymentId String @db.Uuid
+
+  fileKey      String  @db.VarChar(200)
+  originalName String  @db.VarChar(255)
+  mimeType     String  @db.VarChar(100)
+  sizeBytes    Int
+
+  uploadedByAccountId String? @db.Uuid
+
+  createdAt DateTime @default(now())
+
+  payment    Payment  @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  uploadedBy Account? @relation("ProofUploadedBy", fields: [uploadedByAccountId], references: [id], onDelete: SetNull)
+
+  @@index([paymentId], map: "idx_payment_proof_payment")
+}
+
 /// A refund is a separate financial event: it records money returned to the
 /// customer for an order whose payment was collected. Stock is not restocked
 /// here; a physical return is inspected and recorded separately.
@@ -784,6 +806,7 @@ model Payment {
   order Order @relation(fields: [orderId], references: [id], onDelete: Restrict)
 
   refunds Refund[]
+  proofs  PaymentProof[]
 
   @@index([orderId], map: "idx_payment_order")
   @@index([status], map: "idx_payment_status")

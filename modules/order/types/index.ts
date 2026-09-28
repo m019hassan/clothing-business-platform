@@ -37,6 +37,7 @@ export type OrderListPage = {
 };
 
 export type OrderPaymentView = {
+  id: string;
   status: PaymentStatus;
   amount: string;
   currency: string;

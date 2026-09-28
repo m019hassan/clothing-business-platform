@@ -49,3 +49,4 @@ next-env.d.ts
 
 # Local helper log written when the app server runs in the background.
 .openclaw-server.log
+.data/

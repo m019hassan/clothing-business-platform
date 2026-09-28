@@ -296,6 +296,8 @@ requires `orders.cancel`; the other staff transitions are not implemented yet
 | POST | `/api/orders/:id/payment-simulation` | order owner, or staff with `payments.verify` | `{ order, payment }` |
 | GET | `/api/orders/:id/refund` | any authenticated account | `{ refunds }` |
 | POST | `/api/orders/:id/refund` | `payments.refund` | `{ order, refund }` |
+| GET | `/api/payments/:id/proof` | the order's customer, or staff with `payments.view` | the stored file |
+| POST | `/api/payments/:id/proof` | the order's customer, or staff with `payments.view` | `{ proof }` |
 
 A payment record is created as PENDING automatically when an order is created; there
 is no separate "create payment" endpoint.
@@ -315,6 +317,16 @@ A decision on a payment whose order is no longer `PENDING_PAYMENT`, or a second
 `verify` after verification, is rejected with 409. Every decision writes an
 `AuditLog` row (`PAYMENT_VERIFIED`, `PAYMENT_APPROVED`, `PAYMENT_REJECTED`) and the
 customer is notified with the same titles the simulation uses.
+
+**Receipts.** `POST /api/payments/:id/proof` accepts `multipart/form-data` with a
+`file` field (PDF, JPEG, PNG or WebP, up to 5 MB) and stores it through
+`src/lib/storage` (`UPLOAD_DIR`, default `.data/uploads`, git-ignored). A receipt is
+accepted only for a bank transfer that still awaits a decision (PENDING or
+PENDING_VERIFICATION on a PENDING_PAYMENT order); every upload writes a
+`PAYMENT_PROOF_UPLOADED` audit row. `GET /api/payments/:id/proof` streams the newest
+receipt back to the order's customer or to staff holding `payments.view`. The
+customer's order page offers the upload control and the payments queue links to the
+receipt when one exists.
 
 **Refunds.** `POST /api/orders/:id/refund` records a refund as a separate
 financial event for an order whose payment was collected (status CONFIRMED,

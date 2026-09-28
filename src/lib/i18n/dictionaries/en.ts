@@ -492,6 +492,16 @@ export const en = {
     male: "Male",
     saveProfile: "Save profile",
   },
+  proofUpload: {
+    title: "Transfer receipt",
+    hint: "PDF or image up to 5 MB. The store checks it before deciding on the transfer.",
+    chooseFile: "Choose a file first.",
+    upload: "Upload receipt",
+    uploading: "Uploading…",
+    uploaded: "Receipt uploaded",
+    replace: "Replace receipt",
+    viewReceipt: "View receipt",
+  },
   payments: {
     permissionTitle: "Payment access requires a staff role",
     permissionHint: "Your account does not have the payments.view permission. Ask a manager to grant it.",

@@ -492,6 +492,16 @@ export const ar: Dictionary = {
     male: "ذكر",
     saveProfile: "حفظ الملف",
   },
+  proofUpload: {
+    title: "إيصال التحويل",
+    hint: "ملف PDF أو صورة حتى 5 ميجابايت. يتحقق المتجر منه قبل قرار التحويل.",
+    chooseFile: "اختر ملفاً أولاً.",
+    upload: "رفع الإيصال",
+    uploading: "جارٍ الرفع…",
+    uploaded: "تم رفع الإيصال",
+    replace: "استبدال الإيصال",
+    viewReceipt: "عرض الإيصال",
+  },
   payments: {
     permissionTitle: "إدارة المدفوعات تتطلب دور موظف",
     permissionHint: "حسابك لا يملك صلاحية payments.view. اطلب من المدير منحها.",

@@ -29,6 +29,8 @@ export type PendingPaymentRow = {
   paymentStatus: PaymentStatus;
   paymentMethod: PaymentMethod | null;
   paymentAmount: string;
+  /** True when at least one transfer receipt was uploaded for this payment. */
+  hasProof: boolean;
 };
 
 export type PendingPaymentPage = {

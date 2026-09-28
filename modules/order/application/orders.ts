@@ -70,7 +70,7 @@ export const orderSelection = {
   payments: {
     orderBy: { createdAt: "desc" },
     take: 1,
-    select: { status: true, amount: true, currency: true, method: true },
+    select: { id: true, status: true, amount: true, currency: true, method: true },
   },
 } satisfies Prisma.OrderSelect;
 
@@ -148,6 +148,7 @@ export function mapOrder(order: OrderRecord): OrderView {
     })),
     payment: order.payments[0]
       ? {
+          id: order.payments[0].id,
           status: order.payments[0].status,
           amount: order.payments[0].amount.toString(),
           currency: order.payments[0].currency,

@@ -9,7 +9,9 @@ import { getOrder } from "@/modules/order/application/orders";
 import type { OrderView } from "@/modules/order/types";
 import { AuthorizationError, NotFoundError } from "@/src/lib/errors";
 import { formatDate, formatMoney } from "@/src/lib/format";
+import { getLatestPaymentProof } from "@/modules/payment/application/proofs";
 import { listOrderRefunds } from "@/modules/payment/application/refunds";
+import { ProofUpload } from "@/modules/payment/components/proof-upload";
 import { getInterfaceLanguage } from "@/src/lib/i18n/server";
 
 type OrderDetailProps = {
@@ -77,6 +79,13 @@ export default async function OrderDetailPage({ params }: OrderDetailProps) {
       </section>
     );
   }
+
+  const bankTransferAwaiting =
+    order.payment?.method === "BANK_TRANSFER" &&
+    (order.payment.status === "PENDING" || order.payment.status === "PENDING_VERIFICATION") &&
+    order.status === "PENDING_PAYMENT";
+  const proofOfPayment =
+    bankTransferAwaiting && order.payment ? await getLatestPaymentProof(order.payment.id) : null;
 
   const itemCount = order.items.reduce((sum, item) => sum + item.quantity, 0);
 
@@ -336,6 +345,15 @@ export default async function OrderDetailPage({ params }: OrderDetailProps) {
         <p className="mt-3 text-xs text-slate-400">
           {t.orderDetail.methodFootnote}
         </p>
+        {bankTransferAwaiting && order.payment ? (
+          <ProofUpload
+            paymentId={order.payment.id}
+            existing={
+              proofOfPayment ? { originalName: proofOfPayment.originalName, createdAt: proofOfPayment.createdAt } : null
+            }
+            labels={{ ...t.proofUpload, errors: t.errors }}
+          />
+        ) : null}
       </section>
 
       {/* Summary */}

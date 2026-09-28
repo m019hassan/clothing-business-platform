@@ -139,6 +139,19 @@ export default async function PaymentsPage({ searchParams }: PaymentsPageProps) 
                         {row.paymentMethod
                           ? (t.paymentMethod as Record<string, string>)[row.paymentMethod] ?? row.paymentMethod.replaceAll("_", " ")
                           : t.orderDetail.methodNotSelected}
+                        {row.hasProof ? (
+                          <>
+                            {" · "}
+                            <a
+                              href={`/api/payments/${row.paymentId}/proof`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="font-medium text-blue-700 underline"
+                            >
+                              {t.proofUpload.viewReceipt}
+                            </a>
+                          </>
+                        ) : null}
                       </p>
                     </td>
                     <td className="whitespace-nowrap px-6 py-4 text-end text-slate-700">
