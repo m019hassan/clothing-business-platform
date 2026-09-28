@@ -124,7 +124,9 @@ describe("createUser", () => {
   });
 
   it("creates an employee with roles and a branch", async () => {
-    const branch = await prisma.branch.findFirstOrThrow({ where: { code: "FACTORY" }, select: { id: true } });
+    const branch =
+      (await prisma.branch.findFirst({ where: { code: "FACTORY" }, select: { id: true } })) ??
+      (await prisma.branch.create({ data: { code: "FACTORY", name: "Factory" }, select: { id: true } }));
     const roleCode = `VITROLE_${suffix.toUpperCase()}`;
     const role = await prisma.role.create({
       data: { code: roleCode, name: `Vitest Role ${suffix}`, isActive: true },

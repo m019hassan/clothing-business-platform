@@ -144,18 +144,36 @@ async function ensureWalkInProfile(
     select: { id: true },
   });
 
-  const account = await transaction.account.create({
-    data: {
+  const phone = `${WALK_IN_PHONE_PREFIX}${branch.id.replaceAll("-", "").slice(0, 8)}`;
+
+  // Upsert, not create: the phone is unique and deterministic per branch, so two
+  // terminals selling at the same branch at the same moment would otherwise race
+  // between the lookup above and an insert, and the loser would fail with a unique
+  // constraint error instead of reusing the walk-in buyer.
+  const account = await transaction.account.upsert({
+    where: { phone },
+    create: {
       accountType: "CUSTOMER",
       status: "ACTIVE",
       email: null,
       // Account.phone is VarChar(20) and unique: a short deterministic value
       // derived from the branch keeps one walk-in buyer per branch.
-      phone: `${WALK_IN_PHONE_PREFIX}${branch.id.replaceAll("-", "").slice(0, 8)}`,
+      phone,
       passwordHash: WALK_IN_PASSWORD_SENTINEL,
     },
+    // The conflict target is the phone itself; this only keeps the row active.
+    update: { status: "ACTIVE" },
     select: { id: true },
   });
+
+  const existingProfile = await transaction.customerProfile.findFirst({
+    where: { accountId: account.id },
+    select: { id: true },
+  });
+
+  if (existingProfile) {
+    return existingProfile.id;
+  }
 
   const profile = await transaction.customerProfile.create({
     data: {

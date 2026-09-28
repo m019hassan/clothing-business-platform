@@ -9,6 +9,13 @@ export type TransactionClient = Prisma.TransactionClient;
 
 export class ReservationConflictError extends Error {}
 
+/**
+ * How many times a guarded stock write re-reads state before giving up. Two
+ * terminals can legitimately contend for the same row; the guard is what keeps the
+ * ceiling, the retry is what keeps an honest request from failing because of it.
+ */
+const STOCK_ATTEMPTS = 3;
+
 export async function reserveStock(
   transaction: TransactionClient,
   variantId: string,
@@ -19,64 +26,73 @@ export async function reserveStock(
     return;
   }
 
-  const rows = await transaction.inventoryItem.findMany({
-    where: { variantId },
-    select: { id: true, warehouseId: true, quantityOnHand: true, quantityReserved: true },
-    orderBy: { quantityOnHand: "desc" },
-  });
+  let pending = quantity;
 
-  const available = rows.reduce(
-    (sum, row) => sum + row.quantityOnHand - row.quantityReserved,
-    0,
-  );
-
-  if (available < quantity) {
-    throw new ConflictError("Insufficient stock for the requested quantity.");
-  }
-
-  let remaining = quantity;
-
-  for (const row of rows) {
-    if (remaining <= 0) {
-      break;
-    }
-
-    const headroom = row.quantityOnHand - row.quantityReserved;
-
-    if (headroom <= 0) {
-      continue;
-    }
-
-    const amount = Math.min(headroom, remaining);
-
-    const result = await transaction.inventoryItem.updateMany({
-      where: {
-        id: row.id,
-        quantityReserved: row.quantityReserved,
-        quantityOnHand: { gte: row.quantityReserved + amount },
-      },
-      data: { quantityReserved: { increment: amount } },
+  // Optimistic concurrency: the guarded update below fails when another
+  // transaction changed the row after we read it, even when the stock is still
+  // there. Re-reading and retrying keeps a legitimate request from failing just
+  // because it lost a race, while the guard itself still guarantees the ceiling.
+  for (let attempt = 1; attempt <= STOCK_ATTEMPTS && pending > 0; attempt += 1) {
+    const rows = await transaction.inventoryItem.findMany({
+      where: { variantId },
+      select: { id: true, warehouseId: true, quantityOnHand: true, quantityReserved: true },
+      orderBy: { quantityOnHand: "desc" },
     });
 
-    if (result.count === 0) {
-      throw new ReservationConflictError("Reservation state changed concurrently.");
+    const available = rows.reduce(
+      (sum, row) => sum + row.quantityOnHand - row.quantityReserved,
+      0,
+    );
+
+    if (available < pending) {
+      // Nothing left to win: this is a genuine shortage, not a lost race. Units
+      // reserved by an earlier attempt of this same request stay reserved.
+      throw new ConflictError("Insufficient stock for the requested quantity.");
     }
 
-    await recordMovement(transaction, {
-      variantId,
-      warehouseId: row.warehouseId,
-      type: "RESERVATION",
-      quantityChange: 0,
-      quantityOnHandAfter: row.quantityOnHand,
-      quantityReservedAfter: row.quantityReserved + amount,
-      context,
-    });
+    for (const row of rows) {
+      if (pending <= 0) {
+        break;
+      }
 
-    remaining -= amount;
+      const headroom = row.quantityOnHand - row.quantityReserved;
+
+      if (headroom <= 0) {
+        continue;
+      }
+
+      const amount = Math.min(headroom, pending);
+
+      const result = await transaction.inventoryItem.updateMany({
+        where: {
+          id: row.id,
+          quantityReserved: row.quantityReserved,
+          quantityOnHand: { gte: row.quantityReserved + amount },
+        },
+        data: { quantityReserved: { increment: amount } },
+      });
+
+      if (result.count === 0) {
+        // Lost the race for this row; start the next attempt from fresh state.
+        break;
+      }
+
+      await recordMovement(transaction, {
+        variantId,
+        warehouseId: row.warehouseId,
+        type: "RESERVATION",
+        quantityChange: 0,
+        quantityOnHandAfter: row.quantityOnHand,
+        quantityReservedAfter: row.quantityReserved + amount,
+        context,
+      });
+
+      pending -= amount;
+    }
   }
 
-  if (remaining > 0) {
-    throw new ReservationConflictError("Reservation state changed concurrently.");
+  if (pending > 0) {
+    throw new ReservationConflictError("Reservation state changed concurrently. Please retry.");
   }
 }
 
@@ -228,57 +244,66 @@ export async function sellStock(
       : {}),
   };
 
-  const rows = await transaction.inventoryItem.findMany({
-    where,
-    select: { id: true, warehouseId: true, quantityOnHand: true, quantityReserved: true },
-    orderBy: { quantityOnHand: "desc" },
-  });
+  let pending = quantity;
 
-  const available = rows.reduce((sum, row) => sum + row.quantityOnHand - row.quantityReserved, 0);
-
-  if (available < quantity) {
-    throw new ConflictError("Insufficient stock for this sale.");
-  }
-
-  let remaining = quantity;
-
-  for (const row of rows) {
-    if (remaining <= 0) {
-      break;
-    }
-
-    const sellable = row.quantityOnHand - row.quantityReserved;
-
-    if (sellable <= 0) {
-      continue;
-    }
-
-    const amount = Math.min(sellable, remaining);
-
-    const result = await transaction.inventoryItem.updateMany({
-      where: { id: row.id, quantityOnHand: row.quantityOnHand },
-      data: { quantityOnHand: { decrement: amount } },
+  for (let attempt = 1; attempt <= STOCK_ATTEMPTS && pending > 0; attempt += 1) {
+    const rows = await transaction.inventoryItem.findMany({
+      where,
+      select: { id: true, warehouseId: true, quantityOnHand: true, quantityReserved: true },
+      orderBy: { quantityOnHand: "desc" },
     });
 
-    if (result.count === 0) {
-      throw new ReservationConflictError("Stock state changed concurrently.");
+    const available = rows.reduce((sum, row) => sum + row.quantityOnHand - row.quantityReserved, 0);
+
+    if (available < pending) {
+      throw new ConflictError("Insufficient stock for this sale.");
     }
 
-    await recordMovement(transaction, {
-      variantId,
-      warehouseId: row.warehouseId,
-      type: "CONSUMPTION",
-      quantityChange: -amount,
-      quantityOnHandAfter: row.quantityOnHand - amount,
-      quantityReservedAfter: row.quantityReserved,
-      context: options.context,
-    });
+    for (const row of rows) {
+      if (pending <= 0) {
+        break;
+      }
 
-    remaining -= amount;
+      const sellable = row.quantityOnHand - row.quantityReserved;
+
+      if (sellable <= 0) {
+        continue;
+      }
+
+      const amount = Math.min(sellable, pending);
+
+      const result = await transaction.inventoryItem.updateMany({
+        // Both counters are compared: a concurrent reservation changes
+        // quantityReserved without touching quantityOnHand, and selling against a
+        // stale reservation count could push on-hand below the reserved amount.
+        where: {
+          id: row.id,
+          quantityOnHand: row.quantityOnHand,
+          quantityReserved: row.quantityReserved,
+        },
+        data: { quantityOnHand: { decrement: amount } },
+      });
+
+      if (result.count === 0) {
+        break;
+      }
+
+      await recordMovement(transaction, {
+        variantId,
+        warehouseId: row.warehouseId,
+        type: "CONSUMPTION",
+        quantityChange: -amount,
+        quantityOnHandAfter: row.quantityOnHand - amount,
+        quantityReservedAfter: row.quantityReserved,
+        context: options.context,
+      });
+
+      pending -= amount;
+    }
   }
 
-  if (remaining > 0) {
-    throw new ReservationConflictError("Stock state changed concurrently.");
+  if (pending > 0) {
+    throw new ReservationConflictError("Stock state changed concurrently. Please retry.");
   }
 
   return quantity;

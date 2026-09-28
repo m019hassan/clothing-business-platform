@@ -11,7 +11,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "expire-reservations": "node scripts/expire-reservations.mjs",
-    "make-admin": "node scripts/make-admin.mjs"
+    "make-admin": "node scripts/make-admin.mjs",
+    "bootstrap": "node prisma/bootstrap.mjs"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",

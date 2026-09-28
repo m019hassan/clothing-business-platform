@@ -164,7 +164,10 @@ beforeAll(async () => {
         accountType: "CUSTOMER",
         status: "ACTIVE",
         email: null,
-        phone: `WALKIN-SC-${branch.code}`.slice(0, 20),
+        // Derived from the branch id, not the code: two branches created in the same
+        // millisecond share the timestamp prefix of their codes, and truncating to the
+        // 20-character column dropped the A/B label, which made the phones collide.
+        phone: `WALKIN-${branch.id.replaceAll("-", "").slice(0, 13)}`,
         passwordHash: "walkin-no-login",
       },
       select: { id: true },

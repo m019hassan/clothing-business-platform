@@ -4,12 +4,14 @@ import "dotenv/config";
 import { afterAll } from "vitest";
 
 /**
- * The local `prisma dev` server accepts only ~9 simultaneous connections, while a
- * Prisma client opens up to ten by default. Capping the pool per client keeps the
- * whole suite (and any app server running next to it) inside that ceiling; the
- * cap only applies to the test process, never to the application runtime.
+ * The suite runs against TEST_DATABASE_URL so a test run can never touch
+ * development data. When that variable is absent the tests fall back to
+ * DATABASE_URL, and in that case the local `prisma dev` (pglite) ceiling of ~9
+ * simultaneous connections still applies, so the pool is capped.
  */
-if (process.env.DATABASE_URL && !process.env.DATABASE_URL.includes("connection_limit=")) {
+if (process.env.TEST_DATABASE_URL) {
+  process.env.DATABASE_URL = process.env.TEST_DATABASE_URL;
+} else if (process.env.DATABASE_URL && !process.env.DATABASE_URL.includes("connection_limit=")) {
   process.env.DATABASE_URL = `${process.env.DATABASE_URL}&connection_limit=2`;
 }
 

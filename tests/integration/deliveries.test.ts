@@ -235,7 +235,9 @@ describe("delivery lifecycle", () => {
 
     const all = await listDeliveries(staff, { limit: 10, offset: 0 });
     expect(all.pagination.total).toBeGreaterThanOrEqual(1);
-    expect(all.deliveries).toHaveLength(10);
+    // A page never returns more than the requested limit, and never more rows than
+    // the queue actually holds (a clean database has no accumulated history).
+    expect(all.deliveries.length).toBe(Math.min(10, all.pagination.total));
 
     // The queue is oldest-first, so search the status-filtered pages for the row
     // instead of assuming it sits on the first page of a busy development database.
