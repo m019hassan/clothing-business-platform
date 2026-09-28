@@ -8,6 +8,7 @@ import { getCurrentPermissions } from "@/modules/auth/application/authorization"
 import { getDashboardOperations, getDashboardSummary } from "@/modules/dashboard/application/summary";
 import type { DashboardSummary } from "@/modules/dashboard/types";
 import { formatDate, formatMoney } from "@/src/lib/format";
+import { getInterfaceLanguage } from "@/src/lib/i18n/server";
 
 function SummaryCard({
   label,
@@ -35,6 +36,7 @@ export default async function DashboardPage() {
   }
 
   const scope = await resolveBranchScope(account);
+  const { t } = await getInterfaceLanguage();
 
   let summary: DashboardSummary | null = null;
   let loadError = false;
@@ -59,44 +61,44 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-6">
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">Dashboard</p>
-        <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-950">Welcome back</h2>
+        <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">{t.dashboard.kicker}</p>
+        <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-950">{t.dashboard.welcome}</h2>
         <p className="mt-2 text-sm text-slate-600">
           {summary?.scope === "business"
-            ? "Business overview across all orders."
-            : "Here is an overview of your account activity."}
+            ? t.dashboard.businessSubtitle
+            : t.dashboard.accountSubtitle}
         </p>
       </section>
 
       {loadError ? (
         <section className="rounded-2xl border border-rose-200 bg-rose-50 p-6">
-          <h3 className="text-sm font-semibold text-rose-800">Unable to load dashboard data</h3>
+          <h3 className="text-sm font-semibold text-rose-800">{t.dashboard.loadErrorTitle}</h3>
           <p className="mt-1 text-sm text-rose-700">
-            The summary could not be retrieved right now. Please refresh the page to try again.
+            {t.dashboard.loadErrorBody}
           </p>
         </section>
       ) : (
         <>
           <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <SummaryCard label="Orders" value={String(summary?.orderCount ?? 0)} />
+            <SummaryCard label={t.dashboard.orders} value={String(summary?.orderCount ?? 0)} />
             <SummaryCard
-              label="Pending Orders"
+              label={t.dashboard.pendingOrders}
               value={String(summary?.pendingOrderCount ?? 0)}
-              hint="Draft or awaiting payment"
+              hint={t.dashboard.pendingOrdersHint}
             />
-            <SummaryCard label="Products" value={String(summary?.productCount ?? 0)} hint="Active catalog items" />
+            <SummaryCard label={t.dashboard.products} value={String(summary?.productCount ?? 0)} hint={t.dashboard.productsHint} />
             <SummaryCard
-              label="Low Stock"
+              label={t.dashboard.lowStock}
               value={String(summary?.lowStockCount ?? 0)}
-              hint="Available below 10 units"
+              hint={t.dashboard.lowStockHint}
             />
           </section>
 
           <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
             <div className="flex items-center justify-between gap-4 border-b border-slate-200 px-6 py-4">
               <div>
-                <h3 className="text-base font-semibold text-slate-900">Recent Orders</h3>
-                <p className="text-sm text-slate-500">Latest orders for this account</p>
+                <h3 className="text-base font-semibold text-slate-900">{t.dashboard.recentOrders}</h3>
+                <p className="text-sm text-slate-500">{t.dashboard.recentOrdersHint}</p>
               </div>
             </div>
 
@@ -105,10 +107,10 @@ export default async function DashboardPage() {
                 <table className="min-w-full divide-y divide-slate-200 text-sm">
                   <thead className="bg-slate-50 text-start text-xs font-semibold uppercase tracking-wide text-slate-500">
                     <tr>
-                      <th scope="col" className="px-6 py-3">Order</th>
-                      <th scope="col" className="px-6 py-3">Status</th>
-                      <th scope="col" className="px-6 py-3">Total</th>
-                      <th scope="col" className="px-6 py-3">Date</th>
+                      <th scope="col" className="px-6 py-3">{t.common.order}</th>
+                      <th scope="col" className="px-6 py-3">{t.common.status}</th>
+                      <th scope="col" className="px-6 py-3">{t.common.total}</th>
+                      <th scope="col" className="px-6 py-3">{t.common.date}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
@@ -133,9 +135,9 @@ export default async function DashboardPage() {
               </div>
             ) : (
               <div className="px-6 py-12 text-center">
-                <p className="text-sm font-medium text-slate-700">No orders yet</p>
+                <p className="text-sm font-medium text-slate-700">{t.dashboard.noOrders}</p>
                 <p className="mt-1 text-sm text-slate-500">
-                  Orders will appear here once they are created.
+                  {t.dashboard.noOrdersHint}
                 </p>
               </div>
             )}

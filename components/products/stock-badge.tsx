@@ -6,22 +6,29 @@ const STOCK_STYLES: Record<StockLevel, string> = {
   OUT_OF_STOCK: "bg-rose-50 text-rose-700 ring-rose-200",
 };
 
-const STOCK_LABELS: Record<StockLevel, string> = {
+export { LOW_STOCK_THRESHOLD, stockLevel };
+
+const STOCK_LABELS_EN: Record<StockLevel, string> = {
   IN_STOCK: "In stock",
   LOW_STOCK: "Low stock",
   OUT_OF_STOCK: "Out of stock",
 };
 
-export { LOW_STOCK_THRESHOLD, stockLevel };
-
-export function StockBadge({ availableQuantity }: { availableQuantity: number }) {
+export function StockBadge({
+  availableQuantity,
+  labels,
+}: {
+  availableQuantity: number;
+  /** Translated labels; English is used when they are not provided. */
+  labels?: Record<string, string>;
+}) {
   const level = stockLevel(availableQuantity);
 
   return (
     <span
       className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${STOCK_STYLES[level]}`}
     >
-      {STOCK_LABELS[level]}
+      {labels?.[level] ?? STOCK_LABELS_EN[level]}
     </span>
   );
 }

@@ -11,6 +11,7 @@ import { getProductInventory } from "@/modules/catalog/application/products";
 import type { ProductInventoryView } from "@/modules/catalog/types";
 import { NotFoundError } from "@/src/lib/errors";
 import { formatDate, formatMoney, formatVariantAttributes, variantLabel } from "@/src/lib/format";
+import { getInterfaceLanguage } from "@/src/lib/i18n/server";
 
 type ProductDetailProps = {
   params: Promise<{ id: string }>;
@@ -32,8 +33,9 @@ export default async function ProductDetailPage({ params }: ProductDetailProps) 
     redirect("/login");
   }
 
-  const permissions = await getCurrentPermissions();
-  const canUpdateProduct = permissions.has(PERMISSIONS.PRODUCTS_UPDATE);
+  const permissionSet = await getCurrentPermissions();
+  const canUpdateProduct = permissionSet.has(PERMISSIONS.PRODUCTS_UPDATE);
+  const { t } = await getInterfaceLanguage();
 
   const { id } = await params;
 
@@ -53,12 +55,12 @@ export default async function ProductDetailPage({ params }: ProductDetailProps) 
   if (loadError || product === null) {
     return (
       <section className="rounded-2xl border border-rose-200 bg-rose-50 p-6">
-        <h3 className="text-sm font-semibold text-rose-800">Unable to load this product</h3>
+        <h3 className="text-sm font-semibold text-rose-800">{t.catalog.detail.loadErrorTitle}</h3>
         <p className="mt-1 text-sm text-rose-700">
-          The product could not be retrieved right now. Please refresh the page to try again.
+          {t.catalog.detail.loadErrorBody}
         </p>
         <Link href="/products" className="mt-4 inline-flex text-sm font-medium text-rose-800 underline">
-          Back to products
+          {t.nav.products}
         </Link>
       </section>
     );
@@ -72,7 +74,7 @@ export default async function ProductDetailPage({ params }: ProductDetailProps) 
     <div className="space-y-6">
       <div className="flex flex-wrap items-center gap-2 text-sm text-slate-500">
         <Link href="/products" className="font-medium text-slate-600 hover:text-blue-700">
-          Products
+          {t.nav.products}
         </Link>
         <span aria-hidden>/</span>
         <span className="truncate text-slate-800">{product.name}</span>
@@ -82,16 +84,16 @@ export default async function ProductDetailPage({ params }: ProductDetailProps) 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
-            <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">Product</p>
+            <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">{t.catalog.product}</p>
             <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-950">{product.name}</h2>
             {product.description ? (
               <p className="mt-3 max-w-3xl text-sm text-slate-600">{product.description}</p>
             ) : (
-              <p className="mt-3 text-sm text-slate-400">No description provided.</p>
+              <p className="mt-3 text-sm text-slate-400">{t.catalog.detail.noDescription}</p>
             )}
           </div>
           <div className="flex shrink-0 flex-col items-start gap-2 sm:items-end">
-            <ProductStatusBadge status={product.status} />
+            <ProductStatusBadge status={product.status} labels={t.catalog.statusLabels} />
             <p className="text-lg font-semibold text-slate-900">
               {formatMoney(product.basePrice, product.currency)}
             </p>
@@ -101,13 +103,13 @@ export default async function ProductDetailPage({ params }: ProductDetailProps) 
                   href={`/products/${product.id}/edit`}
                   className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50"
                 >
-                  Edit product
+                  {t.catalog.detail.editProduct}
                 </Link>
                 <Link
                   href={`/products/${product.id}/edit`}
                   className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-50"
                 >
-                  Manage variants
+                  {t.catalog.detail.manageVariants}
                 </Link>
               </div>
             ) : null}
@@ -115,16 +117,17 @@ export default async function ProductDetailPage({ params }: ProductDetailProps) 
         </div>
 
         <dl className="mt-6 grid grid-cols-1 gap-4 border-t border-slate-100 pt-5 sm:grid-cols-2 lg:grid-cols-4">
-          <InfoRow label="Category" value={product.categoryName ?? "Uncategorized"} />
-          <InfoRow label="Slug" value={product.slug} />
-          <InfoRow label="Created" value={formatDate(product.createdAt)} />
-          <InfoRow label="Updated" value={formatDate(product.updatedAt)} />
+          <InfoRow label={t.catalog.detail.category} value={product.categoryName ?? t.catalog.uncategorized} />
+          <InfoRow label={t.catalog.detail.slug} value={product.slug} />
+          <InfoRow label={t.catalog.detail.created} value={formatDate(product.createdAt)} />
+          <InfoRow label={t.catalog.detail.updated} value={formatDate(product.updatedAt)} />
         </dl>
       </section>
 
       {/* Add to cart */}
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <AddToCart
+          labels={t.catalog.addToCart}
           currency={product.currency}
           canPurchase={account.accountType === "CUSTOMER" && account.customerProfile !== null}
           variants={product.variants.map((variant) => ({
@@ -147,17 +150,17 @@ export default async function ProductDetailPage({ params }: ProductDetailProps) 
       {/* Inventory summary */}
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <p className="text-sm font-medium text-slate-500">On hand</p>
+          <p className="text-sm font-medium text-slate-500">{t.catalog.detail.onHand}</p>
           <p className="mt-2 text-3xl font-semibold tracking-tight text-slate-900">{totalOnHand}</p>
         </div>
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <p className="text-sm font-medium text-slate-500">Reserved</p>
+          <p className="text-sm font-medium text-slate-500">{t.catalog.detail.reserved}</p>
           <p className="mt-2 text-3xl font-semibold tracking-tight text-slate-900">{totalReserved}</p>
         </div>
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <p className="text-sm font-medium text-slate-500">Available</p>
+          <p className="text-sm font-medium text-slate-500">{t.catalog.detail.available}</p>
           <p className="mt-2 text-3xl font-semibold tracking-tight text-slate-900">{totalAvailable}</p>
-          <p className="mt-1 text-xs text-slate-400">On hand minus reserved</p>
+          <p className="mt-1 text-xs text-slate-400">{t.catalog.detail.onHandMinusReserved}</p>
         </div>
       </section>
 
@@ -165,18 +168,19 @@ export default async function ProductDetailPage({ params }: ProductDetailProps) 
       <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="flex items-center justify-between gap-4 border-b border-slate-200 px-6 py-4">
           <div>
-            <h3 className="text-base font-semibold text-slate-900">Variants</h3>
+            <h3 className="text-base font-semibold text-slate-900">{t.catalog.detail.variants}</h3>
             <p className="text-sm text-slate-500">
-              {product.variants.length} variant{product.variants.length === 1 ? "" : "s"} in this product
+              {product.variants.length}{" "}
+              {product.variants.length === 1 ? t.catalog.detail.variantSingular : t.catalog.detail.variantPlural}
             </p>
           </div>
         </div>
 
         {product.variants.length === 0 ? (
           <div className="px-6 py-12 text-center">
-            <p className="text-sm font-semibold text-slate-800">No variants yet</p>
+            <p className="text-sm font-semibold text-slate-800">{t.catalog.detail.noVariants}</p>
             <p className="mt-1 text-sm text-slate-500">
-              A product without an active variant cannot be sold.
+              {t.catalog.detail.noVariantsHint}
             </p>
           </div>
         ) : (
@@ -186,15 +190,15 @@ export default async function ProductDetailPage({ params }: ProductDetailProps) 
               <table className="min-w-full divide-y divide-slate-200 text-sm">
                 <thead className="bg-slate-50 text-start text-xs font-semibold uppercase tracking-wide text-slate-500">
                   <tr>
-                    <th scope="col" className="px-6 py-3">SKU</th>
-                    <th scope="col" className="px-6 py-3">Size</th>
-                    <th scope="col" className="px-6 py-3">Color</th>
-                    <th scope="col" className="px-6 py-3">Status</th>
-                    <th scope="col" className="px-6 py-3">Unit price</th>
-                    <th scope="col" className="px-6 py-3 text-end">On hand</th>
-                    <th scope="col" className="px-6 py-3 text-end">Reserved</th>
-                    <th scope="col" className="px-6 py-3 text-end">Available</th>
-                    <th scope="col" className="px-6 py-3">Stock</th>
+                    <th scope="col" className="px-6 py-3">{t.catalog.detail.sku}</th>
+                    <th scope="col" className="px-6 py-3">{t.catalog.detail.size}</th>
+                    <th scope="col" className="px-6 py-3">{t.catalog.detail.color}</th>
+                    <th scope="col" className="px-6 py-3">{t.common.status}</th>
+                    <th scope="col" className="px-6 py-3">{t.catalog.detail.unitPrice}</th>
+                    <th scope="col" className="px-6 py-3 text-end">{t.catalog.detail.onHand}</th>
+                    <th scope="col" className="px-6 py-3 text-end">{t.catalog.detail.reserved}</th>
+                    <th scope="col" className="px-6 py-3 text-end">{t.catalog.detail.available}</th>
+                    <th scope="col" className="px-6 py-3">{t.catalog.detail.stock}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -209,7 +213,7 @@ export default async function ProductDetailPage({ params }: ProductDetailProps) 
                       <td className="whitespace-nowrap px-6 py-4 text-slate-700">
                         {formatMoney(variant.priceOverride ?? product.basePrice, product.currency)}
                         {variant.priceOverride ? (
-                          <span className="ms-2 text-xs text-slate-400">override</span>
+                          <span className="ms-2 text-xs text-slate-400">{t.catalog.detail.override}</span>
                         ) : null}
                       </td>
                       <td className="whitespace-nowrap px-6 py-4 text-end text-slate-700">{variant.quantityOnHand}</td>
@@ -218,7 +222,7 @@ export default async function ProductDetailPage({ params }: ProductDetailProps) 
                         {variant.availableQuantity}
                       </td>
                       <td className="whitespace-nowrap px-6 py-4">
-                        <StockBadge availableQuantity={variant.availableQuantity} />
+                        <StockBadge availableQuantity={variant.availableQuantity} labels={t.catalog.stockLabels} />
                       </td>
                     </tr>
                   ))}
@@ -237,7 +241,7 @@ export default async function ProductDetailPage({ params }: ProductDetailProps) 
                         {formatVariantAttributes(variant.size, variant.color)}
                       </p>
                     </div>
-                    <StockBadge availableQuantity={variant.availableQuantity} />
+                    <StockBadge availableQuantity={variant.availableQuantity} labels={t.catalog.stockLabels} />
                   </div>
                   <div className="mt-3 flex items-center gap-2">
                     <ProductStatusBadge status={variant.status} />
@@ -247,15 +251,15 @@ export default async function ProductDetailPage({ params }: ProductDetailProps) 
                   </div>
                   <dl className="mt-4 grid grid-cols-3 gap-3 text-sm">
                     <div>
-                      <dt className="text-xs text-slate-500">On hand</dt>
+                      <dt className="text-xs text-slate-500">{t.catalog.detail.onHand}</dt>
                       <dd className="text-slate-800">{variant.quantityOnHand}</dd>
                     </div>
                     <div>
-                      <dt className="text-xs text-slate-500">Reserved</dt>
+                      <dt className="text-xs text-slate-500">{t.catalog.detail.reserved}</dt>
                       <dd className="text-slate-800">{variant.quantityReserved}</dd>
                     </div>
                     <div>
-                      <dt className="text-xs text-slate-500">Available</dt>
+                      <dt className="text-xs text-slate-500">{t.catalog.detail.available}</dt>
                       <dd className="font-medium text-slate-900">{variant.availableQuantity}</dd>
                     </div>
                   </dl>
@@ -267,9 +271,7 @@ export default async function ProductDetailPage({ params }: ProductDetailProps) 
 
         <div className="border-t border-slate-100 bg-slate-50 px-6 py-3">
           <p className="text-xs text-slate-500">
-            Available = on hand − reserved. Inventory is read-only here; stock adjustments have no API yet.
-            Low stock follows the documented threshold of fewer than 10 available units
-            (docs/01-product/business-rules.md).
+            {t.catalog.detail.footnote}
           </p>
         </div>
       </section>

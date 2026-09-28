@@ -16,14 +16,30 @@ export type AddToCartVariant = {
   sellable: boolean;
 };
 
+export type AddToCartLabels = {
+  title: string;
+  variant: string;
+  quantity: string;
+  add: string;
+  adding: string;
+  selectVariant: string;
+  customersOnly: string;
+  customersOnlyHint: string;
+  notAvailable: string;
+  notAvailableHint: string;
+  viewCart: string;
+};
+
 export function AddToCart({
   variants,
   currency,
   canPurchase,
+  labels,
 }: {
   variants: AddToCartVariant[];
   currency: string;
   canPurchase: boolean;
+  labels: AddToCartLabels;
 }) {
   const router = useRouter();
   const sellableVariants = variants.filter((variant) => variant.sellable);
@@ -37,7 +53,7 @@ export function AddToCart({
 
   async function addToCart() {
     if (!selected) {
-      setError("Select a variant first.");
+      setError(labels.selectVariant);
       return;
     }
 
@@ -51,7 +67,7 @@ export function AddToCart({
         body: JSON.stringify({ variantId: selected.id, quantity }),
       });
 
-      setSuccess(`Added ${quantity} × ${selected.sku} to your cart.`);
+      setSuccess(`${labels.add}: ${quantity} × ${selected.sku}`);
       setQuantity(1);
       router.refresh();
     } catch (requestError) {
@@ -64,9 +80,9 @@ export function AddToCart({
   if (!canPurchase) {
     return (
       <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-5 py-4">
-        <p className="text-sm font-medium text-slate-700">Customer accounts only</p>
+        <p className="text-sm font-medium text-slate-700">{labels.customersOnly}</p>
         <p className="mt-1 text-sm text-slate-500">
-          Shopping cart actions are available for customer accounts. This account type cannot purchase.
+          {labels.customersOnlyHint}
         </p>
       </div>
     );
@@ -75,9 +91,9 @@ export function AddToCart({
   if (sellableVariants.length === 0) {
     return (
       <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-5 py-4">
-        <p className="text-sm font-medium text-slate-700">Not available for purchase</p>
+        <p className="text-sm font-medium text-slate-700">{labels.notAvailable}</p>
         <p className="mt-1 text-sm text-slate-500">
-          This product has no active variant with available stock.
+          {labels.notAvailableHint}
         </p>
       </div>
     );
@@ -85,11 +101,11 @@ export function AddToCart({
 
   return (
     <div className="rounded-xl border border-slate-200 bg-slate-50 p-5">
-      <h3 className="text-sm font-semibold text-slate-900">Add to cart</h3>
+      <h3 className="text-sm font-semibold text-slate-900">{labels.title}</h3>
 
       <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_auto_auto] sm:items-end">
         <label className="block">
-          <span className="mb-1 block text-xs font-medium text-slate-600">Variant</span>
+          <span className="mb-1 block text-xs font-medium text-slate-600">{labels.variant}</span>
           <select
             value={variantId}
             onChange={(event) => setVariantId(event.target.value)}
@@ -104,7 +120,7 @@ export function AddToCart({
         </label>
 
         <label className="block">
-          <span className="mb-1 block text-xs font-medium text-slate-600">Quantity</span>
+          <span className="mb-1 block text-xs font-medium text-slate-600">{labels.quantity}</span>
           <input
             type="number"
             min={1}
@@ -121,7 +137,7 @@ export function AddToCart({
           disabled={pending || !selected}
           className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {pending ? "Adding…" : "Add to cart"}
+          {pending ? labels.adding : labels.add}
         </button>
       </div>
 
@@ -143,7 +159,7 @@ export function AddToCart({
         <p role="status" className="mt-3 flex flex-wrap items-center gap-2 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
           {success}
           <Link href="/cart" className="font-semibold underline">
-            View cart
+            {labels.viewCart}
           </Link>
         </p>
       ) : null}
