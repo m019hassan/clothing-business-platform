@@ -9,6 +9,7 @@ import { getProductInventory } from "@/modules/catalog/application/products";
 import { CategoryManager } from "@/modules/catalog/components/category-manager";
 import { ProductForm } from "@/modules/catalog/components/product-form";
 import { VariantManager } from "@/modules/catalog/components/variant-manager";
+import { suggestSku } from "@/modules/catalog/application/identifiers";
 import { getInterfaceLanguage } from "@/src/lib/i18n/server";
 import type { ProductInventoryView } from "@/modules/catalog/types";
 import { NotFoundError } from "@/src/lib/errors";
@@ -94,6 +95,7 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
             categories={categories}
             labels={{ ...t.catalog.form, status: t.common.status, category: t.catalog.category }}
             statusLabels={t.catalog.statusLabels}
+            suggestedVariantSku={suggestSku(product.slug)}
             product={{
               id: product.id,
               name: product.name,
@@ -115,6 +117,7 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
         <div className="mt-5">
           <VariantManager
             productId={product.id}
+            suggestedSku={suggestSku(product.slug)}
             labels={{
               saving: t.catalog.form.saving,
               save: t.catalog.form.save,

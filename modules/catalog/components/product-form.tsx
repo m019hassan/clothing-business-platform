@@ -51,12 +51,15 @@ export function ProductForm({
   categories,
   labels,
   statusLabels,
+  suggestedVariantSku,
 }: {
   mode: "create" | "edit";
   product?: ProductFormValues;
   categories: { id: string; name: string; isActive: boolean }[];
   labels: ProductFormLabels;
   statusLabels: Record<string, string>;
+  /** Ready-to-use SKU for the optional first variant (create mode). */
+  suggestedVariantSku: string;
 }) {
   const [state, formAction, isPending] = useActionState(
     mode === "create" ? createProductAction : updateProductAction,
@@ -161,7 +164,14 @@ export function ProductForm({
               <label htmlFor="variantSku" className={labelClass}>
                 SKU
               </label>
-              <input id="variantSku" name="variantSku" type="text" placeholder="SHIRT-M" className={inputClass} />
+              <input
+                id="variantSku"
+                name="variantSku"
+                type="text"
+                defaultValue={suggestedVariantSku}
+                placeholder="SHIRT-M"
+                className={inputClass}
+              />
             </div>
             <div>
               <label htmlFor="variantSize" className={labelClass}>

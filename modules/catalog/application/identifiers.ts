@@ -50,3 +50,21 @@ export function isValidSlug(value: string): boolean {
 export function autoSku(prefix = "VAR"): string {
   return `${prefix}-${shortToken().toUpperCase()}`;
 }
+
+/**
+ * A ready-to-use SKU the forms pre-fill, so adding a variant never starts from an
+ * empty box. The product slug makes it readable (`JAKET-4F9A2C`); without one it
+ * falls back to `SKU-4F9A2C`. The user can edit or clear it, and the service
+ * generates a different one if the field is emptied.
+ */
+export function suggestSku(prefix?: string | null): string {
+  const cleaned = (prefix ?? "")
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 12);
+
+  const token = shortToken().toUpperCase();
+
+  return cleaned.length > 0 ? `${cleaned}-${token}` : `SKU-${token}`;
+}

@@ -126,9 +126,11 @@ export function VariantManager({
   labels,
   newLabels,
   statusLabels,
+  suggestedSku,
 }: {
   productId: string;
   variants: VariantRow[];
+  suggestedSku: string;
   labels: VariantLabels;
   newLabels: {
     addTitle: string;
@@ -172,7 +174,13 @@ export function VariantManager({
         <input type="hidden" name="productId" value={productId} />
         <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{newLabels.addTitle}</p>
         <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-5">
-          <input name="sku" placeholder={newLabels.skuPlaceholder} aria-label={newLabels.newSku} className={inputClass} />
+          <input
+            name="sku"
+            defaultValue={suggestedSku}
+            placeholder={newLabels.skuPlaceholder}
+            aria-label={newLabels.newSku}
+            className={inputClass}
+          />
           <input name="size" placeholder={newLabels.sizePlaceholder} aria-label={newLabels.newSize} className={inputClass} />
           <input name="color" placeholder={newLabels.colorPlaceholder} aria-label={newLabels.newColor} className={inputClass} />
           <input

@@ -815,7 +815,7 @@ export const en = {
       optionalVariant: "Optional first variant",
       priceOverride: "Price override",
       variantStatus: "Variant status",
-      variantHint: "Fill the SKU to create the first variant. Everything except the SKU is optional.",
+      variantHint: "The first variant is created with the code above — change it, or clear it to start without a variant.",
       saving: "Saving…",
       save: "Save",
       createProduct: "Create product",
@@ -824,7 +824,7 @@ export const en = {
       archiving: "Archiving…",
     },
     variantsAdmin: {
-      skuHint: "Leave it empty to generate a code automatically.",
+      skuHint: "A ready-to-use code is filled in. Keep it, edit it, or clear it and we generate another one.",
       empty: "No variants yet.",
       addTitle: "Add a variant",
       add: "Add variant",

@@ -811,7 +811,7 @@ export const ar: Dictionary = {
       optionalVariant: "بديل أول اختياري",
       priceOverride: "سعر خاص",
       variantStatus: "حالة البديل",
-      variantHint: "املأ الكود لإنشاء البديل الأول. كل الحقول ما عدا الكود اختيارية.",
+      variantHint: "يُنشأ البديل الأول بالكود أعلاه — غيّره، أو امسحه لتبدأ بدون بديل.",
       saving: "جارٍ الحفظ…",
       save: "حفظ",
       createProduct: "إنشاء منتج",
@@ -820,7 +820,7 @@ export const ar: Dictionary = {
       archiving: "جارٍ الأرشفة…",
     },
     variantsAdmin: {
-      skuHint: "اتركه فارغاً لتوليد كود تلقائياً.",
+      skuHint: "الكود معبّى بقيمة جاهزة — استخدمه كما هو، أو عدّله، أو امسحه لنولّد واحداً آخر.",
       empty: "لا توجد بدائل بعد.",
       addTitle: "إضافة بديل",
       add: "إضافة بديل",

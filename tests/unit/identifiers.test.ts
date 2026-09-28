@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { autoSku, autoSlug, isValidSlug, slugifyName } from "@/modules/catalog/application/identifiers";
+import { autoSku, autoSlug, isValidSlug, slugifyName, suggestSku } from "@/modules/catalog/application/identifiers";
 
 describe("slugifyName", () => {
   it("turns a Latin name into a slug", () => {
@@ -37,6 +37,23 @@ describe("autoSlug", () => {
     for (const slug of slugs) {
       expect(isValidSlug(slug)).toBe(true);
     }
+  });
+});
+
+describe("suggestSku", () => {
+  it("builds a readable suggestion from a slug", () => {
+    expect(suggestSku("jaket")).toMatch(/^JAKET-[0-9A-F]{6}$/);
+    expect(suggestSku("linen-shirt")).toMatch(/^LINEN-SHIRT-[0-9A-F]{6}$/);
+  });
+
+  it("falls back to SKU when there is nothing to prefix", () => {
+    expect(suggestSku()).toMatch(/^SKU-[0-9A-F]{6}$/);
+    expect(suggestSku("!!!")).toMatch(/^SKU-[0-9A-F]{6}$/);
+  });
+
+  it("gives a different code every time", () => {
+    const codes = new Set(Array.from({ length: 20 }, () => suggestSku("jaket")));
+    expect(codes.size).toBe(20);
   });
 });
 
