@@ -6,22 +6,26 @@ import { useState, type ReactNode } from "react";
 
 import { logoutAction } from "@/modules/auth/application/actions";
 import { NotificationBell } from "@/modules/notification/components/notification-bell";
+import type { Dictionary } from "@/src/lib/i18n/dictionaries";
+import type { Locale } from "@/src/lib/i18n";
+
+import { LocaleSwitcher } from "./locale-switcher";
 
 const NAV_ITEMS = [
-  { href: "/dashboard", label: "Dashboard", customerOnly: false },
-  { href: "/reports", label: "Reports", customerOnly: false, requiresReports: true },
-  { href: "/products", label: "Products", customerOnly: false },
-  { href: "/orders", label: "Orders", customerOnly: true },
-  { href: "/cart", label: "Cart", customerOnly: true },
-  { href: "/account", label: "Account", customerOnly: false },
-  { href: "/inventory", label: "Inventory", customerOnly: false, requiresInventory: true },
-  { href: "/payments", label: "Payments", customerOnly: false, requiresPayments: true },
-  { href: "/pos", label: "Point of sale", customerOnly: false, distributorOnly: true },
-  { href: "/admin", label: "Admin", customerOnly: false, requiresUsers: true },
-  { href: "/deliveries", label: "Deliveries", customerOnly: false, requiresShipping: true },
-  { href: "/customers", label: "Customers", customerOnly: false, requiresCustomers: true },
-  { href: "/employees", label: "Employees", customerOnly: false, requiresEmployees: true },
-  { href: "/roles", label: "Roles", customerOnly: false, requiresRoles: true },
+  { href: "/dashboard", key: "dashboard", customerOnly: false },
+  { href: "/reports", key: "reports", customerOnly: false, requiresReports: true },
+  { href: "/products", key: "products", customerOnly: false },
+  { href: "/orders", key: "orders", customerOnly: true },
+  { href: "/cart", key: "cart", customerOnly: true },
+  { href: "/account", key: "account", customerOnly: false },
+  { href: "/inventory", key: "inventory", customerOnly: false, requiresInventory: true },
+  { href: "/payments", key: "payments", customerOnly: false, requiresPayments: true },
+  { href: "/pos", key: "pos", customerOnly: false, distributorOnly: true },
+  { href: "/admin", key: "admin", customerOnly: false, requiresUsers: true },
+  { href: "/deliveries", key: "deliveries", customerOnly: false, requiresShipping: true },
+  { href: "/customers", key: "customers", customerOnly: false, requiresCustomers: true },
+  { href: "/employees", key: "employees", customerOnly: false, requiresEmployees: true },
+  { href: "/roles", key: "roles", customerOnly: false, requiresRoles: true },
 ] as const;
 
 function NavIcon({ href }: { href: string }) {
@@ -166,6 +170,8 @@ function NavIcon({ href }: { href: string }) {
 }
 
 function SidebarContent({
+  navLabels,
+  shellLabels,
   pathname,
   userLabel,
   isCustomer,
@@ -180,6 +186,8 @@ function SidebarContent({
   canViewReports,
   onNavigate,
 }: {
+  navLabels: Dictionary["nav"];
+  shellLabels: Dictionary["shell"];
   pathname: string;
   userLabel: string;
   isCustomer: boolean;
@@ -264,7 +272,7 @@ function SidebarContent({
               ].join(" ")}
             >
               <NavIcon href={item.href} />
-              {item.label}
+              {navLabels[item.key]}
             </Link>
           );
         })}
@@ -290,7 +298,7 @@ function SidebarContent({
               <path d="M15 12H4M8 8l-4 4 4 4" />
               <path d="M12 4h6a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6" />
             </svg>
-            Sign outt
+            {shellLabels.signOut}
           </button>
         </form>
       </div>
@@ -298,7 +306,11 @@ function SidebarContent({
   );
 }
 
+type ShellLabels = { nav: Dictionary["nav"]; shell: Dictionary["shell"] };
+
 export function AppShell({
+  labels,
+  locale,
   userLabel,
   unreadNotificationCount,
   isCustomer,
@@ -313,6 +325,8 @@ export function AppShell({
   canViewReports,
   children,
 }: {
+  labels: ShellLabels;
+  locale: Locale;
   userLabel: string;
   unreadNotificationCount: number;
   isCustomer: boolean;
@@ -330,12 +344,14 @@ export function AppShell({
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const activeItem = NAV_ITEMS.find((item) => pathname === item.href || pathname.startsWith(`${item.href}/`));
-  const title = activeItem?.label ?? "Dashboard";
+  const title = labels.nav[activeItem?.key ?? "dashboard"];
 
   return (
     <div className="min-h-screen bg-slate-100 lg:flex">
-      <aside className="hidden w-64 shrink-0 border-r border-slate-200 bg-white lg:sticky lg:top-0 lg:block lg:h-screen">
+      <aside className="hidden w-64 shrink-0 border-e border-slate-200 bg-white lg:sticky lg:top-0 lg:block lg:h-screen">
         <SidebarContent
+          navLabels={labels.nav}
+          shellLabels={labels.shell}
           pathname={pathname}
           userLabel={userLabel}
           isCustomer={isCustomer}
@@ -355,12 +371,14 @@ export function AppShell({
         <div className="fixed inset-0 z-40 lg:hidden">
           <button
             type="button"
-            aria-label="Close navigation"
+            aria-label={labels.shell.closeNavigation}
             className="absolute inset-0 bg-slate-900/50"
             onClick={() => setMobileOpen(false)}
           />
-          <aside className="absolute inset-y-0 left-0 w-72 max-w-[85%] bg-white shadow-xl">
+          <aside className="absolute inset-y-0 start-0 w-72 max-w-[85%] bg-white shadow-xl">
             <SidebarContent
+              navLabels={labels.nav}
+              shellLabels={labels.shell}
               pathname={pathname}
               userLabel={userLabel}
               isCustomer={isCustomer}
@@ -386,7 +404,7 @@ export function AppShell({
               type="button"
               className="rounded-lg border border-slate-300 p-2 text-slate-600 transition-colors hover:bg-slate-50 lg:hidden"
               onClick={() => setMobileOpen(true)}
-              aria-label="Open navigation"
+              aria-label={labels.shell.openNavigation}
             >
               <svg
                 className="h-5 w-5"
@@ -408,8 +426,9 @@ export function AppShell({
               <h1 className="truncate text-lg font-semibold text-slate-900">{title}</h1>
             </div>
 
-            <div className="ml-auto flex items-center gap-3">
+            <div className="ms-auto flex items-center gap-3">
               <NotificationBell unreadCount={unreadNotificationCount} />
+              <LocaleSwitcher locale={locale} label={labels.shell.language} />
               <span className="hidden max-w-[220px] truncate text-sm text-slate-600 sm:block">
                 {userLabel}
               </span>
@@ -418,7 +437,7 @@ export function AppShell({
                   type="submit"
                   className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
                 >
-                  Sign out
+                  {labels.shell.signOut}
                 </button>
               </form>
             </div>

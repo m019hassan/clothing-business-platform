@@ -24,3 +24,10 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* The Latin UI fonts carry no Arabic glyphs; keep an Arabic-capable stack behind
+   them so an RTL page renders with proper shapes instead of fallback boxes. */
+html[lang="ar"] body {
+  font-family: var(--font-geist-sans), var(--font-geist-mono), "Geeza Pro", "Noto Naskh Arabic",
+    "Segoe UI", Tahoma, Arial, Helvetica, sans-serif;
+}

@@ -5,6 +5,7 @@ import { getCurrentPermissions } from "@/modules/auth/application/authorization"
 import { PERMISSIONS } from "@/modules/auth/application/permissions";
 import { getCurrentAccount } from "@/modules/auth/infrastructure/session";
 import { getUnreadNotificationCount } from "@/modules/notification/application/notifications";
+import { getInterfaceLanguage } from "@/src/lib/i18n/server";
 
 export default async function AppLayout({
   children,
@@ -15,13 +16,16 @@ export default async function AppLayout({
     redirect("/login");
   }
 
-  const [permissions, unreadNotificationCount] = await Promise.all([
+  const [permissions, unreadNotificationCount, language] = await Promise.all([
     getCurrentPermissions(),
     getUnreadNotificationCount(account),
+    getInterfaceLanguage(),
   ]);
 
   return (
     <AppShell
+      locale={language.locale}
+      labels={{ nav: language.t.nav, shell: language.t.shell }}
       userLabel={account.email ?? account.phone}
       unreadNotificationCount={unreadNotificationCount}
       isCustomer={account.accountType === "CUSTOMER"}

@@ -7,14 +7,14 @@ import type { LoginResult } from "@/modules/auth/types";
 
 const initialState: LoginResult = { success: false, message: "" };
 
-export function LoginForm() {
+export function LoginForm({ labels }: { labels: { identifier: string; password: string; signIn: string; signingIn: string } }) {
   const [state, formAction, isPending] = useActionState(loginAction, initialState);
 
   return (
     <form action={formAction} className="space-y-5">
       <div>
         <label htmlFor="identifier" className="mb-2 block text-sm font-medium text-slate-700">
-          Email or phone
+          {labels.identifier}
         </label>
         <input
           id="identifier"
@@ -27,7 +27,7 @@ export function LoginForm() {
       </div>
       <div>
         <label htmlFor="password" className="mb-2 block text-sm font-medium text-slate-700">
-          Password
+          {labels.password}
         </label>
         <input
           id="password"
@@ -48,7 +48,7 @@ export function LoginForm() {
         disabled={isPending}
         className="w-full rounded-lg bg-slate-900 px-4 py-3 font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {isPending ? "Signing in..." : "Sign in"}
+        {isPending ? labels.signingIn : labels.signIn}
       </button>
     </form>
   );
