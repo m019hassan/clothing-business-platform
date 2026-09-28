@@ -53,7 +53,7 @@ export default async function ReportsPage({
           {t.reports.noReportingPermission}
         </p>
         <Link href="/dashboard" className="mt-5 inline-flex rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100">
-          Back to dashboard
+          {t.common.backToDashboard}
         </Link>
       </section>
     );
@@ -91,7 +91,7 @@ export default async function ReportsPage({
         <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">{t.reports.kicker}</p>
         <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-950">{t.reports.title}</h2>
         <p className="mt-1 text-sm text-slate-600">
-          Aggregated by the database from existing orders, payments and inventory. Periods are rolling UTC windows.
+          {t.reports.subtitle}
         </p>
 
         <nav className="mt-4 flex flex-wrap gap-2" aria-label={t.reports.periodAria}>
@@ -193,7 +193,7 @@ export default async function ReportsPage({
                 <div className="border-b border-slate-200 px-6 py-4">
                   <h3 className="text-base font-semibold text-slate-900">{t.reports.topProducts}</h3>
                   <p className="text-sm text-slate-500">
-                    Ranked by revenue from confirmed or later orders (unit price × quantity)
+                    {t.reports.topCustomersNote}
                   </p>
                 </div>
                 {topProducts.length > 0 ? (
@@ -280,7 +280,7 @@ export default async function ReportsPage({
               <p className="text-sm text-slate-500">{payments.total} payment records in this period</p>
             </div>
             <Link href="/payments" className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-100">
-              Open queue
+              {t.reports.openQueue}
             </Link>
           </div>
           <table className="min-w-full divide-y divide-slate-200 text-sm">

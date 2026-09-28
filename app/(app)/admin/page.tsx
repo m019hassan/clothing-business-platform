@@ -68,7 +68,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
           href="/dashboard"
           className="mt-5 inline-flex rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
         >
-          Back to dashboard
+          {t.common.backToDashboard}
         </Link>
       </section>
     );
@@ -142,7 +142,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
         <form method="get" className="grid grid-cols-1 gap-3 sm:grid-cols-4">
           <div className="sm:col-span-2">
             <label htmlFor="q" className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
-              Search
+              {t.catalog.search}
             </label>
             <input
               id="q"
@@ -192,7 +192,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
               type="submit"
               className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
             >
-              Apply
+              {t.common.apply}
             </button>
             {query.size > 0 ? (
               <Link href="/admin" className="px-3 py-2 text-sm font-medium text-slate-500 hover:text-slate-800">

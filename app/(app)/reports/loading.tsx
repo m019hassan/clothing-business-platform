@@ -1,4 +1,7 @@
-export default function ReportsLoading() {
+import { getInterfaceLanguage } from "@/src/lib/i18n/server";
+
+export default async function ReportsLoading() {
+  const { t } = await getInterfaceLanguage();
   return (
     <div className="space-y-6" aria-busy="true" aria-live="polite">
       <div className="h-32 animate-pulse rounded-2xl border border-slate-200 bg-white" />
@@ -8,7 +11,7 @@ export default function ReportsLoading() {
         ))}
       </div>
       <div className="h-72 animate-pulse rounded-2xl border border-slate-200 bg-white" />
-      <p className="sr-only">Loading reports…</p>
+      <p className="sr-only">{t.common.loading}</p>
     </div>
   );
 }

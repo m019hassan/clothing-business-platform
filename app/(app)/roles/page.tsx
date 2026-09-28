@@ -36,7 +36,7 @@ export default async function RolesPage() {
           {t.roles.permissionHint}
         </p>
         <Link href="/dashboard" className="mt-5 inline-flex rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100">
-          Back to dashboard
+          {t.common.backToDashboard}
         </Link>
       </section>
     );
@@ -94,7 +94,7 @@ export default async function RolesPage() {
           title={t.roles.editTooltip}
           className="cursor-not-allowed rounded-lg border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-400"
         >
-          Create role
+          {t.roles.createRole}
         </button>
       </section>
 

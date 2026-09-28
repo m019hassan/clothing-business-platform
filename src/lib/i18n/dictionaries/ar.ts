@@ -25,6 +25,7 @@ export const ar: Dictionary = {
     language: "اللغة",
     openNavigation: "فتح القائمة",
     closeNavigation: "إغلاق القائمة",
+    brand: "منصة إدارة أعمال الملابس",
   },
   dashboard: {
     kicker: "لوحة التحكم",
@@ -84,6 +85,7 @@ export const ar: Dictionary = {
     },
   },
   common: {
+    loading: "جارٍ التحميل…",
     order: "طلب",
     status: "الحالة",
     total: "الإجمالي",
@@ -103,6 +105,7 @@ export const ar: Dictionary = {
     orders: "الطلبات",
     placed: "تاريخ الطلب",
     page: "صفحة",
+    apply: "تطبيق",
     discount: "الخصم",
     next: "التالي",
     view: "عرض",
@@ -210,6 +213,7 @@ export const ar: Dictionary = {
     noResults: "لا توجد حسابات مطابقة لهذه الفلاتر.",
   },
   branches: {
+    warehousesOfBranch: "مستودعات هذا الفرع",
     active: "نشط",
     warehouseList: "المستودعات",
     warehousesCount: "{count} مستودع · أُنشئ {date}",
@@ -237,6 +241,9 @@ export const ar: Dictionary = {
     address: "العنوان",
   },
   reports: {
+    openQueue: "افتح الطابور",
+    topCustomersNote: "مرتّبة حسب الإيراد من الطلبات المؤكّدة أو أبعد (سعر الوحدة × الكمية)",
+    subtitle: "تُجمَّع في قاعدة البيانات من الطلبات والمدفوعات والمخزون القائمة. الفترات نوافذ متجددة بتوقيت UTC.",
     revenue: "الإيراد",
     limitationsTitle: "حدود التقرير",
     limitation1: "المبيعات المحققة تعتمد على الطلبات المؤكّدة أو أبعد؛ والملغاة والمُرتجعة والمُستردة تُعرض منفصلة.",
@@ -282,6 +289,7 @@ export const ar: Dictionary = {
     nothing: "لا شيء لعرضه بعد.",
   },
   notifications: {
+    emptyHintAccount: "ستظهر هنا تحديثات الطلبات والمدفوعات لحسابك.",
     typeLabel: "النوع",
     markRead: "تعليم كمقروء",
     openOrder: "فتح الطلب",
@@ -312,6 +320,7 @@ export const ar: Dictionary = {
       timezone: "المنطقة الزمنية",
       timezonePlaceholder: "Asia/Riyadh",
       marketing: "الموافقة التسويقية",
+      marketingNote: "الموافقة التسويقية تخص حسابات العملاء فقط.",
     },
   },
   errors: {
@@ -329,6 +338,8 @@ export const ar: Dictionary = {
     branch: "الفرع",
   },
   deliveries: {
+    subtitleIntro: "الطلبات المؤكّدة تظهر هنا تلقائياً. انقل كل طلب من التجهيز إلى التسليم؛ والشحن يتطلب ناقلاً ورقم تتبع.",
+    emptyHint2: "تُنشأ التوصيلات تلقائياً عند تأكيد الطلب بدفعة معتمدة.",
     permissionTitle: "التوصيلات تتطلب دور موظف",
     permissionHint: "حسابك لا يملك صلاحية shipping.manage. اطلب من المدير منحها.",
     kicker: "التجهيز",
@@ -408,6 +419,7 @@ export const ar: Dictionary = {
     assignedRoles: "الأدوار الممنوحة",
   },
   roles: {
+    createRole: "إنشاء دور",
     systemNote: "«{name}» دور نظام تديره المنصة (npm run make-admin) ولا يمكن تعديله هنا.",
     permissionTitle: "الأدوار تتطلب دور موظف",
     permissionHint: "حسابك لا يملك صلاحية roles.view. اطلب من المدير منحها.",
@@ -427,6 +439,7 @@ export const ar: Dictionary = {
     savePermissions: "حفظ الصلاحيات",
   },
   usersAdmin: {
+    initialPassword: "كلمة مرور أولية (8 أحرف على الأقل)",
     accountType: "نوع الحساب",
     email: "البريد الإلكتروني",
     password: "كلمة المرور",
@@ -539,6 +552,8 @@ export const ar: Dictionary = {
     stockHint: "{products} منتج · {onHand} موجود",
   },
   inventory: {
+    subtitle: "أرصدة المخزون لكل مستودع مع دفتر الحركات الكامل. الحجوزات والإلغاءات والمدفوعات تحرّك المخزون تلقائياً؛ ويمكن للمخوّلين تسجيل تصحيحات يدوية.",
+    ledgerNote: "أحدث 20 حركة في الدفتر. كل حركة تحفظ الموجود والمحجوز الناتجين.",
     permissionTitle: "المخزون يتطلب دور موظف",
     permissionHint: "حسابك لا يملك صلاحية inventory.view. اطلب من المدير منحها.",
     loadErrorTitle: "تعذّر تحميل المخزون",

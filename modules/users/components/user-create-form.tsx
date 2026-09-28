@@ -26,6 +26,7 @@ export type UserCreateLabels = {
   noBranch: string;
   create: string;
   creating: string;
+  initialPassword: string;
 };
 
 export function UserCreateForm({
@@ -68,7 +69,7 @@ export function UserCreateForm({
         </div>
         <div>
           <label htmlFor="password" className={labelClass}>
-            Initial password (8+ characters)
+            {labels.initialPassword}
           </label>
           <input id="password" name="password" type="text" required className={inputClass} />
         </div>

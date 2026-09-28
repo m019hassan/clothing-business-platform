@@ -421,7 +421,7 @@ export function AppShell({
 
             <div className="min-w-0">
               <p className="text-[11px] font-semibold uppercase tracking-wide text-blue-700">
-                Clothing Business Platform
+                {labels.shell.brand}
               </p>
               <h1 className="truncate text-lg font-semibold text-slate-900">{title}</h1>
             </div>

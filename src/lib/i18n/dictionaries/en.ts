@@ -24,6 +24,7 @@ export const en = {
     language: "Language",
     openNavigation: "Open navigation",
     closeNavigation: "Close navigation",
+    brand: "Clothing Business Platform",
   },
   dashboard: {
     kicker: "Dashboard",
@@ -83,6 +84,7 @@ export const en = {
     },
   },
   common: {
+    loading: "Loading…",
     order: "Order",
     status: "Status",
     total: "Total",
@@ -102,6 +104,7 @@ export const en = {
     orders: "Orders",
     placed: "Placed",
     page: "Page",
+    apply: "Apply",
     discount: "Discount",
     next: "Next",
     view: "View",
@@ -209,6 +212,7 @@ export const en = {
     noResults: "No accounts match these filters.",
   },
   branches: {
+    warehousesOfBranch: "Warehouses of this branch",
     active: "Active",
     warehouseList: "Warehouses",
     warehousesCount: "{count} warehouse(s) · created {date}",
@@ -236,6 +240,9 @@ export const en = {
     address: "Address",
   },
   reports: {
+    openQueue: "Open queue",
+    topCustomersNote: "Ranked by revenue from confirmed or later orders (unit price × quantity)",
+    subtitle: "Aggregated by the database from existing orders, payments and inventory. Periods are rolling UTC windows.",
     revenue: "Revenue",
     limitationsTitle: "Report limitations",
     limitation1: "Realised sales use confirmed or later orders; cancelled, returned and refunded orders are shown separately.",
@@ -281,6 +288,7 @@ export const en = {
     nothing: "Nothing to show yet.",
   },
   notifications: {
+    emptyHintAccount: "Order and payment updates for your account will appear here.",
     typeLabel: "Type",
     markRead: "Mark as read",
     openOrder: "Open order",
@@ -311,6 +319,7 @@ export const en = {
       timezone: "Timezone",
       timezonePlaceholder: "Asia/Riyadh",
       marketing: "Marketing consent",
+    marketingNote: "Marketing consent applies to customer accounts only.",
     },
   },
   errors: {
@@ -328,6 +337,8 @@ export const en = {
     branch: "Branch",
   },
   deliveries: {
+    subtitleIntro: "confirmed orders appear here automatically. Move each one from processing to delivered; shipping requires a carrier and a tracking number.",
+    emptyHint2: "Deliveries are created automatically when an order is confirmed by an approved payment.",
     permissionTitle: "Delivery access requires a staff role",
     permissionHint: "Your account does not have the shipping.manage permission. Ask a manager to grant it.",
     kicker: "Fulfilment",
@@ -408,6 +419,7 @@ export const en = {
     assignedRoles: "Assigned roles",
   },
   roles: {
+    createRole: "Create role",
     systemNote: "{name} is a system role maintained by the platform (npm run make-admin) and cannot be edited here.",
     permissionTitle: "Role access requires a staff role",
     permissionHint: "Your account does not have the roles.view permission. Ask a manager to grant it.",
@@ -427,6 +439,7 @@ export const en = {
     savePermissions: "Save permissions",
   },
   usersAdmin: {
+    initialPassword: "Initial password (8+ characters)",
     accountType: "Account type",
     email: "Email",
     password: "Password",
@@ -540,6 +553,8 @@ export const en = {
     stockHint: "{products} product(s) · {onHand} on hand",
   },
   inventory: {
+    subtitle: "stock balances per warehouse with the full movement ledger. Reservations, cancellations and payments move stock automatically; permitted staff can record manual corrections.",
+    ledgerNote: "The 20 most recent ledger entries. Every entry stores the resulting on-hand and reserved quantities.",
     permissionTitle: "Inventory access requires a staff role",
     permissionHint: "Your account does not have the inventory.view permission. Ask a manager to grant it.",
     loadErrorTitle: "Unable to load inventory",

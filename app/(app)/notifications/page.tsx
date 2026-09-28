@@ -146,7 +146,7 @@ export default async function NotificationsPage({ searchParams }: NotificationsP
         <section className="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center">
           <p className="text-sm font-semibold text-slate-800">{t.notifications.emptyTitle}</p>
           <p className="mt-1 text-sm text-slate-500">
-            Order and payment updates for your account will appear here.
+            {t.notifications.emptyHintAccount}
           </p>
         </section>
       ) : (

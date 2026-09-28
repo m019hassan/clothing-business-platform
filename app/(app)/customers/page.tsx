@@ -53,7 +53,7 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
           href="/dashboard"
           className="mt-5 inline-flex rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
         >
-          Back to dashboard
+          {t.common.backToDashboard}
         </Link>
       </section>
     );
@@ -124,7 +124,7 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
               type="submit"
               className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
             >
-              Search
+              {t.catalog.search}
             </button>
             {query.size > 0 ? (
               <Link href="/customers" className="px-3 py-2 text-sm font-medium text-slate-500 hover:text-slate-800">
@@ -216,7 +216,7 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
 
           <section className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white px-6 py-4 text-sm sm:flex-row sm:items-center sm:justify-between">
             <p className="text-slate-600">
-              Showing <span className="font-medium text-slate-900">{rangeStart}</span>–
+              {t.common.showing} <span className="font-medium text-slate-900">{rangeStart}</span>–
               <span className="font-medium text-slate-900">{rangeEnd}</span> of{" "}
               <span className="font-medium text-slate-900">{total}</span>
             </p>

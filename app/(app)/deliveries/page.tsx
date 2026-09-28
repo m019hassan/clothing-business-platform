@@ -64,7 +64,7 @@ export default async function DeliveriesPage({ searchParams }: DeliveriesPagePro
           href="/dashboard"
           className="mt-5 inline-flex rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
         >
-          Back to dashboard
+          {t.common.backToDashboard}
         </Link>
       </section>
     );
@@ -112,8 +112,7 @@ export default async function DeliveriesPage({ searchParams }: DeliveriesPagePro
         <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">{t.deliveries.kicker}</p>
         <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-950">{t.deliveries.title}</h2>
         <p className="mt-1 text-sm text-slate-600">
-          {scopeDescription(scope, t.scope)} — confirmed orders appear here automatically. Move each one from processing to delivered; shipping requires a
-          carrier and a tracking number.
+          {scopeDescription(scope, t.scope)} — {t.deliveries.subtitleIntro}
         </p>
       </section>
 
@@ -166,7 +165,7 @@ export default async function DeliveriesPage({ searchParams }: DeliveriesPagePro
         <section className="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center">
           <p className="text-sm font-semibold text-slate-800">{t.deliveries.emptyTitle}</p>
           <p className="mt-1 text-sm text-slate-500">
-            Deliveries are created automatically when an order is confirmed by an approved payment.
+            {t.deliveries.emptyHint2}
           </p>
         </section>
       ) : (

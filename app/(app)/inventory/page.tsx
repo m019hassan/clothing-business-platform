@@ -48,7 +48,7 @@ export default async function InventoryPage({ searchParams }: InventoryPageProps
           href="/dashboard"
           className="mt-5 inline-flex rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100"
         >
-          Back to dashboard
+          {t.common.backToDashboard}
         </Link>
       </section>
     );
@@ -104,8 +104,7 @@ export default async function InventoryPage({ searchParams }: InventoryPageProps
         <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">{t.inventory.kicker}</p>
         <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-950">{t.inventory.title}</h2>
         <p className="mt-1 text-sm text-slate-600">
-          {scopeDescription(scope)} — stock balances per warehouse with the full movement ledger. Reservations, cancellations and payments move
-          stock automatically; permitted staff can record manual corrections.
+          {scopeDescription(scope, t.scope)} — {t.inventory.subtitle}
         </p>
       </section>
 
@@ -270,7 +269,7 @@ export default async function InventoryPage({ searchParams }: InventoryPageProps
         <div className="border-b border-slate-200 px-6 py-4">
           <h3 className="text-base font-semibold text-slate-900">{t.inventory.movementsTitle}</h3>
           <p className="text-sm text-slate-500">
-            The 20 most recent ledger entries. Every entry stores the resulting on-hand and reserved quantities.
+            {t.inventory.ledgerNote}
           </p>
         </div>
 

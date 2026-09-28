@@ -23,6 +23,7 @@ export type BranchFormLabels = {
   address: string;
   active: string;
   warehouseList: string;
+  warehousesOfBranch: string;
   noWarehouses: string;
   codePlaceholder: string;
   create: string;
@@ -90,7 +91,7 @@ export function BranchForm({
 
       <fieldset className="rounded-xl border border-slate-200 p-4">
         <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
-          Warehouses of this branch
+          {labels.warehousesOfBranch}
         </legend>
         {warehouses.length === 0 ? (
           <p className="text-sm text-slate-500">{labels.noWarehouses}</p>

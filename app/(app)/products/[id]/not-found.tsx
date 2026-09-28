@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { getInterfaceLanguage } from "@/src/lib/i18n/server";
 
-export default function ProductNotFound() {
+export default async function ProductNotFound() {
+  const { t } = await getInterfaceLanguage();
   return (
     <div className="space-y-6">
       <section className="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center">
@@ -12,7 +14,7 @@ export default function ProductNotFound() {
           href="/products"
           className="mt-5 inline-flex rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100"
         >
-          Back to products
+          {t.nav.products}
         </Link>
       </section>
     </div>

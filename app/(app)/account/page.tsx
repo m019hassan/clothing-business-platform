@@ -245,7 +245,7 @@ export default async function AccountPage() {
             <div className="mt-6 border-t border-slate-200 pt-6">
               <h4 className="text-sm font-semibold text-slate-900">{t.account.notificationsTitle}</h4>
               <p className="mt-1 text-xs text-slate-500">
-                Choose which in-app notifications you want to receive.
+                {t.account.notificationSectionHint}
               </p>
               <NotificationPreferencesForm preferences={notificationPreferences} labels={t.notifications.preferences} />
             </div>

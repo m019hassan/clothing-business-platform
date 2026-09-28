@@ -21,6 +21,7 @@ export type AccountPreferenceLabels = {
   timezone: string;
   timezonePlaceholder: string;
   marketing: string;
+  marketingNote: string;
   saveAccount: string;
   saving: string;
 };
@@ -87,7 +88,7 @@ export function AccountPreferencesForm({
         </div>
       ) : (
         <p className="text-sm text-slate-500">
-          Marketing consent applies to customer accounts only.
+          {labels.marketingNote}
         </p>
       )}
 

@@ -57,7 +57,7 @@ export default async function OrderDetailPage({ params }: OrderDetailProps) {
       <section className="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center">
         <p className="text-sm font-semibold text-slate-800">{t.orders.notCustomerTitle}</p>
         <Link href="/dashboard" className="mt-5 inline-flex rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100">
-          Back to dashboard
+          {t.common.backToDashboard}
         </Link>
       </section>
     );
@@ -69,7 +69,7 @@ export default async function OrderDetailPage({ params }: OrderDetailProps) {
         <h3 className="text-sm font-semibold text-rose-800">{t.orderDetail.loadErrorTitle}</h3>
         <p className="mt-1 text-sm text-rose-700">{t.common.refreshHint}</p>
         <Link href="/orders" className="mt-4 inline-flex text-sm font-medium text-rose-800 underline">
-          Back to orders
+          {t.nav.orders}
         </Link>
       </section>
     );

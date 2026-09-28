@@ -1,4 +1,7 @@
-export default function CheckoutLoading() {
+import { getInterfaceLanguage } from "@/src/lib/i18n/server";
+
+export default async function CheckoutLoading() {
+  const { t } = await getInterfaceLanguage();
   return (
     <div className="space-y-6" aria-busy="true" aria-live="polite">
       <div className="h-6 w-40 animate-pulse rounded bg-slate-200" />
@@ -6,7 +9,7 @@ export default function CheckoutLoading() {
         <div className="h-80 animate-pulse rounded-2xl border border-slate-200 bg-white" />
         <div className="h-72 animate-pulse rounded-2xl border border-slate-200 bg-white" />
       </div>
-      <p className="sr-only">Loading checkout…</p>
+      <p className="sr-only">{t.common.loading}</p>
     </div>
   );
 }

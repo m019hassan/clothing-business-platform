@@ -35,7 +35,7 @@ export default async function EmployeesPage({ searchParams }: EmployeesPageProps
           {t.employees.permissionHint}
         </p>
         <Link href="/dashboard" className="mt-5 inline-flex rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100">
-          Back to dashboard
+          {t.common.backToDashboard}
         </Link>
       </section>
     );
