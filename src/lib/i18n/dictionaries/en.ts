@@ -313,6 +313,16 @@ export const en = {
       marketing: "Marketing consent",
     },
   },
+  errors: {
+    rateLimited: "Too many attempts. Please wait a moment and try again.",
+    validation: "Please check the entered values and try again.",
+    authentication: "Your session has expired. Please sign in again.",
+    authorization: "You do not have permission to perform this action.",
+    notFound: "This item is no longer available.",
+    conflict: "The data changed while you were working. Please review and try again.",
+    database: "The service is temporarily unavailable. Please try again.",
+    internal: "Something went wrong. Please try again.",
+  },
   scope: {
     all: "All branches",
     branch: "Branch",
@@ -847,6 +857,10 @@ export const en = {
     },
   },
   auth: {
+    invalidCredentials: "The email/phone or password is incorrect.",
+    missingFields: "Enter an email or phone number and password.",
+    rateLimited: "Too many attempts. Please wait a moment and try again.",
+    unavailable: "Unable to sign in right now.",
     appName: "Clothing Business Platform",
     signInTitle: "Sign in",
     signInSubtitle: "Use your account credentials to continue.",

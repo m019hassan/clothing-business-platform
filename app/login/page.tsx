@@ -31,6 +31,10 @@ export default async function LoginPage() {
             password: t.auth.password,
             signIn: t.auth.signIn,
             signingIn: t.auth.signingIn,
+            invalidCredentials: t.auth.invalidCredentials,
+            missingFields: t.auth.missingFields,
+            rateLimited: t.auth.rateLimited,
+            unavailable: t.auth.unavailable,
           }}
         />
       </section>

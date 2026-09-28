@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import type { OrderView } from "@/modules/order/types";
-import { apiErrorMessage, apiRequest } from "@/src/lib/api";
+import { apiErrorMessage, apiRequest, type ApiErrorLabels } from "@/src/lib/api";
 
 export type OrderActionLabels = {
   cancelConfirm: string;
@@ -30,6 +30,7 @@ export function OrderActions({
   canSubmit,
   canCancel,
   labels,
+  errors,
 }: {
   orderId: string;
   orderNumber: string;
@@ -37,6 +38,7 @@ export function OrderActions({
   canSubmit: boolean;
   canCancel: boolean;
   labels: OrderActionLabels;
+  errors?: ApiErrorLabels;
 }) {
   const router = useRouter();
   const [pending, setPending] = useState<null | "submit" | "cancel">(null);
@@ -68,7 +70,7 @@ export function OrderActions({
           nextStatus === "CANCELLED" ? labels.cannotCancel : labels.cannotSubmit,
         );
       } else {
-        setError(apiErrorMessage(requestError));
+        setError(apiErrorMessage(requestError, errors));
       }
 
       router.refresh();

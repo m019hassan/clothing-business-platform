@@ -147,7 +147,7 @@ export default async function PaymentsPage({ searchParams }: PaymentsPageProps) 
                     <td className="whitespace-nowrap px-6 py-4 text-slate-500">{formatDate(row.createdAt)}</td>
                     {canDecidePayments ? (
                       <td className="whitespace-nowrap px-6 py-4 text-end">
-                        <PaymentActions labels={t.payments}
+                        <PaymentActions labels={t.payments} errors={t.errors}
                           payment={row}
                         canVerify={canProcessPayments}
                         canApprove={canApprovePayments}
@@ -191,7 +191,7 @@ export default async function PaymentsPage({ searchParams }: PaymentsPageProps) 
                 </dl>
                 {canDecidePayments ? (
                   <div className="mt-4">
-                    <PaymentActions labels={t.payments}
+                    <PaymentActions labels={t.payments} errors={t.errors}
                       payment={row}
                         canVerify={canProcessPayments}
                         canApprove={canApprovePayments}

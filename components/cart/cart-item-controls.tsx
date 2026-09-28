@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-import { apiErrorMessage, apiRequest } from "@/src/lib/api";
+import { apiErrorMessage, apiRequest, type ApiErrorLabels } from "@/src/lib/api";
 import type { CartView } from "@/modules/cart/types";
 
 export type CartItemControlLabels = {
@@ -18,10 +18,12 @@ export function CartItemControls({
   itemId,
   quantity,
   labels,
+  errors,
 }: {
   itemId: string;
   quantity: number;
   labels: CartItemControlLabels;
+  errors?: ApiErrorLabels;
 }) {
   const router = useRouter();
   const [pending, setPending] = useState<"decrease" | "increase" | "remove" | null>(null);
@@ -47,7 +49,7 @@ export function CartItemControls({
 
       router.refresh();
     } catch (requestError) {
-      setError(apiErrorMessage(requestError));
+      setError(apiErrorMessage(requestError, errors));
     } finally {
       setPending(null);
     }

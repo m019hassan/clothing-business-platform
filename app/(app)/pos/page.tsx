@@ -64,7 +64,7 @@ export default async function PosPage() {
 
       <PosDashboardCards dashboard={dashboard} labels={{ ...t.pos, each: t.cart.each }} />
 
-      <PosTerminal catalog={catalog} labels={{ ...t.pos, each: t.cart.each }} />
+      <PosTerminal catalog={catalog} labels={{ ...t.pos, each: t.cart.each }} errors={t.errors} />
     </div>
   );
 }

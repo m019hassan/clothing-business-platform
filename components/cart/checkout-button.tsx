@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import type { AddressView } from "@/modules/customers/application/addresses";
-import { apiErrorMessage, apiRequest } from "@/src/lib/api";
+import { apiErrorMessage, apiRequest, type ApiErrorLabels } from "@/src/lib/api";
 import type { OrderView } from "@/modules/order/types";
 
 export type CheckoutLabels = {
@@ -31,7 +31,15 @@ export type CheckoutLabels = {
   serverNote: string;
 };
 
-export function CheckoutButton({ addresses, labels }: { addresses: AddressView[]; labels: CheckoutLabels }) {
+export function CheckoutButton({
+  addresses,
+  labels,
+  errors,
+}: {
+  addresses: AddressView[];
+  labels: CheckoutLabels;
+  errors?: ApiErrorLabels;
+}) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -55,7 +63,7 @@ export function CheckoutButton({ addresses, labels }: { addresses: AddressView[]
       setCreatedOrder(result.order);
       router.refresh();
     } catch (requestError) {
-      setError(apiErrorMessage(requestError));
+      setError(apiErrorMessage(requestError, errors));
       // Re-sync with the backend so the page never shows a stale cart.
       router.refresh();
     } finally {

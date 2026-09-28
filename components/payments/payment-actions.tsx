@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import type { PaymentSimulationResult, PaymentView, PendingPaymentRow } from "@/modules/payment/types";
-import { apiErrorMessage, apiRequest } from "@/src/lib/api";
+import { apiErrorMessage, apiRequest, type ApiErrorLabels } from "@/src/lib/api";
 
 type PaymentAction = "verify" | "approve" | "reject";
 
@@ -26,12 +26,14 @@ export function PaymentActions({
   canApprove,
   canReject,
   labels,
+  errors,
 }: {
   payment: PendingPaymentRow;
   canVerify: boolean;
   canApprove: boolean;
   canReject: boolean;
   labels: PaymentActionLabels;
+  errors?: ApiErrorLabels;
 }) {
   const router = useRouter();
   const [pending, setPending] = useState<PaymentAction | null>(null);
@@ -60,7 +62,7 @@ export function PaymentActions({
       if (requestError instanceof Error && "status" in requestError && (requestError as { status: number }).status === 409) {
         setError(labels.stale);
       } else {
-        setError(apiErrorMessage(requestError));
+        setError(apiErrorMessage(requestError, errors));
       }
 
       router.refresh();

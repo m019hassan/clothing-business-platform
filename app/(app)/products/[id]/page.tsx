@@ -128,6 +128,7 @@ export default async function ProductDetailPage({ params }: ProductDetailProps) 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <AddToCart
           labels={t.catalog.addToCart}
+          errors={t.errors}
           currency={product.currency}
           canPurchase={account.accountType === "CUSTOMER" && account.customerProfile !== null}
           variants={product.variants.map((variant) => ({

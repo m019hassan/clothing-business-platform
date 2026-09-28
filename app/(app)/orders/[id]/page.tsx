@@ -113,6 +113,7 @@ export default async function OrderDetailPage({ params }: OrderDetailProps) {
         <div className="mt-6 border-t border-slate-100 pt-5">
           <OrderActions
             labels={t.orderActions}
+            errors={t.errors}
             orderId={order.id}
             orderNumber={order.orderNumber}
             status={order.status}

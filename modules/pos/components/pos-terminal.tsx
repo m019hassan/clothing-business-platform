@@ -4,12 +4,20 @@ import { useMemo, useState } from "react";
 
 import type { PosLabels } from "@/modules/pos/components/pos-labels";
 import type { PosCatalogItemView, PosCatalogView, PosReceiptView } from "@/modules/pos/types";
-import { apiErrorMessage, apiRequest } from "@/src/lib/api";
+import { apiErrorMessage, apiRequest, type ApiErrorLabels } from "@/src/lib/api";
 import { formatMoney } from "@/src/lib/format";
 
 type CartLine = { item: PosCatalogItemView; quantity: number };
 
-export function PosTerminal({ catalog, labels }: { catalog: PosCatalogView; labels: PosLabels }) {
+export function PosTerminal({
+  catalog,
+  labels,
+  errors,
+}: {
+  catalog: PosCatalogView;
+  labels: PosLabels;
+  errors?: ApiErrorLabels;
+}) {
   const [query, setQuery] = useState("");
   const [lines, setLines] = useState<CartLine[]>([]);
   const [pending, setPending] = useState(false);
@@ -95,7 +103,7 @@ export function PosTerminal({ catalog, labels }: { catalog: PosCatalogView; labe
       setReceipt(result.receipt);
       setLines([]);
     } catch (requestError) {
-      setError(apiErrorMessage(requestError));
+      setError(apiErrorMessage(requestError, errors));
     } finally {
       setPending(false);
     }

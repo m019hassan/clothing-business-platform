@@ -134,7 +134,12 @@ export default async function CartPage() {
                     <p className="text-sm font-semibold text-slate-900">
                       {formatMoney(item.lineTotal, item.currency)}
                     </p>
-                    <CartItemControls itemId={item.id} quantity={item.quantity} labels={t.cart.controls} />
+                    <CartItemControls
+                          itemId={item.id}
+                          quantity={item.quantity}
+                          labels={t.cart.controls}
+                          errors={t.errors}
+                        />
                   </div>
                 </div>
               </li>

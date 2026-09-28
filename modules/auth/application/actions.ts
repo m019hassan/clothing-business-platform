@@ -15,15 +15,23 @@ export async function loginAction(
   const password = formData.get("password");
 
   if (typeof identifier !== "string" || typeof password !== "string") {
-    return { success: false, message: "Enter an email or phone number and password." };
+    return { success: false, reason: "MISSING_FIELDS", message: "Enter an email or phone number and password." };
   }
 
   try {
     await login({ identifier, password });
   } catch (error) {
     const appError = toAppError(error);
+    const reason =
+      appError.code === "AUTHENTICATION_ERROR"
+        ? ("INVALID_CREDENTIALS" as const)
+        : appError.code === "RATE_LIMITED"
+          ? ("RATE_LIMITED" as const)
+          : ("UNAVAILABLE" as const);
+
     return {
       success: false,
+      reason,
       message:
         appError.code === "VALIDATION_ERROR" || appError.code === "AUTHENTICATION_ERROR"
           ? appError.message

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-import { apiErrorMessage, apiRequest } from "@/src/lib/api";
+import { apiErrorMessage, apiRequest, type ApiErrorLabels } from "@/src/lib/api";
 import type { CartView } from "@/modules/cart/types";
 
 export type AddToCartVariant = {
@@ -35,11 +35,13 @@ export function AddToCart({
   currency,
   canPurchase,
   labels,
+  errors,
 }: {
   variants: AddToCartVariant[];
   currency: string;
   canPurchase: boolean;
   labels: AddToCartLabels;
+  errors?: ApiErrorLabels;
 }) {
   const router = useRouter();
   const sellableVariants = variants.filter((variant) => variant.sellable);
@@ -71,7 +73,7 @@ export function AddToCart({
       setQuantity(1);
       router.refresh();
     } catch (requestError) {
-      setError(apiErrorMessage(requestError));
+      setError(apiErrorMessage(requestError, errors));
     } finally {
       setPending(false);
     }

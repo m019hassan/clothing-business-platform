@@ -157,7 +157,8 @@ export default async function CheckoutPage() {
             </div>
           </dl>
 
-          <CheckoutButton addresses={addresses} labels={{ ...t.checkout, continueShopping: t.cart.continueShopping }} />
+          <CheckoutButton addresses={addresses} labels={{ ...t.checkout, continueShopping: t.cart.continueShopping }}
+            errors={t.errors} />
 
           <p className="text-xs text-slate-500">
             {t.checkout.draftNote}
