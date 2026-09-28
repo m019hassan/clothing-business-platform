@@ -185,3 +185,121 @@ export async function updateRolePermissions(
 
   return mapRole(role);
 }
+
+export type RoleCreateInput = { name: string; code: string; description?: string };
+
+const ROLE_CODE_PATTERN = /^[A-Z][A-Z0-9_]{1,49}$/;
+const MAX_ROLE_NAME = 100;
+const MAX_ROLE_DESCRIPTION = 300;
+
+/** Validates a role-creation payload. Unknown keys are rejected. */
+export function parseRoleCreateInput(payload: unknown): RoleCreateInput {
+  if (typeof payload !== "object" || payload === null || Array.isArray(payload)) {
+    throw new ValidationError("Request body must be a JSON object.");
+  }
+
+  const body = payload as Record<string, unknown>;
+  const unknown = Object.keys(body).filter((key) => !["name", "code", "description"].includes(key));
+
+  if (unknown.length > 0) {
+    throw new ValidationError(`Unknown field(s): ${unknown.join(", ")}.`);
+  }
+
+  if (typeof body.name !== "string" || body.name.trim().length === 0) {
+    throw new ValidationError("name is required.");
+  }
+
+  const name = body.name.trim();
+
+  if (name.length > MAX_ROLE_NAME) {
+    throw new ValidationError(`name must be at most ${MAX_ROLE_NAME} characters.`);
+  }
+
+  if (typeof body.code !== "string" || body.code.trim().length === 0) {
+    throw new ValidationError("code is required.");
+  }
+
+  const code = body.code.trim().toUpperCase();
+
+  if (!ROLE_CODE_PATTERN.test(code)) {
+    throw new ValidationError(
+      "code must use capital letters, digits and underscores, and start with a letter (for example STORE_MANAGER).",
+    );
+  }
+
+  const input: RoleCreateInput = { name, code };
+
+  if (body.description !== undefined) {
+    if (typeof body.description !== "string") {
+      throw new ValidationError("description must be a string when provided.");
+    }
+
+    const description = body.description.trim();
+
+    if (description.length > MAX_ROLE_DESCRIPTION) {
+      throw new ValidationError(`description must be at most ${MAX_ROLE_DESCRIPTION} characters.`);
+    }
+
+    if (description.length > 0) {
+      input.description = description;
+    }
+  }
+
+  return input;
+}
+
+/**
+ * Creates an empty role. Permissions are granted afterwards from the matrix on the
+ * roles screen, which keeps this action small and auditable.
+ */
+export async function createRole(
+  account: AuthenticatedAccount,
+  payload: unknown,
+): Promise<RoleWithPermissionsView> {
+  await requirePermission(PERMISSIONS.ROLES_CREATE);
+
+  const input = parseRoleCreateInput(payload);
+
+  const role = await withDatabaseError(async () => {
+    try {
+      return await prisma.$transaction(async (transaction) => {
+        const created = await transaction.role.create({
+          data: {
+            name: input.name,
+            code: input.code,
+            description: input.description ?? null,
+            isActive: true,
+          },
+          select: { id: true },
+        });
+
+        await transaction.auditLog.create({
+          data: {
+            accountId: account.id,
+            action: "ROLE_CREATED",
+            entity: "Role",
+            entityId: created.id,
+            newValue: input.code,
+          },
+        });
+
+        return created;
+      });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+        throw new ConflictError(`The code "${input.code}" is already used by another role.`);
+      }
+
+      throw error;
+    }
+  });
+
+  const roles = await listRolesWithPermissions();
+  const created = roles.find((entry) => entry.id === role.id);
+
+  if (!created) {
+    throw new NotFoundError("Role not found.");
+  }
+
+  return created;
+}

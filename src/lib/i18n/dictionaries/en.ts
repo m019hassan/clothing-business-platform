@@ -421,6 +421,16 @@ export const en = {
     assignedRoles: "Assigned roles",
   },
   roles: {
+    createTitle: "New role",
+    summaryRoles: "{count} role(s)",
+    summaryPermissions: "{count} active permissions",
+    create: {
+      name: "Role name",
+      code: "Code",
+      codeHint: "Capital letters, digits and underscores, starting with a letter — for example STORE_MANAGER.",
+      create: "Create role",
+      creating: "Creating…",
+    },
     createRole: "Create role",
     systemNote: "{name} is a system role maintained by the platform (npm run make-admin) and cannot be edited here.",
     permissionTitle: "Role access requires a staff role",

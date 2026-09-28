@@ -163,6 +163,7 @@ every code in `modules/auth/application/permissions.ts`.
 | Method | Path | Auth | Response |
 | --- | --- | --- | --- |
 | GET | `/api/roles` | `roles.view` | `{ roles, catalog }` (codes per role + every active permission grouped by module) |
+| POST | `/api/roles` | `roles.create` | `{ role }` (empty role; grant permissions from the matrix) |
 | PUT | `/api/roles/:id/permissions` | `roles.update` | `{ role }` |
 
 Replaces the permission set of a role (`{ permissionCodes: [...] }`, an empty array

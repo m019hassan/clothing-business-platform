@@ -10,6 +10,7 @@ import {
   listPermissionCatalog,
   listRolesWithPermissions,
 } from "@/modules/employees/application/role-permissions";
+import { RoleCreateForm } from "@/modules/employees/components/role-create-form";
 import { RolePermissionsEditor } from "@/modules/employees/components/role-permissions-editor";
 import type {
   AccessOverviewView,
@@ -85,18 +86,21 @@ export default async function RolesPage() {
           <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">{t.roles.kicker}</p>
           <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-950">{t.roles.title}</h2>
           <p className="mt-1 text-sm text-slate-600">
-            {roles.length} role{roles.length === 1 ? "" : "s"} · {catalog.reduce((sum, entry) => sum + entry.permissions.length, 0)} active permissions
+            {t.roles.summaryRoles.replace("{count}", String(roles.length))} ·{" "}
+            {t.roles.summaryPermissions.replace(
+              "{count}",
+              String(catalog.reduce((sum, entry) => sum + entry.permissions.length, 0)),
+            )}
           </p>
         </div>
-        <button
-          type="button"
-          disabled
-          title={t.roles.editTooltip}
-          className="cursor-not-allowed rounded-lg border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-400"
-        >
-          {t.roles.createRole}
-        </button>
       </section>
+
+      {canEditRoles ? (
+        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h3 className="text-base font-semibold text-slate-900">{t.roles.createTitle}</h3>
+          <RoleCreateForm labels={t.roles.create} />
+        </section>
+      ) : null}
 
       {roles.length === 0 ? (
         <section className="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center">

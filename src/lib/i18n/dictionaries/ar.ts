@@ -421,6 +421,16 @@ export const ar: Dictionary = {
     assignedRoles: "الأدوار الممنوحة",
   },
   roles: {
+    createTitle: "دور جديد",
+    summaryRoles: "{count} دور",
+    summaryPermissions: "{count} صلاحية نشطة",
+    create: {
+      name: "اسم الدور",
+      code: "الكود",
+      codeHint: "أحرف كبيرة وأرقام وشرطات سفلية، ويبدأ بحرف — مثال: STORE_MANAGER.",
+      create: "إنشاء دور",
+      creating: "جارٍ الإنشاء…",
+    },
     createRole: "إنشاء دور",
     systemNote: "«{name}» دور نظام تديره المنصة (npm run make-admin) ولا يمكن تعديله هنا.",
     permissionTitle: "الأدوار تتطلب دور موظف",
