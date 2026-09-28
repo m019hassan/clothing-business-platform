@@ -158,7 +158,7 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
         </div>
       </section>
 
-      <CategoryManager categories={categories} labels={{ ...t.catalog.categories, saving: t.catalog.form.saving }} />
+      <CategoryManager categories={categories} labels={{ ...t.catalog.categories, saving: t.catalog.form.saving, slugHint: t.catalog.form.slugHint }} />
     </div>
   );
 }

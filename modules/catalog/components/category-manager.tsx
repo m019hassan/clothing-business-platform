@@ -29,6 +29,7 @@ export type CategoryManagerLabels = {
   productPlural: string;
   ariaName: string;
   ariaSlug: string;
+  slugHint: string;
   ariaDescription: string;
   saving: string;
 };
@@ -105,7 +106,15 @@ export function CategoryManager({
         <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{labels.newTitle}</p>
         <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
           <input name="name" required placeholder={labels.namePlaceholder} aria-label={labels.ariaName} className={inputClass} />
-          <input name="slug" required placeholder={labels.slugPlaceholder} aria-label={labels.ariaSlug} className={inputClass} />
+          <input
+            name="slug"
+            required
+            pattern="[a-z0-9]+(-[a-z0-9]+)*"
+            title={labels.slugHint}
+            placeholder={labels.slugPlaceholder}
+            aria-label={labels.ariaSlug}
+            className={inputClass}
+          />
           <input name="description" placeholder={labels.descriptionPlaceholder} aria-label={labels.ariaDescription} className={inputClass} />
         </div>
         <div className="mt-3 flex flex-wrap items-center gap-3">

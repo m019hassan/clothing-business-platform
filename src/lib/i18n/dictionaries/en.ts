@@ -805,6 +805,7 @@ export const en = {
         "Available = on hand − reserved. Stock adjustments are recorded from the inventory screen. Low stock follows the documented threshold of fewer than 10 available units (docs/01-product/business-rules.md).",
     },
     form: {
+      slugHint: "Lowercase letters, digits and single hyphens — for example linen-shirt.",
       name: "Name",
       slug: "Slug",
       basePrice: "Base price (SAR)",

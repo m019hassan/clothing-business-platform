@@ -29,6 +29,7 @@ export type ProductFormValues = {
 export type ProductFormLabels = {
   name: string;
   slug: string;
+  slugHint: string;
   basePrice: string;
   status: string;
   category: string;
@@ -84,10 +85,15 @@ export function ProductForm({
             name="slug"
             type="text"
             required
+            // The server enforces this too; the pattern stops the round trip and the
+            // browser reports it in the interface language.
+            pattern="[a-z0-9]+(-[a-z0-9]+)*"
+            title={labels.slugHint}
             defaultValue={product?.slug ?? ""}
             placeholder="linen-shirt"
             className={inputClass}
           />
+          <p className="mt-1 text-xs text-slate-400">{labels.slugHint}</p>
         </div>
         <div>
           <label htmlFor="basePrice" className={labelClass}>
