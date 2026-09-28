@@ -32,7 +32,6 @@ const inputClass =
 /** Edits one employee, or removes the account (deleteUser decides archive vs delete). */
 export function EmployeeRowActions({
   employee,
-  departments,
   roles,
   labels,
 }: {
@@ -45,7 +44,6 @@ export function EmployeeRowActions({
     departmentName: string | null;
     roleIds: string[];
   };
-  departments: LookupOption[];
   roles: LookupOption[];
   labels: EmployeeRowLabels;
 }) {

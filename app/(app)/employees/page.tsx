@@ -29,7 +29,6 @@ export default async function EmployeesPage({ searchParams }: EmployeesPageProps
   }
 
   const permissions = await getCurrentPermissions();
-  const canManageUsers = permissions.has(PERMISSIONS.USERS_MANAGE);
 
   if (!permissions.has(PERMISSIONS.EMPLOYEES_VIEW)) {
     return (
@@ -169,7 +168,6 @@ export default async function EmployeesPage({ searchParams }: EmployeesPageProps
                               departmentName: row.departmentName,
                               roleIds: row.roleIds,
                             }}
-                            departments={departmentOptions}
                             roles={roleOptions}
                             labels={{ ...t.employees.editor, statusLabels: t.accountStatus, errors: t.errors }}
                           />
