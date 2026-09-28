@@ -20,16 +20,16 @@ const PAYMENT_STATUS_LABELS: Record<string, string> = {
   CANCELLED: "Cancelled",
 };
 
-export function paymentStatusLabel(status: string): string {
-  return PAYMENT_STATUS_LABELS[status] ?? status.replaceAll("_", " ");
+export function paymentStatusLabel(status: string, labels?: Record<string, string>): string {
+  return labels?.[status] ?? PAYMENT_STATUS_LABELS[status] ?? status.replaceAll("_", " ");
 }
 
-export function PaymentStatusBadge({ status }: { status: string }) {
+export function PaymentStatusBadge({ status, labels }: { status: string; labels?: Record<string, string> }) {
   const style = PAYMENT_STATUS_STYLES[status] ?? "bg-slate-100 text-slate-700 ring-slate-200";
 
   return (
     <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${style}`}>
-      {paymentStatusLabel(status)}
+      {paymentStatusLabel(status, labels)}
     </span>
   );
 }

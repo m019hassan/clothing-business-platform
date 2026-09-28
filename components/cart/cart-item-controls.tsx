@@ -6,12 +6,22 @@ import { useState } from "react";
 import { apiErrorMessage, apiRequest } from "@/src/lib/api";
 import type { CartView } from "@/modules/cart/types";
 
+export type CartItemControlLabels = {
+  decrease: string;
+  increase: string;
+  removing: string;
+  remove: string;
+  updating: string;
+};
+
 export function CartItemControls({
   itemId,
   quantity,
+  labels,
 }: {
   itemId: string;
   quantity: number;
+  labels: CartItemControlLabels;
 }) {
   const router = useRouter();
   const [pending, setPending] = useState<"decrease" | "increase" | "remove" | null>(null);
@@ -49,7 +59,7 @@ export function CartItemControls({
         <div className="inline-flex items-center rounded-lg border border-slate-300 bg-white">
           <button
             type="button"
-            aria-label="Decrease quantity"
+            aria-label={labels.decrease}
             onClick={() => run("decrease")}
             disabled={pending !== null || quantity <= 1}
             className="px-3 py-2 text-slate-700 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:text-slate-300"
@@ -61,7 +71,7 @@ export function CartItemControls({
           </span>
           <button
             type="button"
-            aria-label="Increase quantity"
+            aria-label={labels.increase}
             onClick={() => run("increase")}
             disabled={pending !== null}
             className="px-3 py-2 text-slate-700 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:text-slate-300"
@@ -76,12 +86,12 @@ export function CartItemControls({
           disabled={pending !== null}
           className="rounded-lg border border-rose-200 px-3 py-2 text-xs font-medium text-rose-700 transition-colors hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {pending === "remove" ? "Removing…" : "Remove"}
+          {pending === "remove" ? labels.removing : labels.remove}
         </button>
       </div>
 
       {pending === "increase" || pending === "decrease" ? (
-        <p className="text-xs text-slate-400">Updating…</p>
+        <p className="text-xs text-slate-400">{labels.updating}</p>
       ) : null}
 
       {error ? (

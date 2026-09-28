@@ -8,7 +8,30 @@ import type { AddressView } from "@/modules/customers/application/addresses";
 import { apiErrorMessage, apiRequest } from "@/src/lib/api";
 import type { OrderView } from "@/modules/order/types";
 
-export function CheckoutButton({ addresses }: { addresses: AddressView[] }) {
+export type CheckoutLabels = {
+  createdTitle: string;
+  createdBody: string;
+  paymentLine: string;
+  notCreated: string;
+  reservedNote: string;
+  cancelNote: string;
+  deliveryLine: string;
+  viewOrder: string;
+  allOrders: string;
+  continueShopping: string;
+  deliveryAddress: string;
+  addressNote: string;
+  noAddress: string;
+  paymentMethod: string;
+  cashOnDelivery: string;
+  bankTransfer: string;
+  paymentNote: string;
+  creating: string;
+  create: string;
+  serverNote: string;
+};
+
+export function CheckoutButton({ addresses, labels }: { addresses: AddressView[]; labels: CheckoutLabels }) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -43,21 +66,29 @@ export function CheckoutButton({ addresses }: { addresses: AddressView[] }) {
   if (createdOrder) {
     return (
       <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-5">
-        <h3 className="text-sm font-semibold text-emerald-800">Order created</h3>
+        <h3 className="text-sm font-semibold text-emerald-800">{labels.createdTitle}</h3>
         <p className="mt-1 text-sm text-emerald-700">
-          Your order <span className="font-semibold">{createdOrder.orderNumber}</span> was created with status{" "}
-          {createdOrder.status.replaceAll("_", " ")} for {createdOrder.totalAmount} {createdOrder.currency}.
+          {labels.createdBody
+            .replace("{number}", createdOrder.orderNumber)
+            .replace("{status}", createdOrder.status.replaceAll("_", " "))
+            .replace("{total}", String(createdOrder.totalAmount))
+            .replace("{currency}", createdOrder.currency)}
         </p>
         <ul className="mt-3 space-y-1 text-sm text-emerald-700">
           <li>
-            Payment: {createdOrder.payment ? createdOrder.payment.status.replaceAll("_", " ").toLowerCase() : "not created"}
+            {labels.paymentLine.replace(
+              "{status}",
+              createdOrder.payment ? createdOrder.payment.status.replaceAll("_", " ").toLowerCase() : labels.notCreated,
+            )}
           </li>
-          <li>The items stay reserved until the payment outcome is recorded.</li>
-          <li>You can cancel the order from its page within 24 hours.</li>
+          <li>{labels.reservedNote}</li>
+          <li>{labels.cancelNote}</li>
           {createdOrder.deliveryAddress ? (
             <li>
-              Delivery to {createdOrder.deliveryAddress.recipientName}, {createdOrder.deliveryAddress.city} (
-              {createdOrder.deliveryAddress.line1}).
+              {labels.deliveryLine
+                .replace("{recipient}", createdOrder.deliveryAddress.recipientName)
+                .replace("{city}", createdOrder.deliveryAddress.city)
+                .replace("{line1}", createdOrder.deliveryAddress.line1)}
             </li>
           ) : null}
         </ul>
@@ -66,19 +97,19 @@ export function CheckoutButton({ addresses }: { addresses: AddressView[] }) {
             href={`/orders/${createdOrder.id}`}
             className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-slate-700"
           >
-            View order
+            {labels.viewOrder}
           </Link>
           <Link
             href="/orders"
             className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-white"
           >
-            All orders
+            {labels.allOrders}
           </Link>
           <Link
             href="/products"
             className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-white"
           >
-            Continue shopping
+            {labels.continueShopping}
           </Link>
         </div>
       </div>
@@ -90,7 +121,7 @@ export function CheckoutButton({ addresses }: { addresses: AddressView[] }) {
       {addresses.length > 0 ? (
         <div>
           <label htmlFor="addressId" className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
-            Delivery address
+            {labels.deliveryAddress}
           </label>
           <select
             id="addressId"
@@ -105,18 +136,18 @@ export function CheckoutButton({ addresses }: { addresses: AddressView[] }) {
             ))}
           </select>
           <p className="mt-1 text-xs text-slate-400">
-            Manage your addresses from the account page. The order stores a copy, so later edits will not change it.
+            {labels.addressNote}
           </p>
         </div>
       ) : (
         <p className="rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-500">
-          No delivery address saved yet. You can add one from the account page, or continue without one.
+          {labels.noAddress}
         </p>
       )}
 
       <div>
         <label htmlFor="paymentMethod" className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
-          Payment method
+          {labels.paymentMethod}
         </label>
         <select
           id="paymentMethod"
@@ -124,11 +155,11 @@ export function CheckoutButton({ addresses }: { addresses: AddressView[] }) {
           onChange={(event) => setPaymentMethod(event.target.value)}
           className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none ring-blue-500 focus:ring-2"
         >
-          <option value="CASH_ON_DELIVERY">Cash on delivery</option>
-          <option value="BANK_TRANSFER">Bank transfer</option>
+          <option value="CASH_ON_DELIVERY">{labels.cashOnDelivery}</option>
+          <option value="BANK_TRANSFER">{labels.bankTransfer}</option>
         </select>
         <p className="mt-1 text-xs text-slate-400">
-          Cash on delivery is paid to the courier; a bank transfer is confirmed by the store once it arrives.
+          {labels.paymentNote}
         </p>
       </div>
 
@@ -138,11 +169,10 @@ export function CheckoutButton({ addresses }: { addresses: AddressView[] }) {
         disabled={pending}
         className="w-full rounded-lg bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {pending ? "Creating order…" : "Create order"}
+        {pending ? labels.creating : labels.create}
       </button>
       <p className="text-xs text-slate-500">
-        Prices, totals and inventory are calculated by the server. Nothing is sent from this page except the
-        request to create the order.
+        {labels.serverNote}
       </p>
 
       {error ? (

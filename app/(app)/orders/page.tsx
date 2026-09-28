@@ -7,6 +7,7 @@ import { listOrders } from "@/modules/order/application/orders";
 import type { OrderSummaryView } from "@/modules/order/types";
 import { AuthorizationError } from "@/src/lib/errors";
 import { formatDate, formatMoney } from "@/src/lib/format";
+import { getInterfaceLanguage } from "@/src/lib/i18n/server";
 
 const PAGE_SIZE = 10;
 
@@ -26,6 +27,7 @@ function parseLimit(raw: string | undefined): number {
 
 export default async function OrdersPage({ searchParams }: OrdersPageProps) {
   const account = await getCurrentAccount();
+  const { t } = await getInterfaceLanguage();
 
   if (!account) {
     redirect("/login");
@@ -55,8 +57,8 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
   if (notCustomer) {
     return (
       <section className="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center">
-        <p className="text-sm font-semibold text-slate-800">Orders are available for customer accounts</p>
-        <p className="mt-1 text-sm text-slate-500">Staff order management is a later phase.</p>
+        <p className="text-sm font-semibold text-slate-800">{t.orders.notCustomerTitle}</p>
+        <p className="mt-1 text-sm text-slate-500">{t.orders.notCustomerHint}</p>
         <Link href="/dashboard" className="mt-5 inline-flex rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100">
           Back to dashboard
         </Link>
@@ -67,8 +69,8 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
   if (loadError) {
     return (
       <section className="rounded-2xl border border-rose-200 bg-rose-50 p-6">
-        <h3 className="text-sm font-semibold text-rose-800">Unable to load your orders</h3>
-        <p className="mt-1 text-sm text-rose-700">Please refresh the page to try again.</p>
+        <h3 className="text-sm font-semibold text-rose-800">{t.orders.loadErrorTitle}</h3>
+        <p className="mt-1 text-sm text-rose-700">{t.common.refreshHint}</p>
       </section>
     );
   }
@@ -81,8 +83,8 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
   return (
     <div className="space-y-6">
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">Purchases</p>
-        <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-950">Orders</h2>
+        <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">{t.orders.kicker}</p>
+        <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-950">{t.orders.title}</h2>
         <p className="mt-1 text-sm text-slate-600">
           {total} order{total === 1 ? "" : "s"} placed with this account.
         </p>
@@ -90,8 +92,8 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
 
       {orders.length === 0 ? (
         <section className="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-16 text-center">
-          <p className="text-base font-semibold text-slate-800">No orders yet</p>
-          <p className="mt-1 text-sm text-slate-500">Orders you place will appear here.</p>
+          <p className="text-base font-semibold text-slate-800">{t.orders.emptyTitle}</p>
+          <p className="mt-1 text-sm text-slate-500">{t.orders.emptyHint}</p>
           <Link
             href="/products"
             className="mt-6 inline-flex rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-slate-700"
@@ -106,11 +108,11 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
             <table className="min-w-full divide-y divide-slate-200 text-sm">
               <thead className="bg-slate-50 text-start text-xs font-semibold uppercase tracking-wide text-slate-500">
                 <tr>
-                  <th scope="col" className="px-6 py-3">Order</th>
-                  <th scope="col" className="px-6 py-3">Status</th>
-                  <th scope="col" className="px-6 py-3 text-end">Total</th>
-                  <th scope="col" className="px-6 py-3">Created</th>
-                  <th scope="col" className="px-6 py-3 text-end">Actions</th>
+                  <th scope="col" className="px-6 py-3">{t.common.order}</th>
+                  <th scope="col" className="px-6 py-3">{t.common.status}</th>
+                  <th scope="col" className="px-6 py-3 text-end">{t.common.total}</th>
+                  <th scope="col" className="px-6 py-3">{t.common.created}</th>
+                  <th scope="col" className="px-6 py-3 text-end">{t.common.actions}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -125,7 +127,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
                       </p>
                     </td>
                     <td className="whitespace-nowrap px-6 py-4">
-                      <OrderStatusBadge status={order.status} />
+                      <OrderStatusBadge status={order.status} labels={t.orderStatus} />
                     </td>
                     <td className="whitespace-nowrap px-6 py-4 text-end text-slate-700">
                       {formatMoney(order.totalAmount, order.currency)}
@@ -136,7 +138,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
                         href={`/orders/${order.id}`}
                         className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-100"
                       >
-                        View
+                        {t.common.view}
                       </Link>
                     </td>
                   </tr>
@@ -158,7 +160,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
                     <p className="truncate font-semibold text-slate-900">{order.orderNumber}</p>
                     <p className="text-xs text-slate-500">{formatDate(order.createdAt)}</p>
                   </div>
-                  <OrderStatusBadge status={order.status} />
+                  <OrderStatusBadge status={order.status} labels={t.orderStatus} />
                 </div>
                 <div className="mt-4 flex items-center justify-between text-sm">
                   <span className="text-slate-600">
@@ -174,7 +176,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
 
           <section className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white px-6 py-4 text-sm sm:flex-row sm:items-center sm:justify-between">
             <p className="text-slate-600">
-              Page <span className="font-medium text-slate-900">{currentPage}</span> of{" "}
+              {t.common.page} <span className="font-medium text-slate-900">{currentPage}</span> {t.common.of}{" "}
               <span className="font-medium text-slate-900">{totalPages}</span>
             </p>
             <div className="flex items-center gap-2">
@@ -183,20 +185,20 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
                   href={`/orders?offset=${Math.max(offset - limit, 0)}&limit=${limit}`}
                   className="rounded-lg border border-slate-300 px-3 py-1.5 font-medium text-slate-700 transition-colors hover:bg-slate-100"
                 >
-                  Previous
+                  {t.common.previous}
                 </Link>
               ) : (
-                <span className="cursor-not-allowed rounded-lg border border-slate-200 px-3 py-1.5 text-slate-400">Previous</span>
+                <span className="cursor-not-allowed rounded-lg border border-slate-200 px-3 py-1.5 text-slate-400">{t.common.previous}</span>
               )}
               {hasNext ? (
                 <Link
                   href={`/orders?offset=${offset + limit}&limit=${limit}`}
                   className="rounded-lg border border-slate-300 px-3 py-1.5 font-medium text-slate-700 transition-colors hover:bg-slate-100"
                 >
-                  Next
+                  {t.common.next}
                 </Link>
               ) : (
-                <span className="cursor-not-allowed rounded-lg border border-slate-200 px-3 py-1.5 text-slate-400">Next</span>
+                <span className="cursor-not-allowed rounded-lg border border-slate-200 px-3 py-1.5 text-slate-400">{t.common.next}</span>
               )}
             </div>
           </section>

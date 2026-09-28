@@ -120,7 +120,7 @@ export default async function DashboardPage() {
                           {order.orderNumber}
                         </td>
                         <td className="whitespace-nowrap px-6 py-4">
-                          <OrderStatusBadge status={order.status} />
+                          <OrderStatusBadge status={order.status} labels={t.orderStatus} />
                         </td>
                         <td className="whitespace-nowrap px-6 py-4 text-slate-700">
                           {formatMoney(order.totalAmount, order.currency)}

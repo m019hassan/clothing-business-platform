@@ -24,18 +24,18 @@ const STATUS_LABELS: Record<string, string> = {
   REFUNDED: "Refunded",
 };
 
-export function orderStatusLabel(status: string): string {
-  return STATUS_LABELS[status] ?? status.replaceAll("_", " ");
+export function orderStatusLabel(status: string, labels?: Record<string, string>): string {
+  return labels?.[status] ?? STATUS_LABELS[status] ?? status.replaceAll("_", " ");
 }
 
-export function OrderStatusBadge({ status }: { status: string }) {
+export function OrderStatusBadge({ status, labels }: { status: string; labels?: Record<string, string> }) {
   const style = STATUS_STYLES[status] ?? "bg-slate-100 text-slate-700 ring-slate-200";
 
   return (
     <span
       className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${style}`}
     >
-      {orderStatusLabel(status)}
+      {orderStatusLabel(status, labels)}
     </span>
   );
 }

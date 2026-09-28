@@ -150,7 +150,7 @@ export async function OperationsOverview({
                   <tr key={order.id} className="transition-colors hover:bg-slate-50">
                     <td className="whitespace-nowrap px-6 py-4 font-medium text-slate-900">{order.orderNumber}</td>
                     <td className="whitespace-nowrap px-6 py-4">
-                      <OrderStatusBadge status={order.status} />
+                      <OrderStatusBadge status={order.status} labels={t.orderStatus} />
                     </td>
                     <td className="whitespace-nowrap px-6 py-4 text-end text-slate-700">
                       {formatMoney(order.totalAmount, order.currency)}
