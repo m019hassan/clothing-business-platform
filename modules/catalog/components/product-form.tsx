@@ -26,14 +26,36 @@ export type ProductFormValues = {
   categoryId: string;
 };
 
+export type ProductFormLabels = {
+  name: string;
+  slug: string;
+  basePrice: string;
+  status: string;
+  category: string;
+  selectCategory: string;
+  inactive: string;
+  description: string;
+  optionalVariant: string;
+  priceOverride: string;
+  variantStatus: string;
+  variantHint: string;
+  saving: string;
+  createProduct: string;
+  saveChanges: string;
+};
+
 export function ProductForm({
   mode,
   product,
   categories,
+  labels,
+  statusLabels,
 }: {
   mode: "create" | "edit";
   product?: ProductFormValues;
   categories: { id: string; name: string; isActive: boolean }[];
+  labels: ProductFormLabels;
+  statusLabels: Record<string, string>;
 }) {
   const [state, formAction, isPending] = useActionState(
     mode === "create" ? createProductAction : updateProductAction,
@@ -49,13 +71,13 @@ export function ProductForm({
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
         <div>
           <label htmlFor="name" className={labelClass}>
-            Name
+            {labels.name}
           </label>
           <input id="name" name="name" type="text" required defaultValue={product?.name ?? ""} className={inputClass} />
         </div>
         <div>
           <label htmlFor="slug" className={labelClass}>
-            Slug
+            {labels.slug}
           </label>
           <input
             id="slug"
@@ -69,7 +91,7 @@ export function ProductForm({
         </div>
         <div>
           <label htmlFor="basePrice" className={labelClass}>
-            Base price (SAR)
+            {labels.basePrice}
           </label>
           <input
             id="basePrice"
@@ -84,35 +106,35 @@ export function ProductForm({
         </div>
         <div>
           <label htmlFor="status" className={labelClass}>
-            Status
+            {labels.status}
           </label>
           <select id="status" name="status" defaultValue={product?.status ?? "DRAFT"} className={inputClass}>
             {STATUS_OPTIONS.map((status) => (
               <option key={status} value={status}>
-                {status}
+                {statusLabels[status] ?? status}
               </option>
             ))}
           </select>
         </div>
         <div className="sm:col-span-2">
           <label htmlFor="categoryId" className={labelClass}>
-            Category
+            {labels.category}
           </label>
           <select id="categoryId" name="categoryId" required defaultValue={product?.categoryId ?? ""} className={inputClass}>
             <option value="" disabled>
-              Select a category
+              {labels.selectCategory}
             </option>
             {categories.map((category) => (
               <option key={category.id} value={category.id}>
                 {category.name}
-                {category.isActive ? "" : " (inactive)"}
+                {category.isActive ? "" : " " + labels.inactive}
               </option>
             ))}
           </select>
         </div>
         <div className="sm:col-span-2">
           <label htmlFor="description" className={labelClass}>
-            Description
+            {labels.description}
           </label>
           <textarea
             id="description"
@@ -127,7 +149,7 @@ export function ProductForm({
       {mode === "create" ? (
         <fieldset className="rounded-xl border border-slate-200 p-4">
           <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Optional first variant
+            {labels.optionalVariant}
           </legend>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div>
@@ -150,7 +172,7 @@ export function ProductForm({
             </div>
             <div>
               <label htmlFor="variantPriceOverride" className={labelClass}>
-                Price override
+                {labels.priceOverride}
               </label>
               <input
                 id="variantPriceOverride"
@@ -162,7 +184,7 @@ export function ProductForm({
             </div>
             <div>
               <label htmlFor="variantStatus" className={labelClass}>
-                Variant status
+                {labels.variantStatus}
               </label>
               <select id="variantStatus" name="variantStatus" defaultValue="ACTIVE" className={inputClass}>
                 {STATUS_OPTIONS.map((status) => (
@@ -174,7 +196,7 @@ export function ProductForm({
             </div>
           </div>
           <p className="mt-3 text-xs text-slate-500">
-            Fill the SKU to create the first variant. Everything except the SKU is optional.
+            {labels.variantHint}
           </p>
         </fieldset>
       ) : null}
@@ -185,7 +207,7 @@ export function ProductForm({
           disabled={isPending}
           className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {isPending ? "Saving…" : mode === "create" ? "Create product" : "Save changes"}
+          {isPending ? labels.saving : mode === "create" ? labels.createProduct : labels.saveChanges}
         </button>
         {state.message ? (
           <p role={state.ok ? "status" : "alert"} className={["text-sm", state.ok ? "text-emerald-700" : "text-rose-700"].join(" ")}>

@@ -379,7 +379,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
         </>
       )}
 
-      {canCreate ? <CategoryManager categories={categories} /> : null}
+      {canCreate ? <CategoryManager categories={categories} labels={{ ...t.catalog.categories, saving: t.catalog.form.saving }} /> : null}
     </div>
   );
 }

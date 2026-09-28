@@ -9,6 +9,7 @@ import { getProductInventory } from "@/modules/catalog/application/products";
 import { CategoryManager } from "@/modules/catalog/components/category-manager";
 import { ProductForm } from "@/modules/catalog/components/product-form";
 import { VariantManager } from "@/modules/catalog/components/variant-manager";
+import { getInterfaceLanguage } from "@/src/lib/i18n/server";
 import type { ProductInventoryView } from "@/modules/catalog/types";
 import { NotFoundError } from "@/src/lib/errors";
 
@@ -24,13 +25,14 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
   }
 
   const permissions = await getCurrentPermissions();
+  const { t } = await getInterfaceLanguage();
 
   if (!permissions.has(PERMISSIONS.PRODUCTS_UPDATE)) {
     return (
       <section className="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center">
-        <p className="text-sm font-semibold text-slate-800">Editing products requires a staff role</p>
+        <p className="text-sm font-semibold text-slate-800">{t.catalog.editPage.permissionTitle}</p>
         <p className="mt-1 text-sm text-slate-500">
-          Your account does not have the products.update permission. Ask a manager to grant it.
+          {t.catalog.editPage.permissionHint}
         </p>
         <Link
           href="/products"
@@ -62,10 +64,10 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
     <div className="mx-auto max-w-4xl space-y-6">
       <section className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">Catalog</p>
+          <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">{t.catalog.kicker}</p>
           <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-950">{product.name}</h2>
           <p className="mt-1 text-sm text-slate-600">
-            {product.slug} · {product.categoryName ?? "No category"} · {product.status}
+            {product.slug} · {product.categoryName ?? t.catalog.uncategorized} · {product.status}
           </p>
         </div>
         <div className="flex shrink-0 gap-2">
@@ -73,23 +75,25 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
             href={`/products/${product.id}`}
             className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-50"
           >
-            View product
+            {t.catalog.editPage.viewProduct}
           </Link>
           <Link
             href="/products"
             className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-50"
           >
-            All products
+            {t.catalog.editPage.allProducts}
           </Link>
         </div>
       </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h3 className="text-base font-semibold text-slate-900">Product details</h3>
+        <h3 className="text-base font-semibold text-slate-900">{t.catalog.editPage.productDetails}</h3>
         <div className="mt-5">
           <ProductForm
             mode="edit"
             categories={categories}
+            labels={{ ...t.catalog.form, status: t.common.status, category: t.catalog.category }}
+            statusLabels={t.catalog.statusLabels}
             product={{
               id: product.id,
               name: product.name,
@@ -104,13 +108,43 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
       </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h3 className="text-base font-semibold text-slate-900">Variants</h3>
+        <h3 className="text-base font-semibold text-slate-900">{t.catalog.detail.variants}</h3>
         <p className="mt-1 text-sm text-slate-500">
-          Every variant (including draft and archived ones) with its live availability.
+          {t.catalog.editPage.variantsSubtitle}
         </p>
         <div className="mt-5">
           <VariantManager
             productId={product.id}
+            labels={{
+              saving: t.catalog.form.saving,
+              save: t.catalog.form.save,
+              archive: t.catalog.form.archive,
+              archiving: t.catalog.form.archiving,
+              available: t.catalog.variantsAdmin.available,
+              sizePlaceholder: t.catalog.detail.size,
+              colorPlaceholder: t.catalog.detail.color,
+              pricePlaceholder: t.catalog.form.priceOverride,
+              ariaSize: t.catalog.variantsAdmin.ariaSize,
+              ariaColor: t.catalog.variantsAdmin.ariaColor,
+              ariaPrice: t.catalog.variantsAdmin.ariaPrice,
+              ariaStatus: t.catalog.variantsAdmin.ariaStatus,
+            }}
+            newLabels={{
+              addTitle: t.catalog.variantsAdmin.addTitle,
+              add: t.catalog.variantsAdmin.add,
+              adding: t.catalog.variantsAdmin.adding,
+              empty: t.catalog.variantsAdmin.empty,
+              newSku: t.catalog.variantsAdmin.newSku,
+              newSize: t.catalog.variantsAdmin.newSize,
+              newColor: t.catalog.variantsAdmin.newColor,
+              newPrice: t.catalog.variantsAdmin.newPrice,
+              newStatus: t.catalog.variantsAdmin.newStatus,
+              skuPlaceholder: t.catalog.detail.sku,
+              sizePlaceholder: t.catalog.detail.size,
+              colorPlaceholder: t.catalog.detail.color,
+              pricePlaceholder: t.catalog.form.priceOverride,
+            }}
+            statusLabels={t.catalog.statusLabels}
             variants={product.variants.map((variant) => ({
               id: variant.id,
               sku: variant.sku,
@@ -124,7 +158,7 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
         </div>
       </section>
 
-      <CategoryManager categories={categories} />
+      <CategoryManager categories={categories} labels={{ ...t.catalog.categories, saving: t.catalog.form.saving }} />
     </div>
   );
 }

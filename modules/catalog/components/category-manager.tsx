@@ -13,7 +13,27 @@ const initialState: CatalogFormState = { ok: true, message: "" };
 const inputClass =
   "w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none ring-blue-500 focus:ring-2";
 
-function CategoryRow({ category }: { category: CategoryView }) {
+export type CategoryManagerLabels = {
+  title: string;
+  subtitle: string;
+  newTitle: string;
+  namePlaceholder: string;
+  slugPlaceholder: string;
+  descriptionPlaceholder: string;
+  create: string;
+  creating: string;
+  activate: string;
+  deactivate: string;
+  inactiveBadge: string;
+  productSingular: string;
+  productPlural: string;
+  ariaName: string;
+  ariaSlug: string;
+  ariaDescription: string;
+  saving: string;
+};
+
+function CategoryRow({ category, labels }: { category: CategoryView; labels: CategoryManagerLabels }) {
   const [state, formAction, isPending] = useActionState(toggleCategoryAction, initialState);
 
   return (
@@ -23,12 +43,13 @@ function CategoryRow({ category }: { category: CategoryView }) {
           {category.name}
           {category.isActive ? null : (
             <span className="ms-2 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-              inactive
+              {labels.inactiveBadge}
             </span>
           )}
         </p>
         <p className="text-xs text-slate-500">
-          {category.slug} · {category.productCount} product{category.productCount === 1 ? "" : "s"}
+          {category.slug} · {category.productCount}{" "}
+          {category.productCount === 1 ? labels.productSingular : labels.productPlural}
         </p>
       </div>
       <form action={formAction}>
@@ -44,7 +65,7 @@ function CategoryRow({ category }: { category: CategoryView }) {
               : "border-emerald-200 text-emerald-700 hover:bg-emerald-50",
           ].join(" ")}
         >
-          {isPending ? "Saving…" : category.isActive ? "Deactivate" : "Activate"}
+          {isPending ? labels.saving : category.isActive ? labels.deactivate : labels.activate}
         </button>
       </form>
       {state.message && !state.ok ? (
@@ -56,30 +77,36 @@ function CategoryRow({ category }: { category: CategoryView }) {
   );
 }
 
-export function CategoryManager({ categories }: { categories: CategoryView[] }) {
+export function CategoryManager({
+  categories,
+  labels,
+}: {
+  categories: CategoryView[];
+  labels: CategoryManagerLabels;
+}) {
   const [state, formAction, isPending] = useActionState(createCategoryAction, initialState);
 
   return (
     <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
       <div className="border-b border-slate-200 px-6 py-4">
-        <h3 className="text-base font-semibold text-slate-900">Categories</h3>
+        <h3 className="text-base font-semibold text-slate-900">{labels.title}</h3>
         <p className="text-sm text-slate-500">
-          Only active categories appear in the public catalog and in filters.
+          {labels.subtitle}
         </p>
       </div>
 
       <ul className="divide-y divide-slate-100">
         {categories.map((category) => (
-          <CategoryRow key={category.id} category={category} />
+          <CategoryRow key={category.id} category={category} labels={labels} />
         ))}
       </ul>
 
       <form action={formAction} className="border-t border-slate-200 px-6 py-4">
-        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">New category</p>
+        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{labels.newTitle}</p>
         <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <input name="name" required placeholder="Name" aria-label="New category name" className={inputClass} />
-          <input name="slug" required placeholder="slug" aria-label="New category slug" className={inputClass} />
-          <input name="description" placeholder="Description (optional)" aria-label="New category description" className={inputClass} />
+          <input name="name" required placeholder={labels.namePlaceholder} aria-label={labels.ariaName} className={inputClass} />
+          <input name="slug" required placeholder={labels.slugPlaceholder} aria-label={labels.ariaSlug} className={inputClass} />
+          <input name="description" placeholder={labels.descriptionPlaceholder} aria-label={labels.ariaDescription} className={inputClass} />
         </div>
         <div className="mt-3 flex flex-wrap items-center gap-3">
           <button
@@ -87,7 +114,7 @@ export function CategoryManager({ categories }: { categories: CategoryView[] }) 
             disabled={isPending}
             className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-60"
           >
-            {isPending ? "Creating…" : "Create category"}
+            {isPending ? labels.creating : labels.create}
           </button>
           {state.message ? (
             <p role={state.ok ? "status" : "alert"} className={["text-sm", state.ok ? "text-emerald-700" : "text-rose-700"].join(" ")}>
