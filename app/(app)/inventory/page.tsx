@@ -17,6 +17,7 @@ import { StockAdjustForm } from "@/modules/inventory/components/stock-adjust-for
 import type { InventoryPageView, StockMovementView } from "@/modules/inventory/types";
 import { formatDate, formatVariantAttributes } from "@/src/lib/format";
 import { parsePaginationParams } from "@/src/lib/validation";
+import { getInterfaceLanguage } from "@/src/lib/i18n/server";
 
 const PAGE_SIZE = 10;
 
@@ -26,6 +27,7 @@ type InventoryPageProps = {
 
 export default async function InventoryPage({ searchParams }: InventoryPageProps) {
   const account = await getCurrentAccount();
+  const { t } = await getInterfaceLanguage();
 
   if (!account) {
     redirect("/login");
@@ -38,9 +40,9 @@ export default async function InventoryPage({ searchParams }: InventoryPageProps
   if (!canViewInventory) {
     return (
       <section className="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center">
-        <p className="text-sm font-semibold text-slate-800">Inventory access requires a staff role</p>
+        <p className="text-sm font-semibold text-slate-800">{t.inventory.permissionTitle}</p>
         <p className="mt-1 text-sm text-slate-500">
-          Your account does not have the inventory.view permission. Ask a manager to grant it.
+          {t.inventory.permissionHint}
         </p>
         <Link
           href="/dashboard"
@@ -73,8 +75,8 @@ export default async function InventoryPage({ searchParams }: InventoryPageProps
   if (loadError || page === null) {
     return (
       <section className="rounded-2xl border border-rose-200 bg-rose-50 p-6">
-        <h3 className="text-sm font-semibold text-rose-800">Unable to load inventory</h3>
-        <p className="mt-1 text-sm text-rose-700">Please refresh the page to try again.</p>
+        <h3 className="text-sm font-semibold text-rose-800">{t.inventory.loadErrorTitle}</h3>
+        <p className="mt-1 text-sm text-rose-700">{t.common.refreshHint}</p>
       </section>
     );
   }
@@ -99,8 +101,8 @@ export default async function InventoryPage({ searchParams }: InventoryPageProps
   return (
     <div className="space-y-6">
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">Operations</p>
-        <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-950">Inventory</h2>
+        <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">{t.inventory.kicker}</p>
+        <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-950">{t.inventory.title}</h2>
         <p className="mt-1 text-sm text-slate-600">
           {scopeDescription(scope)} — stock balances per warehouse with the full movement ledger. Reservations, cancellations and payments move
           stock automatically; permitted staff can record manual corrections.
@@ -109,34 +111,34 @@ export default async function InventoryPage({ searchParams }: InventoryPageProps
 
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <p className="text-sm font-medium text-slate-500">Tracked balances</p>
+          <p className="text-sm font-medium text-slate-500">{t.inventory.trackedBalances}</p>
           <p className="mt-2 text-3xl font-semibold tracking-tight text-slate-900">{summary.trackedRows}</p>
-          <p className="mt-1 text-xs text-slate-400">Variant × warehouse rows</p>
+          <p className="mt-1 text-xs text-slate-400">{t.inventory.rowsHint}</p>
         </div>
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <p className="text-sm font-medium text-slate-500">On hand</p>
+          <p className="text-sm font-medium text-slate-500">{t.inventory.onHand}</p>
           <p className="mt-2 text-3xl font-semibold tracking-tight text-slate-900">{summary.totalOnHand}</p>
-          <p className="mt-1 text-xs text-slate-400">Reserved {summary.totalReserved}</p>
+          <p className="mt-1 text-xs text-slate-400">{t.inventory.reservedHint.replace("{count}", String(summary.totalReserved))}</p>
         </div>
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <p className="text-sm font-medium text-slate-500">Available</p>
+          <p className="text-sm font-medium text-slate-500">{t.inventory.available}</p>
           <p className="mt-2 text-3xl font-semibold tracking-tight text-slate-900">{summary.totalAvailable}</p>
-          <p className="mt-1 text-xs text-slate-400">On hand minus reserved</p>
+          <p className="mt-1 text-xs text-slate-400">{t.inventory.onHandMinusReserved}</p>
         </div>
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <p className="text-sm font-medium text-slate-500">Low / out of stock</p>
+          <p className="text-sm font-medium text-slate-500">{t.inventory.lowOrOut}</p>
           <p className="mt-2 text-3xl font-semibold tracking-tight text-slate-900">
             {summary.lowStockRows} / {summary.outOfStockRows}
           </p>
-          <p className="mt-1 text-xs text-slate-400">Below 10 available / none available</p>
+          <p className="mt-1 text-xs text-slate-400">{t.inventory.lowOrOutHint}</p>
         </div>
       </section>
 
       {rows.length === 0 ? (
         <section className="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center">
-          <p className="text-sm font-semibold text-slate-800">No inventory balances yet</p>
+          <p className="text-sm font-semibold text-slate-800">{t.inventory.emptyTitle}</p>
           <p className="mt-1 text-sm text-slate-500">
-            Stock rows are created when inventory is recorded for a variant in a warehouse.
+            {t.inventory.emptyHint}
           </p>
         </section>
       ) : (
@@ -146,14 +148,14 @@ export default async function InventoryPage({ searchParams }: InventoryPageProps
             <table className="min-w-full divide-y divide-slate-200 text-sm">
               <thead className="bg-slate-50 text-start text-xs font-semibold uppercase tracking-wide text-slate-500">
                 <tr>
-                  <th scope="col" className="px-6 py-3">Product / variant</th>
-                  <th scope="col" className="px-6 py-3">Warehouse</th>
-                  <th scope="col" className="px-6 py-3 text-end">On hand</th>
-                  <th scope="col" className="px-6 py-3 text-end">Reserved</th>
-                  <th scope="col" className="px-6 py-3 text-end">Available</th>
-                  <th scope="col" className="px-6 py-3">Status</th>
-                  <th scope="col" className="px-6 py-3">Updated</th>
-                  {canAdjustInventory ? <th scope="col" className="px-6 py-3">Adjust</th> : null}
+                  <th scope="col" className="px-6 py-3">{t.inventory.productVariant}</th>
+                  <th scope="col" className="px-6 py-3">{t.inventory.warehouse}</th>
+                  <th scope="col" className="px-6 py-3 text-end">{t.inventory.onHand}</th>
+                  <th scope="col" className="px-6 py-3 text-end">{t.inventory.reserved}</th>
+                  <th scope="col" className="px-6 py-3 text-end">{t.inventory.available}</th>
+                  <th scope="col" className="px-6 py-3">{t.inventory.status}</th>
+                  <th scope="col" className="px-6 py-3">{t.inventory.updated}</th>
+                  {canAdjustInventory ? <th scope="col" className="px-6 py-3">{t.inventory.adjust}</th> : null}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -178,12 +180,12 @@ export default async function InventoryPage({ searchParams }: InventoryPageProps
                       {row.availableQuantity}
                     </td>
                     <td className="whitespace-nowrap px-6 py-4">
-                      <StockBadge availableQuantity={row.availableQuantity} />
+                      <StockBadge availableQuantity={row.availableQuantity} labels={t.catalog.stockLabels} />
                     </td>
                     <td className="whitespace-nowrap px-6 py-4 text-slate-500">{formatDate(row.updatedAt)}</td>
                     {canAdjustInventory ? (
                       <td className="px-6 py-4">
-                        <StockAdjustForm variantId={row.variantId} warehouseId={row.warehouseId} sku={row.sku} />
+                        <StockAdjustForm labels={{ ...t.inventory, saving: t.catalog.form.saving }} variantId={row.variantId} warehouseId={row.warehouseId} sku={row.sku} />
                       </td>
                     ) : null}
                   </tr>
@@ -203,29 +205,29 @@ export default async function InventoryPage({ searchParams }: InventoryPageProps
                     </Link>
                     <p className="truncate text-xs text-slate-500">{row.sku}</p>
                   </div>
-                  <StockBadge availableQuantity={row.availableQuantity} />
+                  <StockBadge availableQuantity={row.availableQuantity} labels={t.catalog.stockLabels} />
                 </div>
                 <dl className="mt-4 grid grid-cols-2 gap-3 text-sm">
                   <div>
-                    <dt className="text-xs text-slate-500">Warehouse</dt>
+                    <dt className="text-xs text-slate-500">{t.inventory.warehouse}</dt>
                     <dd className="text-slate-800">{row.warehouseCode}</dd>
                   </div>
                   <div>
-                    <dt className="text-xs text-slate-500">On hand</dt>
+                    <dt className="text-xs text-slate-500">{t.inventory.onHand}</dt>
                     <dd className="text-slate-800">{row.quantityOnHand}</dd>
                   </div>
                   <div>
-                    <dt className="text-xs text-slate-500">Reserved</dt>
+                    <dt className="text-xs text-slate-500">{t.inventory.reserved}</dt>
                     <dd className="text-slate-800">{row.quantityReserved}</dd>
                   </div>
                   <div>
-                    <dt className="text-xs text-slate-500">Available</dt>
+                    <dt className="text-xs text-slate-500">{t.inventory.available}</dt>
                     <dd className="font-medium text-slate-900">{row.availableQuantity}</dd>
                   </div>
                 </dl>
                 {canAdjustInventory ? (
                   <div className="mt-4 border-t border-slate-100 pt-4">
-                    <StockAdjustForm variantId={row.variantId} warehouseId={row.warehouseId} sku={row.sku} />
+                    <StockAdjustForm labels={{ ...t.inventory, saving: t.catalog.form.saving }} variantId={row.variantId} warehouseId={row.warehouseId} sku={row.sku} />
                   </div>
                 ) : null}
               </div>
@@ -244,20 +246,20 @@ export default async function InventoryPage({ searchParams }: InventoryPageProps
                   href={`/inventory?offset=${Math.max(pagination.offset - pagination.limit, 0)}&limit=${pagination.limit}`}
                   className="rounded-lg border border-slate-300 px-3 py-1.5 font-medium text-slate-700 transition-colors hover:bg-slate-100"
                 >
-                  Previous
+                  {t.common.previous}
                 </Link>
               ) : (
-                <span className="cursor-not-allowed rounded-lg border border-slate-200 px-3 py-1.5 text-slate-400">Previous</span>
+                <span className="cursor-not-allowed rounded-lg border border-slate-200 px-3 py-1.5 text-slate-400">{t.common.previous}</span>
               )}
               {hasNext ? (
                 <Link
                   href={`/inventory?offset=${pagination.offset + pagination.limit}&limit=${pagination.limit}`}
                   className="rounded-lg border border-slate-300 px-3 py-1.5 font-medium text-slate-700 transition-colors hover:bg-slate-100"
                 >
-                  Next
+                  {t.common.next}
                 </Link>
               ) : (
-                <span className="cursor-not-allowed rounded-lg border border-slate-200 px-3 py-1.5 text-slate-400">Next</span>
+                <span className="cursor-not-allowed rounded-lg border border-slate-200 px-3 py-1.5 text-slate-400">{t.common.next}</span>
               )}
             </div>
           </section>
@@ -266,26 +268,26 @@ export default async function InventoryPage({ searchParams }: InventoryPageProps
 
       <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="border-b border-slate-200 px-6 py-4">
-          <h3 className="text-base font-semibold text-slate-900">Stock movements</h3>
+          <h3 className="text-base font-semibold text-slate-900">{t.inventory.movementsTitle}</h3>
           <p className="text-sm text-slate-500">
             The 20 most recent ledger entries. Every entry stores the resulting on-hand and reserved quantities.
           </p>
         </div>
 
         {movements.length === 0 ? (
-          <p className="px-6 py-8 text-sm text-slate-500">No stock movements recorded yet.</p>
+          <p className="px-6 py-8 text-sm text-slate-500">{t.inventory.noMovements}</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-slate-200 text-sm">
               <thead className="bg-slate-50 text-start text-xs font-semibold uppercase tracking-wide text-slate-500">
                 <tr>
-                  <th scope="col" className="px-6 py-3">Type</th>
-                  <th scope="col" className="px-6 py-3">Variant</th>
-                  <th scope="col" className="px-6 py-3 text-end">On hand change</th>
-                  <th scope="col" className="px-6 py-3 text-end">On hand after</th>
-                  <th scope="col" className="px-6 py-3 text-end">Reserved after</th>
-                  <th scope="col" className="px-6 py-3">Reason</th>
-                  <th scope="col" className="px-6 py-3">When</th>
+                  <th scope="col" className="px-6 py-3">{t.inventory.movementType}</th>
+                  <th scope="col" className="px-6 py-3">{t.inventory.variant}</th>
+                  <th scope="col" className="px-6 py-3 text-end">{t.inventory.onHandChange}</th>
+                  <th scope="col" className="px-6 py-3 text-end">{t.inventory.onHandAfter}</th>
+                  <th scope="col" className="px-6 py-3 text-end">{t.inventory.reservedAfter}</th>
+                  <th scope="col" className="px-6 py-3">{t.inventory.reason}</th>
+                  <th scope="col" className="px-6 py-3">{t.inventory.when}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -293,7 +295,7 @@ export default async function InventoryPage({ searchParams }: InventoryPageProps
                   <tr key={movement.id}>
                     <td className="whitespace-nowrap px-6 py-3">
                       <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-slate-600">
-                        {movement.type}
+                        {(t.movementTypes as Record<string, string>)[movement.type] ?? movement.type}
                       </span>
                     </td>
                     <td className="px-6 py-3">
@@ -307,7 +309,7 @@ export default async function InventoryPage({ searchParams }: InventoryPageProps
                     <td className="whitespace-nowrap px-6 py-3 text-end text-slate-700">{movement.quantityReservedAfter}</td>
                     <td className="px-6 py-3 text-slate-600">
                       {movement.reason ?? "—"}
-                      {movement.orderId ? <span className="ms-1 text-xs text-slate-400">(order)</span> : null}
+                      {movement.orderId ? <span className="ms-1 text-xs text-slate-400">{t.inventory.orderTag}</span> : null}
                     </td>
                     <td className="whitespace-nowrap px-6 py-3 text-slate-500">{formatDate(movement.createdAt)}</td>
                   </tr>

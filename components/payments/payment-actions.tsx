@@ -8,8 +8,16 @@ import { apiErrorMessage, apiRequest } from "@/src/lib/api";
 
 type PaymentAction = "verify" | "approve" | "reject";
 
-const CONFIRMATIONS: Partial<Record<PaymentAction, string>> = {
-  reject: "Reject this payment? The order will be cancelled and its reservation released.",
+export type PaymentActionLabels = {
+  noDecision: string;
+  confirmTransfer: string;
+  recording: string;
+  approve: string;
+  approving: string;
+  reject: string;
+  rejecting: string;
+  rejectConfirm: string;
+  stale: string;
 };
 
 export function PaymentActions({
@@ -17,11 +25,13 @@ export function PaymentActions({
   canVerify,
   canApprove,
   canReject,
+  labels,
 }: {
   payment: PendingPaymentRow;
   canVerify: boolean;
   canApprove: boolean;
   canReject: boolean;
+  labels: PaymentActionLabels;
 }) {
   const router = useRouter();
   const [pending, setPending] = useState<PaymentAction | null>(null);
@@ -31,7 +41,7 @@ export function PaymentActions({
   const isSettleable = isPending || payment.paymentStatus === "PENDING_VERIFICATION";
 
   async function run(action: PaymentAction) {
-    const confirmation = CONFIRMATIONS[action];
+    const confirmation = action === "reject" ? labels.rejectConfirm : undefined;
 
     if (confirmation && !window.confirm(confirmation)) {
       return;
@@ -48,7 +58,7 @@ export function PaymentActions({
       router.refresh();
     } catch (requestError) {
       if (requestError instanceof Error && "status" in requestError && (requestError as { status: number }).status === 409) {
-        setError("This order is no longer awaiting a payment decision.");
+        setError(labels.stale);
       } else {
         setError(apiErrorMessage(requestError));
       }
@@ -64,8 +74,8 @@ export function PaymentActions({
   if (isPending && canVerify) {
     buttons.push({
       action: "verify",
-      label: "Confirm transfer received",
-      busy: "Recording…",
+      label: labels.confirmTransfer,
+      busy: labels.recording,
       className: "rounded-lg border border-slate-300 px-3 py-2 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60",
     });
   }
@@ -73,8 +83,8 @@ export function PaymentActions({
   if (isSettleable && canApprove) {
     buttons.push({
       action: "approve",
-      label: "Approve payment",
-      busy: "Approving…",
+      label: labels.approve,
+      busy: labels.approving,
       className: "rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60",
     });
   }
@@ -82,8 +92,8 @@ export function PaymentActions({
   if (isSettleable && canReject) {
     buttons.push({
       action: "reject",
-      label: "Reject payment",
-      busy: "Rejecting…",
+      label: labels.reject,
+      busy: labels.rejecting,
       className: "rounded-lg border border-rose-200 px-3 py-2 text-xs font-medium text-rose-700 transition-colors hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-60",
     });
   }
@@ -105,7 +115,7 @@ export function PaymentActions({
           ))}
         </div>
       ) : (
-        <p className="text-xs text-slate-500">No decision is available to your account.</p>
+        <p className="text-xs text-slate-500">{labels.noDecision}</p>
       )}
 
       {error ? (

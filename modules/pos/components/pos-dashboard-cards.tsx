@@ -1,4 +1,5 @@
 import type { PosDashboardView } from "@/modules/pos/types";
+import type { PosLabels } from "@/modules/pos/components/pos-labels";
 import { formatMoney } from "@/src/lib/format";
 
 function Card({ label, value, hint }: { label: string; value: string; hint?: string }) {
@@ -11,42 +12,48 @@ function Card({ label, value, hint }: { label: string; value: string; hint?: str
   );
 }
 
-export function PosDashboardCards({ dashboard }: { dashboard: PosDashboardView }) {
+export function PosDashboardCards({ dashboard, labels }: { dashboard: PosDashboardView; labels: PosLabels }) {
   const currency = "SAR";
 
   return (
     <div className="space-y-6">
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Card
-          label="My sales today"
+          label={labels.salesToday}
           value={formatMoney(dashboard.salesToday.total, currency)}
-          hint={`${dashboard.salesToday.orders} sale(s) · ${dashboard.salesToday.items} item(s)`}
+          hint={labels.salesHint
+            .replace("{orders}", String(dashboard.salesToday.orders))
+            .replace("{items}", String(dashboard.salesToday.items))}
         />
         <Card
-          label="My sales this month"
+          label={labels.salesThisMonth}
           value={formatMoney(dashboard.salesThisMonth.total, currency)}
-          hint={`${dashboard.salesThisMonth.orders} sale(s) · ${dashboard.salesThisMonth.items} item(s)`}
+          hint={labels.salesHint
+            .replace("{orders}", String(dashboard.salesThisMonth.orders))
+            .replace("{items}", String(dashboard.salesThisMonth.items))}
         />
         <Card
-          label="Stock left in the branch"
+          label={labels.stockLeft}
           value={String(dashboard.stock.totalAvailable)}
-          hint={`${dashboard.stock.trackedItems} product(s) · ${dashboard.stock.totalOnHand} on hand`}
+          hint={labels.stockHint
+            .replace("{products}", String(dashboard.stock.trackedItems))
+            .replace("{onHand}", String(dashboard.stock.totalOnHand))}
         />
         <Card
-          label="Needs attention"
+          label={labels.needsAttention}
           value={`${dashboard.stock.outOfStockCount} / ${dashboard.stock.lowStockCount}`}
-          hint="Out of stock / low stock (below 10)"
+          hint={labels.needsAttentionHint}
         />
       </section>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h3 className="text-base font-semibold text-slate-900">What is running out</h3>
+          <h3 className="text-base font-semibold text-slate-900">{labels.runningOut}</h3>
           <p className="mt-1 text-xs text-slate-500">
             Lowest availability first — tell the store to restock these.
           </p>
           {dashboard.shortages.length === 0 ? (
-            <p className="mt-4 text-sm text-slate-500">Everything is comfortably in stock.</p>
+            <p className="mt-4 text-sm text-slate-500">{labels.allInStock}</p>
           ) : (
             <ul className="mt-4 divide-y divide-slate-100">
               {dashboard.shortages.map((row) => (
@@ -72,10 +79,10 @@ export function PosDashboardCards({ dashboard }: { dashboard: PosDashboardView }
         </section>
 
         <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h3 className="text-base font-semibold text-slate-900">Selling best in the branch</h3>
-          <p className="mt-1 text-xs text-slate-500">Last 30 days, by units sold at the counter.</p>
+          <h3 className="text-base font-semibold text-slate-900">{labels.sellingBest}</h3>
+          <p className="mt-1 text-xs text-slate-500">{labels.sellingBestHint}</p>
           {dashboard.topSellers.length === 0 ? (
-            <p className="mt-4 text-sm text-slate-500">No counter sales recorded yet.</p>
+            <p className="mt-4 text-sm text-slate-500">{labels.noSales}</p>
           ) : (
             <ul className="mt-4 divide-y divide-slate-100">
               {dashboard.topSellers.map((row) => (

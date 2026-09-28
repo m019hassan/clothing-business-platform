@@ -10,6 +10,7 @@ import { listPendingPayments } from "@/modules/payment/application/payments";
 import type { PendingPaymentPage } from "@/modules/payment/types";
 import { formatDate, formatMoney } from "@/src/lib/format";
 import { parsePaginationParams } from "@/src/lib/validation";
+import { getInterfaceLanguage } from "@/src/lib/i18n/server";
 
 const PAGE_SIZE = 10;
 
@@ -19,6 +20,7 @@ type PaymentsPageProps = {
 
 export default async function PaymentsPage({ searchParams }: PaymentsPageProps) {
   const account = await getCurrentAccount();
+  const { t } = await getInterfaceLanguage();
 
   if (!account) {
     redirect("/login");
@@ -36,7 +38,7 @@ export default async function PaymentsPage({ searchParams }: PaymentsPageProps) 
   if (!canViewPayments) {
     return (
       <section className="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center">
-        <p className="text-sm font-semibold text-slate-800">Payment access requires a staff role</p>
+        <p className="text-sm font-semibold text-slate-800">{t.payments.permissionTitle}</p>
         <p className="mt-1 text-sm text-slate-500">
           Your account does not have the payments.view permission. Ask a manager to grant it.
         </p>
@@ -68,8 +70,8 @@ export default async function PaymentsPage({ searchParams }: PaymentsPageProps) 
   if (loadError || page === null) {
     return (
       <section className="rounded-2xl border border-rose-200 bg-rose-50 p-6">
-        <h3 className="text-sm font-semibold text-rose-800">Unable to load pending payments</h3>
-        <p className="mt-1 text-sm text-rose-700">Please refresh the page to try again.</p>
+        <h3 className="text-sm font-semibold text-rose-800">{t.payments.loadErrorTitle}</h3>
+        <p className="mt-1 text-sm text-rose-700">{t.common.refreshHint}</p>
       </section>
     );
   }
@@ -83,24 +85,23 @@ export default async function PaymentsPage({ searchParams }: PaymentsPageProps) 
   return (
     <div className="space-y-6">
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">Operations</p>
-        <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-950">Payments</h2>
+        <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">{t.payments.kicker}</p>
+        <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-950">{t.payments.title}</h2>
         <p className="mt-1 text-sm text-slate-600">
-          {pagination.total} order{pagination.total === 1 ? "" : "s"} awaiting a payment outcome.
+          {t.payments.awaitingCount.replace("{count}", String(pagination.total))}
         </p>
         {!canDecidePayments ? (
           <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">
-            You can view payments but not decide on them. Confirming a transfer needs payments.verify, approving
-            needs payments.approve and rejecting needs payments.reject.
+            {t.payments.noDecideHint}
           </p>
         ) : null}
       </section>
 
       {rows.length === 0 ? (
         <section className="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center">
-          <p className="text-sm font-semibold text-slate-800">Nothing awaiting payment</p>
+          <p className="text-sm font-semibold text-slate-800">{t.payments.emptyTitle}</p>
           <p className="mt-1 text-sm text-slate-500">
-            Orders appear here as soon as a customer submits them for payment.
+            {t.payments.emptyHint}
           </p>
         </section>
       ) : (
@@ -109,13 +110,13 @@ export default async function PaymentsPage({ searchParams }: PaymentsPageProps) 
             <table className="min-w-full divide-y divide-slate-200 text-sm">
               <thead className="bg-slate-50 text-start text-xs font-semibold uppercase tracking-wide text-slate-500">
                 <tr>
-                  <th scope="col" className="px-6 py-3">Order</th>
-                  <th scope="col" className="px-6 py-3">Customer</th>
-                  <th scope="col" className="px-6 py-3">Payment</th>
-                  <th scope="col" className="px-6 py-3 text-end">Amount</th>
-                  <th scope="col" className="px-6 py-3">Placed</th>
+                  <th scope="col" className="px-6 py-3">{t.common.order}</th>
+                  <th scope="col" className="px-6 py-3">{t.common.customer}</th>
+                  <th scope="col" className="px-6 py-3">{t.common.payment}</th>
+                  <th scope="col" className="px-6 py-3 text-end">{t.payments.amount}</th>
+                  <th scope="col" className="px-6 py-3">{t.common.placed}</th>
                   {canDecidePayments ? (
-                    <th scope="col" className="px-6 py-3 text-end">Actions</th>
+                    <th scope="col" className="px-6 py-3 text-end">{t.common.actions}</th>
                   ) : null}
                 </tr>
               </thead>
@@ -135,7 +136,9 @@ export default async function PaymentsPage({ searchParams }: PaymentsPageProps) 
                     <td className="whitespace-nowrap px-6 py-4">
                       <PaymentStatusBadge status={row.paymentStatus} />
                       <p className="mt-1 text-xs text-slate-500">
-                        {row.paymentMethod ? row.paymentMethod.replaceAll("_", " ") : "Method not selected"}
+                        {row.paymentMethod
+                          ? (t.paymentMethod as Record<string, string>)[row.paymentMethod] ?? row.paymentMethod.replaceAll("_", " ")
+                          : t.orderDetail.methodNotSelected}
                       </p>
                     </td>
                     <td className="whitespace-nowrap px-6 py-4 text-end text-slate-700">
@@ -144,7 +147,7 @@ export default async function PaymentsPage({ searchParams }: PaymentsPageProps) 
                     <td className="whitespace-nowrap px-6 py-4 text-slate-500">{formatDate(row.createdAt)}</td>
                     {canDecidePayments ? (
                       <td className="whitespace-nowrap px-6 py-4 text-end">
-                        <PaymentActions
+                        <PaymentActions labels={t.payments}
                           payment={row}
                         canVerify={canProcessPayments}
                         canApprove={canApprovePayments}
@@ -170,25 +173,25 @@ export default async function PaymentsPage({ searchParams }: PaymentsPageProps) 
                 </div>
                 <dl className="mt-4 grid grid-cols-2 gap-3 text-sm">
                   <div>
-                    <dt className="text-xs text-slate-500">Customer</dt>
+                    <dt className="text-xs text-slate-500">{t.common.customer}</dt>
                     <dd className="text-slate-800">{row.customerName}</dd>
                   </div>
                   <div>
-                    <dt className="text-xs text-slate-500">Amount</dt>
+                    <dt className="text-xs text-slate-500">{t.payments.amount}</dt>
                     <dd className="text-slate-800">{formatMoney(row.paymentAmount, row.currency)}</dd>
                   </div>
                   <div>
-                    <dt className="text-xs text-slate-500">Items</dt>
+                    <dt className="text-xs text-slate-500">{t.common.items}</dt>
                     <dd className="text-slate-800">{row.itemCount}</dd>
                   </div>
                   <div>
-                    <dt className="text-xs text-slate-500">Placed</dt>
+                    <dt className="text-xs text-slate-500">{t.common.placed}</dt>
                     <dd className="text-slate-800">{formatDate(row.createdAt)}</dd>
                   </div>
                 </dl>
                 {canDecidePayments ? (
                   <div className="mt-4">
-                    <PaymentActions
+                    <PaymentActions labels={t.payments}
                       payment={row}
                         canVerify={canProcessPayments}
                         canApprove={canApprovePayments}
@@ -212,20 +215,20 @@ export default async function PaymentsPage({ searchParams }: PaymentsPageProps) 
                   href={`/payments?offset=${Math.max(pagination.offset - pagination.limit, 0)}&limit=${pagination.limit}`}
                   className="rounded-lg border border-slate-300 px-3 py-1.5 font-medium text-slate-700 transition-colors hover:bg-slate-100"
                 >
-                  Previous
+                  {t.common.previous}
                 </Link>
               ) : (
-                <span className="cursor-not-allowed rounded-lg border border-slate-200 px-3 py-1.5 text-slate-400">Previous</span>
+                <span className="cursor-not-allowed rounded-lg border border-slate-200 px-3 py-1.5 text-slate-400">{t.common.previous}</span>
               )}
               {hasNext ? (
                 <Link
                   href={`/payments?offset=${pagination.offset + pagination.limit}&limit=${pagination.limit}`}
                   className="rounded-lg border border-slate-300 px-3 py-1.5 font-medium text-slate-700 transition-colors hover:bg-slate-100"
                 >
-                  Next
+                  {t.common.next}
                 </Link>
               ) : (
-                <span className="cursor-not-allowed rounded-lg border border-slate-200 px-3 py-1.5 text-slate-400">Next</span>
+                <span className="cursor-not-allowed rounded-lg border border-slate-200 px-3 py-1.5 text-slate-400">{t.common.next}</span>
               )}
             </div>
           </section>
@@ -233,10 +236,9 @@ export default async function PaymentsPage({ searchParams }: PaymentsPageProps) 
       )}
 
       <section className="rounded-2xl border border-dashed border-slate-300 bg-white p-5">
-        <h3 className="text-sm font-semibold text-slate-800">Payment methods, receipts and delivery</h3>
+        <h3 className="text-sm font-semibold text-slate-800">{t.payments.footnoteTitle}</h3>
         <p className="mt-1 text-sm text-slate-500">
-          Selecting a payment method, uploading a transfer receipt and any delivery step are not part of the
-          current backend yet. This screen records only the payment outcome for orders that are awaiting it.
+          {t.payments.footnote}
         </p>
       </section>
     </div>

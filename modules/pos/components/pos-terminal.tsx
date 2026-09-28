@@ -2,13 +2,14 @@
 
 import { useMemo, useState } from "react";
 
+import type { PosLabels } from "@/modules/pos/components/pos-labels";
 import type { PosCatalogItemView, PosCatalogView, PosReceiptView } from "@/modules/pos/types";
 import { apiErrorMessage, apiRequest } from "@/src/lib/api";
 import { formatMoney } from "@/src/lib/format";
 
 type CartLine = { item: PosCatalogItemView; quantity: number };
 
-export function PosTerminal({ catalog }: { catalog: PosCatalogView }) {
+export function PosTerminal({ catalog, labels }: { catalog: PosCatalogView; labels: PosLabels }) {
   const [query, setQuery] = useState("");
   const [lines, setLines] = useState<CartLine[]>([]);
   const [pending, setPending] = useState(false);
@@ -64,7 +65,11 @@ export function PosTerminal({ catalog }: { catalog: PosCatalogView }) {
           const next = line.quantity + delta;
 
           if (next > line.item.availableQuantity) {
-            setError(`${line.item.sku}: only ${line.item.availableQuantity} available.`);
+            setError(
+              labels.onlyAvailable
+                .replace("{sku}", line.item.sku)
+                .replace("{count}", String(line.item.availableQuantity)),
+            );
 
             return line;
           }
@@ -100,7 +105,7 @@ export function PosTerminal({ catalog }: { catalog: PosCatalogView }) {
     return (
       <div className="space-y-5">
         <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-6">
-          <h3 className="text-base font-semibold text-emerald-800">Sale completed</h3>
+          <h3 className="text-base font-semibold text-emerald-800">{labels.saleCompleted}</h3>
           <p className="mt-1 text-sm text-emerald-700">
             {receipt.orderNumber} · {formatMoney(receipt.totalAmount, receipt.currency)} · {receipt.itemCount} item
             {receipt.itemCount === 1 ? "" : "s"} · branch {receipt.branchCode}
@@ -118,7 +123,7 @@ export function PosTerminal({ catalog }: { catalog: PosCatalogView }) {
             onClick={() => setReceipt(null)}
             className="mt-5 rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-slate-700"
           >
-            New sale
+            {labels.newSale}
           </button>
         </div>
       </div>
@@ -129,14 +134,14 @@ export function PosTerminal({ catalog }: { catalog: PosCatalogView }) {
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-[2fr_1fr]">
       <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <label htmlFor="pos-search" className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
-          Find a product
+          {labels.findProduct}
         </label>
         <input
           id="pos-search"
           type="search"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="SKU, name, size or color"
+          placeholder={labels.searchPlaceholder}
           className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none ring-blue-500 focus:ring-2"
         />
 
@@ -148,7 +153,7 @@ export function PosTerminal({ catalog }: { catalog: PosCatalogView }) {
                 <p className="text-xs text-slate-500">
                   {item.sku}
                   {item.size ? ` · ${item.size}` : ""}
-                  {item.color ? ` · ${item.color}` : ""} · available {item.availableQuantity}
+                  {item.color ? ` · ${item.color}` : ""} · {labels.availableInRow} {item.availableQuantity}
                 </p>
               </div>
               <div className="flex shrink-0 items-center gap-3">
@@ -161,26 +166,26 @@ export function PosTerminal({ catalog }: { catalog: PosCatalogView }) {
                   disabled={item.availableQuantity <= 0}
                   className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  Add
+                  {labels.addToSale}
                 </button>
               </div>
             </li>
           ))}
-          {filtered.length === 0 ? <li className="py-6 text-sm text-slate-500">No matching products.</li> : null}
+          {filtered.length === 0 ? <li className="py-6 text-sm text-slate-500">{labels.noMatches}</li> : null}
         </ul>
         {filtered.length > 25 ? (
-          <p className="mt-3 text-xs text-slate-400">Showing the first 25 matches — refine the search.</p>
+          <p className="mt-3 text-xs text-slate-400">{labels.firstMatches}</p>
         ) : null}
       </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <h3 className="text-base font-semibold text-slate-900">Current sale</h3>
+        <h3 className="text-base font-semibold text-slate-900">{labels.currentSale}</h3>
         <p className="mt-1 text-xs text-slate-500">
-          Branch {catalog.branchCode} · cash payment, confirmed immediately.
+          {labels.branchNote.replace("{code}", catalog.branchCode)}
         </p>
 
         {lines.length === 0 ? (
-          <p className="mt-4 text-sm text-slate-500">No items yet.</p>
+          <p className="mt-4 text-sm text-slate-500">{labels.noItems}</p>
         ) : (
           <ul className="mt-4 divide-y divide-slate-100">
             {lines.map((line) => (
@@ -188,7 +193,7 @@ export function PosTerminal({ catalog }: { catalog: PosCatalogView }) {
                 <div className="min-w-0">
                   <p className="truncate text-sm text-slate-900">{line.item.sku}</p>
                   <p className="text-xs text-slate-500">
-                    {formatMoney(line.item.unitPrice, line.item.currency)} each
+                    {formatMoney(line.item.unitPrice, line.item.currency)} {labels.each}
                   </p>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
@@ -214,7 +219,7 @@ export function PosTerminal({ catalog }: { catalog: PosCatalogView }) {
         )}
 
         <p className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4 text-sm">
-          <span className="font-medium text-slate-600">Total</span>
+          <span className="font-medium text-slate-600">{labels.total}</span>
           <span className="text-lg font-semibold text-slate-900">
             {formatMoney(String(total), catalog.items[0]?.currency ?? "SAR")}
           </span>
@@ -226,7 +231,7 @@ export function PosTerminal({ catalog }: { catalog: PosCatalogView }) {
           disabled={pending || lines.length === 0}
           className="mt-4 w-full rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {pending ? "Recording…" : "Complete sale (cash)"}
+          {pending ? labels.recording : labels.completeSaleCash}
         </button>
 
         {error ? (

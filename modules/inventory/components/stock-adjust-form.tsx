@@ -9,14 +9,25 @@ const initialState: AdjustmentFormState = { ok: true, message: "" };
 const inputClass =
   "rounded-lg border border-slate-300 px-2 py-1.5 text-sm text-slate-900 outline-none ring-blue-500 focus:ring-2";
 
+export type StockAdjustLabels = {
+  adjustPlaceholder: string;
+  reasonPlaceholder: string;
+  adjustAria: string;
+  reasonAria: string;
+  adjust: string;
+  saving: string;
+};
+
 export function StockAdjustForm({
   variantId,
   warehouseId,
   sku,
+  labels,
 }: {
   variantId: string;
   warehouseId: string;
   sku: string;
+  labels: StockAdjustLabels;
 }) {
   const [state, formAction, isPending] = useActionState(adjustStockAction, initialState);
 
@@ -29,15 +40,15 @@ export function StockAdjustForm({
         type="number"
         step={1}
         required
-        placeholder="±qty"
-        aria-label={`Adjustment for ${sku}`}
+        placeholder={labels.adjustPlaceholder}
+        aria-label={labels.adjustAria.replace("{sku}", sku)}
         className={`${inputClass} w-20`}
       />
       <input
         name="reason"
         type="text"
-        placeholder="Reason"
-        aria-label={`Adjustment reason for ${sku}`}
+        placeholder={labels.reasonPlaceholder}
+        aria-label={labels.reasonAria.replace("{sku}", sku)}
         className={`${inputClass} w-36`}
       />
       <button
@@ -45,7 +56,7 @@ export function StockAdjustForm({
         disabled={isPending}
         className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-60"
       >
-        {isPending ? "Saving…" : "Adjust"}
+        {isPending ? labels.saving : labels.adjust}
       </button>
       {state.message ? (
         <p
