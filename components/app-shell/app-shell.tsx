@@ -427,7 +427,7 @@ export function AppShell({
             </div>
 
             <div className="ms-auto flex items-center gap-3">
-              <NotificationBell unreadCount={unreadNotificationCount} />
+              <NotificationBell unreadCount={unreadNotificationCount} labels={{ notifications: labels.shell.notifications, unread: labels.shell.unread }} />
               <LocaleSwitcher locale={locale} label={labels.shell.language} />
               <span className="hidden max-w-[220px] truncate text-sm text-slate-600 sm:block">
                 {userLabel}

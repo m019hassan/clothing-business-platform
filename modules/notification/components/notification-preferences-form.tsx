@@ -7,17 +7,21 @@ import type { NotificationPreferenceView, PreferencesFormState } from "@/modules
 
 const initialState: PreferencesFormState = { ok: true, message: "" };
 
-const TYPE_LABELS: Record<string, string> = {
-  ORDER: "Order updates",
-  PAYMENT: "Payment updates",
-  DELIVERY: "Delivery updates",
-  INVENTORY: "Inventory alerts",
+export type NotificationPreferenceLabels = {
+  order: string;
+  payment: string;
+  delivery: string;
+  inventory: string;
+  saveNotifications: string;
+  saving: string;
 };
 
 export function NotificationPreferencesForm({
   preferences,
+  labels,
 }: {
   preferences: NotificationPreferenceView[];
+  labels: NotificationPreferenceLabels;
 }) {
   const [state, formAction, isPending] = useActionState(
     updateNotificationPreferencesAction,
@@ -36,7 +40,7 @@ export function NotificationPreferencesForm({
             className="mt-0.5 h-4 w-4 rounded border-slate-300"
           />
           <label htmlFor={`inApp_${preference.type}`} className="text-sm text-slate-700">
-            {TYPE_LABELS[preference.type] ?? preference.type} — in-app
+            {(labels[preference.type.toLowerCase() as "order"] ?? preference.type) + " — in-app"}
           </label>
         </div>
       ))}
@@ -47,7 +51,7 @@ export function NotificationPreferencesForm({
           disabled={isPending}
           className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {isPending ? "Saving..." : "Save notification preferences"}
+          {isPending ? labels.saving : labels.saveNotifications}
         </button>
         {state.message ? (
           <p

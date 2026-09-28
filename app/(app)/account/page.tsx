@@ -99,27 +99,27 @@ export default async function AccountPage() {
   if (loadError || overview === null) {
     return (
       <section className="rounded-2xl border border-rose-200 bg-rose-50 p-6">
-        <h3 className="text-sm font-semibold text-rose-800">Unable to load your account</h3>
-        <p className="mt-1 text-sm text-rose-700">Please refresh the page to try again.</p>
+        <h3 className="text-sm font-semibold text-rose-800">{t.account.loadErrorTitle}</h3>
+        <p className="mt-1 text-sm text-rose-700">{t.common.refreshHint}</p>
       </section>
     );
   }
 
   const displayName = overview.customer
     ? [overview.customer.firstName, overview.customer.lastName].filter(Boolean).join(" ")
-    : (overview.employee?.jobTitle ?? "Staff member");
+    : (overview.employee?.jobTitle ?? t.account.staffMember);
 
   return (
     <div className="space-y-6">
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
-            <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">Account</p>
+            <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">{t.account.kicker}</p>
             <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-950">{displayName}</h2>
             <div className="mt-3 flex flex-wrap items-center gap-3">
               <AccountStatusBadge status={overview.status} />
               <span className="text-sm text-slate-500">
-                {overview.accountType === "CUSTOMER" ? "Customer account" : "Employee account"}
+                {overview.accountType === "CUSTOMER" ? t.account.typeCustomer : t.account.typeEmployee}
               </span>
             </div>
           </div>
@@ -147,23 +147,23 @@ export default async function AccountPage() {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h3 className="text-base font-semibold text-slate-900">Account information</h3>
+          <h3 className="text-base font-semibold text-slate-900">{t.account.infoTitle}</h3>
           <dl className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <InfoRow label="Email" value={overview.email ?? "Not provided"} />
-            <InfoRow label="Phone" value={overview.phone} />
+            <InfoRow label={t.customers.email} value={overview.email ?? t.customers.notProvided} />
+            <InfoRow label={t.usersAdmin.phone} value={overview.phone} />
             <InfoRow
-              label="Email verified"
+              label={t.account.emailVerified}
               value={overview.emailVerified ? "Yes" : "No"}
             />
             <InfoRow
-              label="Phone verified"
+              label={t.account.phoneVerified}
               value={overview.phoneVerified ? "Yes" : "No"}
             />
-            <InfoRow label="Language" value={overview.preferredLanguage.toUpperCase()} />
-            <InfoRow label="Timezone" value={overview.timezone} />
-            <InfoRow label="Member since" value={formatDate(overview.createdAt)} />
+            <InfoRow label={t.employees.language} value={overview.preferredLanguage.toUpperCase()} />
+            <InfoRow label={t.employees.timezone} value={overview.timezone} />
+            <InfoRow label={t.account.memberSince} value={formatDate(overview.createdAt)} />
             <InfoRow
-              label="Last login"
+              label={t.customers.lastLogin}
               value={overview.lastLoginAt ? formatDate(overview.lastLoginAt) : "—"}
             />
           </dl>
@@ -171,31 +171,31 @@ export default async function AccountPage() {
 
         {overview.customer ? (
           <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h3 className="text-base font-semibold text-slate-900">Customer profile</h3>
+            <h3 className="text-base font-semibold text-slate-900">{t.account.customerProfileTitle}</h3>
             <dl className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <InfoRow label="Customer code" value={overview.customer.customerCode} />
+              <InfoRow label={t.account.customerCode} value={overview.customer.customerCode} />
               <InfoRow
-                label="Classification"
-                value={overview.customer.classificationName ?? "Unclassified"}
+                label={t.customers.classification}
+                value={overview.customer.classificationName ?? t.customers.unclassified}
               />
-              <InfoRow label="Gender" value={overview.customer.gender ?? "Not specified"} />
+              <InfoRow label={t.customers.gender} value={overview.customer.gender ?? t.customers.notSpecified} />
               <InfoRow
-                label="Birth date"
-                value={overview.customer.birthDate ? formatDate(overview.customer.birthDate) : "Not specified"}
+                label={t.customers.birthDate}
+                value={overview.customer.birthDate ? formatDate(overview.customer.birthDate) : t.customers.notSpecified}
               />
               <InfoRow
-                label="Marketing consent"
-                value={overview.customer.marketingConsent ? "Granted" : "Not granted"}
+                label={t.customers.marketingConsent}
+                value={overview.customer.marketingConsent ? t.customers.granted : t.customers.notGranted}
               />
             </dl>
           </section>
         ) : (
           <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h3 className="text-base font-semibold text-slate-900">Employee profile</h3>
+            <h3 className="text-base font-semibold text-slate-900">{t.account.employeeProfileTitle}</h3>
             <dl className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <InfoRow label="Employee number" value={overview.employee?.employeeNumber ?? "—"} />
-              <InfoRow label="Department" value={overview.employee?.departmentName ?? "—"} />
-              <InfoRow label="Job title" value={overview.employee?.jobTitle ?? "—"} />
+              <InfoRow label={t.account.employeeNumber} value={overview.employee?.employeeNumber ?? "—"} />
+              <InfoRow label={t.employees.department} value={overview.employee?.departmentName ?? "—"} />
+              <InfoRow label={t.account.jobTitle} value={overview.employee?.jobTitle ?? "—"} />
             </dl>
             <p className="mt-5 text-xs text-slate-500">
               Staff tools (order and inventory management) arrive in a later phase.
@@ -207,7 +207,7 @@ export default async function AccountPage() {
       {customerProfile ? (
         <section id="profile" className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
-            <h3 className="text-base font-semibold text-slate-900">Profile</h3>
+            <h3 className="text-base font-semibold text-slate-900">{t.account.profileTitle}</h3>
             <p className="text-xs text-slate-500">Customer code {customerProfile.customerCode}</p>
           </div>
           <CustomerProfileForm
@@ -231,22 +231,23 @@ export default async function AccountPage() {
       {accountPreferences ? (
         <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
-            <h3 className="text-base font-semibold text-slate-900">Preferences</h3>
+            <h3 className="text-base font-semibold text-slate-900">{t.account.preferencesTitle}</h3>
             <p className="text-xs text-slate-500">
               Language, timezone and marketing consent are stored on your account.
             </p>
           </div>
           <AccountPreferencesForm
+              labels={t.notifications.preferences}
             preferences={accountPreferences}
             canManageMarketing={overview.customer !== null}
           />
           {notificationPreferences ? (
             <div className="mt-6 border-t border-slate-200 pt-6">
-              <h4 className="text-sm font-semibold text-slate-900">Notifications</h4>
+              <h4 className="text-sm font-semibold text-slate-900">{t.account.notificationsTitle}</h4>
               <p className="mt-1 text-xs text-slate-500">
                 Choose which in-app notifications you want to receive.
               </p>
-              <NotificationPreferencesForm preferences={notificationPreferences} />
+              <NotificationPreferencesForm preferences={notificationPreferences} labels={t.notifications.preferences} />
             </div>
           ) : null}
         </section>
@@ -258,7 +259,7 @@ export default async function AccountPage() {
             href="/orders"
             className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md"
           >
-            <p className="text-sm font-medium text-slate-500">Order history</p>
+            <p className="text-sm font-medium text-slate-500">{t.account.orderHistory}</p>
             <p className="mt-2 text-2xl font-semibold text-slate-900">
               {orderTotal === null ? "—" : orderTotal}
             </p>

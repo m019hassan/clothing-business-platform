@@ -19,20 +19,6 @@ import { getInterfaceLanguage } from "@/src/lib/i18n/server";
 
 const PAGE_SIZE = 20;
 
-const TYPE_OPTIONS = [
-  { value: "", label: "All types" },
-  { value: "CUSTOMER", label: "Customers" },
-  { value: "EMPLOYEE", label: "Employees" },
-  { value: "DISTRIBUTOR", label: "Distributors" },
-] as const;
-
-const STATUS_OPTIONS = [
-  { value: "", label: "All statuses" },
-  { value: "ACTIVE", label: "Active" },
-  { value: "SUSPENDED", label: "Suspended" },
-  { value: "ARCHIVED", label: "Archived" },
-] as const;
-
 type AdminPageProps = {
   searchParams: Promise<{ offset?: string; limit?: string; type?: string; status?: string; q?: string }>;
 };
@@ -52,6 +38,18 @@ function parseLimit(raw: string | undefined): number {
 export default async function AdminPage({ searchParams }: AdminPageProps) {
   const account = await getCurrentAccount();
   const { t } = await getInterfaceLanguage();
+  const typeOptions = [
+    { value: "", label: t.adminUsers.allTypes },
+    { value: "CUSTOMER", label: t.adminUsers.customers },
+    { value: "EMPLOYEE", label: t.adminUsers.employees },
+    { value: "DISTRIBUTOR", label: t.adminUsers.distributors },
+  ] as const;
+  const statusOptions = [
+    { value: "", label: t.adminUsers.allStatuses },
+    { value: "ACTIVE", label: t.accountStatus.ACTIVE },
+    { value: "SUSPENDED", label: t.accountStatus.SUSPENDED },
+    { value: "ARCHIVED", label: t.accountStatus.ARCHIVED },
+  ] as const;
 
   if (!account) {
     redirect("/login");
@@ -62,9 +60,9 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
   if (!permissions.has(PERMISSIONS.USERS_VIEW)) {
     return (
       <section className="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center">
-        <p className="text-sm font-semibold text-slate-800">Account administration requires a staff role</p>
+        <p className="text-sm font-semibold text-slate-800">{t.adminUsers.permissionTitle}</p>
         <p className="mt-1 text-sm text-slate-500">
-          Your account does not have the users.view permission. Ask a manager to grant it.
+          {t.adminUsers.permissionHint}
         </p>
         <Link
           href="/dashboard"
@@ -126,8 +124,8 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
   return (
     <div className="space-y-6">
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">Administration</p>
-        <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-950">Accounts</h2>
+        <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">{t.adminUsers.kicker}</p>
+        <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-950">{t.adminUsers.title}</h2>
         <p className="mt-1 text-sm text-slate-600">
           Create employees, customers and distributors, assign roles and branches, suspend accounts and reset
           passwords.
@@ -151,7 +149,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
               name="q"
               type="search"
               defaultValue={params.q ?? ""}
-              placeholder="Name, email, phone or code"
+              placeholder={t.adminUsers.searchPlaceholder}
               className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none ring-blue-500 focus:ring-2"
             />
           </div>
@@ -165,7 +163,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
               defaultValue={params.type ?? ""}
               className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none ring-blue-500 focus:ring-2"
             >
-              {TYPE_OPTIONS.map((option) => (
+              {typeOptions.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
                 </option>
@@ -182,7 +180,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
               defaultValue={params.status ?? ""}
               className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none ring-blue-500 focus:ring-2"
             >
-              {STATUS_OPTIONS.map((option) => (
+              {statusOptions.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
                 </option>
@@ -212,7 +210,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
 
       {canManage ? (
         <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h3 className="text-base font-semibold text-slate-900">New account</h3>
+          <h3 className="text-base font-semibold text-slate-900">{t.adminUsers.newAccountTitle}</h3>
           <p className="mt-1 text-sm text-slate-500">
             The password is hashed on the server; share it with the person and ask them to change it.
           </p>
@@ -226,8 +224,8 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
 
       {loadError ? (
         <section className="rounded-2xl border border-rose-200 bg-rose-50 p-6">
-          <h3 className="text-sm font-semibold text-rose-800">Unable to load accounts</h3>
-          <p className="mt-1 text-sm text-rose-700">Please refresh the page to try again.</p>
+          <h3 className="text-sm font-semibold text-rose-800">{t.adminUsers.loadErrorTitle}</h3>
+          <p className="mt-1 text-sm text-rose-700">{t.common.refreshHint}</p>
         </section>
       ) : (
         <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
@@ -235,12 +233,12 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
             <table className="min-w-full divide-y divide-slate-200 text-sm">
               <thead className="bg-slate-50 text-start text-xs font-semibold uppercase tracking-wide text-slate-500">
                 <tr>
-                  <th scope="col" className="px-6 py-3">Account</th>
-                  <th scope="col" className="px-6 py-3">Contact</th>
-                  <th scope="col" className="px-6 py-3">Roles</th>
-                  <th scope="col" className="px-6 py-3">Status</th>
-                  <th scope="col" className="px-6 py-3">Joined</th>
-                  {canManage ? <th scope="col" className="px-6 py-3">Manage</th> : null}
+                  <th scope="col" className="px-6 py-3">{t.adminUsers.account}</th>
+                  <th scope="col" className="px-6 py-3">{t.adminUsers.contact}</th>
+                  <th scope="col" className="px-6 py-3">{t.adminUsers.roles}</th>
+                  <th scope="col" className="px-6 py-3">{t.common.status}</th>
+                  <th scope="col" className="px-6 py-3">{t.adminUsers.joined}</th>
+                  {canManage ? <th scope="col" className="px-6 py-3">{t.adminUsers.manage}</th> : null}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -264,7 +262,9 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                         {user.status}
                       </span>
                       {user.lastLoginAt ? (
-                        <p className="mt-1 text-xs text-slate-500">Last login {formatDate(user.lastLoginAt)}</p>
+                        <p className="mt-1 text-xs text-slate-500">
+                          {t.adminUsers.lastLoginPrefix} {formatDate(user.lastLoginAt)}
+                        </p>
                       ) : null}
                     </td>
                     <td className="px-6 py-4 text-slate-600">{formatDate(user.createdAt)}</td>
@@ -300,20 +300,20 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                   href={`/admin?offset=${Math.max(offset - limit, 0)}&limit=${limit}`}
                   className="rounded-lg border border-slate-300 px-3 py-1.5 font-medium text-slate-700 transition-colors hover:bg-slate-100"
                 >
-                  Previous
+                  {t.common.previous}
                 </Link>
               ) : (
-                <span className="cursor-not-allowed rounded-lg border border-slate-200 px-3 py-1.5 text-slate-400">Previous</span>
+                <span className="cursor-not-allowed rounded-lg border border-slate-200 px-3 py-1.5 text-slate-400">{t.common.previous}</span>
               )}
               {hasNext ? (
                 <Link
                   href={`/admin?offset=${offset + limit}&limit=${limit}`}
                   className="rounded-lg border border-slate-300 px-3 py-1.5 font-medium text-slate-700 transition-colors hover:bg-slate-100"
                 >
-                  Next
+                  {t.common.next}
                 </Link>
               ) : (
-                <span className="cursor-not-allowed rounded-lg border border-slate-200 px-3 py-1.5 text-slate-400">Next</span>
+                <span className="cursor-not-allowed rounded-lg border border-slate-200 px-3 py-1.5 text-slate-400">{t.common.next}</span>
               )}
             </div>
           </div>

@@ -16,12 +16,23 @@ const TIMEZONE_SUGGESTIONS = [
   "UTC",
 ];
 
+export type AccountPreferenceLabels = {
+  language: string;
+  timezone: string;
+  timezonePlaceholder: string;
+  marketing: string;
+  saveAccount: string;
+  saving: string;
+};
+
 export function AccountPreferencesForm({
   preferences,
   canManageMarketing,
+  labels,
 }: {
   preferences: AccountPreferenceView;
   canManageMarketing: boolean;
+  labels: AccountPreferenceLabels;
 }) {
   const [state, formAction, isPending] = useActionState(updateAccountPreferencesAction, initialState);
 
@@ -29,9 +40,7 @@ export function AccountPreferencesForm({
     <form action={formAction} className="mt-5 space-y-5">
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
         <div>
-          <label htmlFor="preferredLanguage" className="mb-2 block text-sm font-medium text-slate-700">
-            Language
-          </label>
+          <label htmlFor="preferredLanguage" className="mb-2 block text-sm font-medium text-slate-700">{labels.language}</label>
           <select
             id="preferredLanguage"
             name="preferredLanguage"
@@ -44,16 +53,14 @@ export function AccountPreferencesForm({
         </div>
 
         <div>
-          <label htmlFor="timezone" className="mb-2 block text-sm font-medium text-slate-700">
-            Timezone
-          </label>
+          <label htmlFor="timezone" className="mb-2 block text-sm font-medium text-slate-700">{labels.timezone}</label>
           <input
             id="timezone"
             name="timezone"
             type="text"
             list="timezoneSuggestions"
             defaultValue={preferences.timezone}
-            placeholder="Asia/Riyadh"
+            placeholder={labels.timezonePlaceholder}
             className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-slate-900 outline-none ring-blue-500 focus:ring-2"
           />
           <datalist id="timezoneSuggestions">
@@ -90,7 +97,7 @@ export function AccountPreferencesForm({
           disabled={isPending}
           className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {isPending ? "Saving..." : "Save preferences"}
+          {isPending ? labels.saving : labels.saveAccount}
         </button>
         {state.message ? (
           <p

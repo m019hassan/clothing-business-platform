@@ -1,8 +1,19 @@
 import Link from "next/link";
 
-export function NotificationBell({ unreadCount }: { unreadCount: number }) {
+export type NotificationBellLabels = {
+  notifications: string;
+  unread: string;
+};
+
+export function NotificationBell({
+  unreadCount,
+  labels,
+}: {
+  unreadCount: number;
+  labels: NotificationBellLabels;
+}) {
   const label =
-    unreadCount > 0 ? `Notifications, ${unreadCount} unread` : "Notifications";
+    unreadCount > 0 ? `${labels.notifications}, ${unreadCount} ${labels.unread}` : labels.notifications;
 
   return (
     <Link

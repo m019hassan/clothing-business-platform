@@ -9,15 +9,9 @@ import {
 import { listNotifications } from "@/modules/notification/application/notifications";
 import type { NotificationView } from "@/modules/notification/types";
 import { formatDate } from "@/src/lib/format";
+import { getInterfaceLanguage } from "@/src/lib/i18n/server";
 
 const PAGE_SIZE = 20;
-
-const TYPE_LABELS: Record<string, string> = {
-  ORDER: "Order",
-  PAYMENT: "Payment",
-  DELIVERY: "Delivery",
-  INVENTORY: "Inventory",
-};
 
 type NotificationsPageProps = {
   searchParams: Promise<{ offset?: string; limit?: string }>;
@@ -35,11 +29,23 @@ function parseLimit(raw: string | undefined): number {
   return Number.isInteger(value) && value >= 1 && value <= 100 ? value : PAGE_SIZE;
 }
 
-function typeLabel(type: string): string {
-  return TYPE_LABELS[type] ?? type;
+function typeLabel(type: string, labels: Record<string, string>): string {
+  return labels[type] ?? type;
 }
 
-function NotificationRow({ notification }: { notification: NotificationView }) {
+function NotificationRow({
+  notification,
+  typeLabels,
+  unreadAria,
+  readLabel,
+  markReadLabel,
+}: {
+  notification: NotificationView;
+  typeLabels: Record<string, string>;
+  unreadAria: string;
+  readLabel: string;
+  markReadLabel: string;
+}) {
   const isUnread = notification.readAt === null;
 
   return (
@@ -53,12 +59,12 @@ function NotificationRow({ notification }: { notification: NotificationView }) {
         <div className="flex items-center gap-2">
           {isUnread ? (
             <span
-              aria-label="Unread"
+              aria-label={unreadAria}
               className="h-2 w-2 shrink-0 rounded-full bg-blue-600"
             />
           ) : null}
           <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-slate-600">
-            {typeLabel(notification.type)}
+            {typeLabel(notification.type, typeLabels)}
           </span>
           <span className="text-xs text-slate-500">{formatDate(notification.createdAt)}</span>
         </div>
@@ -83,11 +89,11 @@ function NotificationRow({ notification }: { notification: NotificationView }) {
             type="submit"
             className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
           >
-            Mark as read
+            {markReadLabel}
           </button>
         </form>
       ) : (
-        <span className="shrink-0 text-xs font-medium text-slate-400">Read</span>
+        <span className="shrink-0 text-xs font-medium text-slate-400">{readLabel}</span>
       )}
     </li>
   );
@@ -95,6 +101,7 @@ function NotificationRow({ notification }: { notification: NotificationView }) {
 
 export default async function NotificationsPage({ searchParams }: NotificationsPageProps) {
   const account = await getCurrentAccount();
+  const { t } = await getInterfaceLanguage();
 
   if (!account) {
     redirect("/login");
@@ -116,7 +123,7 @@ export default async function NotificationsPage({ searchParams }: NotificationsP
     <div className="mx-auto max-w-4xl space-y-6">
       <section className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-slate-900">Notifications</h2>
+          <h2 className="text-lg font-semibold text-slate-900">{t.notifications.title}</h2>
           <p className="mt-1 text-sm text-slate-600">
             {unreadCount > 0
               ? `${unreadCount} unread of ${pagination.total} total`
@@ -137,7 +144,7 @@ export default async function NotificationsPage({ searchParams }: NotificationsP
 
       {notifications.length === 0 ? (
         <section className="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center">
-          <p className="text-sm font-semibold text-slate-800">No notifications yet</p>
+          <p className="text-sm font-semibold text-slate-800">{t.notifications.emptyTitle}</p>
           <p className="mt-1 text-sm text-slate-500">
             Order and payment updates for your account will appear here.
           </p>
@@ -147,7 +154,14 @@ export default async function NotificationsPage({ searchParams }: NotificationsP
           <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
             <ul className="divide-y divide-slate-200">
               {notifications.map((notification) => (
-                <NotificationRow key={notification.id} notification={notification} />
+                <NotificationRow
+                    key={notification.id}
+                    notification={notification}
+                    typeLabels={t.notifications.types as Record<string, string>}
+                    unreadAria={t.notifications.unreadAria}
+                    readLabel={t.notifications.read}
+                    markReadLabel={t.notifications.markRead}
+                  />
               ))}
             </ul>
           </section>

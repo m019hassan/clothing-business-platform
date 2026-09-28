@@ -8,9 +8,11 @@ import { listBranches } from "@/modules/branches/application/branches";
 import { BranchForm } from "@/modules/branches/components/branch-form";
 import { prisma } from "@/src/lib/db";
 import { formatDate } from "@/src/lib/format";
+import { getInterfaceLanguage } from "@/src/lib/i18n/server";
 
 export default async function AdminBranchesPage() {
   const account = await getCurrentAccount();
+  const { t } = await getInterfaceLanguage();
 
   if (!account) {
     redirect("/login");
@@ -21,9 +23,9 @@ export default async function AdminBranchesPage() {
   if (!permissions.has(PERMISSIONS.BRANCHES_VIEW)) {
     return (
       <section className="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center">
-        <p className="text-sm font-semibold text-slate-800">Branch management requires a staff role</p>
+        <p className="text-sm font-semibold text-slate-800">{t.branches.permissionTitle}</p>
         <p className="mt-1 text-sm text-slate-500">
-          Your account does not have the branches.view permission. Ask a manager to grant it.
+          {t.branches.permissionHint}
         </p>
         <Link
           href="/dashboard"
@@ -46,11 +48,10 @@ export default async function AdminBranchesPage() {
     <div className="space-y-6">
       <section className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">Administration</p>
-          <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-950">Branches</h2>
+          <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">{t.branches.kicker}</p>
+          <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-950">{t.branches.title}</h2>
           <p className="mt-1 text-sm text-slate-600">
-            A branch owns one or more warehouses. Today the factory serves the branches; give a branch its own
-            warehouse when its stock must be tracked separately.
+            {t.branches.description}
           </p>
         </div>
         <Link
@@ -63,8 +64,8 @@ export default async function AdminBranchesPage() {
 
       {branches.length === 0 ? (
         <section className="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center">
-          <p className="text-sm font-semibold text-slate-800">No branches yet</p>
-          <p className="mt-1 text-sm text-slate-500">Create the first branch below.</p>
+          <p className="text-sm font-semibold text-slate-800">{t.branches.emptyTitle}</p>
+          <p className="mt-1 text-sm text-slate-500">{t.branches.emptyHint}</p>
         </section>
       ) : (
         branches.map((branch) => (
@@ -75,24 +76,26 @@ export default async function AdminBranchesPage() {
                 <span className="text-sm font-normal text-slate-500">({branch.code})</span>
                 {branch.isActive ? null : (
                   <span className="ms-2 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-                    inactive
+                    {t.branches.inactiveBadge}
                   </span>
                 )}
               </h3>
               <p className="text-xs text-slate-500">
-                {branch.warehouses.length} warehouse(s) · created {formatDate(branch.createdAt)}
+                {t.branches.warehousesCount
+                  .replace("{count}", String(branch.warehouses.length))
+                  .replace("{date}", formatDate(branch.createdAt))}
               </p>
             </div>
 
             {canManage ? (
               <div className="mt-5">
-                <BranchForm mode="edit" branch={branch} warehouses={warehouses} />
+                <BranchForm mode="edit" branch={branch} warehouses={warehouses} labels={{ ...t.branches, saving: t.branches.saving }} />
               </div>
             ) : (
               <ul className="mt-4 text-sm text-slate-600">
-                <li>Phone: {branch.phone ?? "—"}</li>
-                <li>City: {branch.city ?? "—"}</li>
-                <li>Warehouses: {branch.warehouses.map((warehouse) => warehouse.code).join(", ") || "—"}</li>
+                <li>{t.branches.phonePrefix} {branch.phone ?? "—"}</li>
+                <li>{t.branches.city}: {branch.city ?? "—"}</li>
+                <li>{t.branches.warehouses}: {branch.warehouses.map((warehouse) => warehouse.code).join(", ") || "—"}</li>
               </ul>
             )}
           </section>
@@ -101,9 +104,9 @@ export default async function AdminBranchesPage() {
 
       {canManage ? (
         <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h3 className="text-base font-semibold text-slate-900">New branch</h3>
+          <h3 className="text-base font-semibold text-slate-900">{t.branches.newTitle}</h3>
           <div className="mt-5">
-            <BranchForm mode="create" warehouses={warehouses} />
+            <BranchForm mode="create" warehouses={warehouses} labels={{ ...t.branches, saving: t.branches.saving }} />
           </div>
         </section>
       ) : null}
