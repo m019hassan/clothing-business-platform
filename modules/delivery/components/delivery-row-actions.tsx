@@ -7,12 +7,20 @@ import type { DeliveryStatus } from "@prisma/client";
 
 const initialState: DeliveryFormState = { ok: true, message: "" };
 
-const NEXT_STATUS_LABELS: Record<string, string> = {
-  PROCESSING: "Start processing",
-  READY: "Mark ready",
-  SHIPPED: "Mark shipped",
-  DELIVERED: "Mark delivered",
-  CANCELLED: "Cancel delivery",
+export type DeliveryRowLabels = {
+  saving: string;
+  nextStatus: string;
+  carrierPlaceholder: string;
+  trackingPlaceholder: string;
+  update: string;
+  statusLabels: Record<string, string>;
+  transitions: {
+    PROCESSING: string;
+    READY: string;
+    SHIPPED: string;
+    DELIVERED: string;
+    CANCELLED: string;
+  };
 };
 
 const inputClass =
@@ -24,42 +32,44 @@ export function DeliveryRowActions({
   allowedTransitions,
   carrier,
   trackingNumber,
+  labels,
 }: {
   deliveryId: string;
   status: DeliveryStatus;
   allowedTransitions: readonly DeliveryStatus[];
   carrier: string | null;
   trackingNumber: string | null;
+  labels: DeliveryRowLabels;
 }) {
   const [state, formAction, isPending] = useActionState(updateDeliveryAction, initialState);
   const isTerminal = allowedTransitions.length === 0;
 
   if (isTerminal) {
-    return <span className="text-xs font-medium text-slate-400">{status}</span>;
+    return <span className="text-xs font-medium text-slate-400">{labels.statusLabels[status] ?? status}</span>;
   }
 
   return (
     <form action={formAction} className="space-y-2">
       <input type="hidden" name="deliveryId" value={deliveryId} />
       <div className="flex flex-wrap items-center gap-2">
-        <select name="status" defaultValue={allowedTransitions[0]} aria-label="Next status" className={inputClass}>
+        <select name="status" defaultValue={allowedTransitions[0]} aria-label={labels.nextStatus} className={inputClass}>
           {allowedTransitions.map((next) => (
             <option key={next} value={next}>
-              {NEXT_STATUS_LABELS[next] ?? next}
+              {labels.transitions[next as keyof DeliveryRowLabels["transitions"]] ?? next}
             </option>
           ))}
         </select>
         <input
           name="carrier"
           defaultValue={carrier ?? ""}
-          placeholder="Carrier"
+          placeholder={labels.carrierPlaceholder}
           aria-label="Carrier"
           className={`${inputClass} w-28`}
         />
         <input
           name="trackingNumber"
           defaultValue={trackingNumber ?? ""}
-          placeholder="Tracking"
+          placeholder={labels.trackingPlaceholder}
           aria-label="Tracking number"
           className={`${inputClass} w-32`}
         />
@@ -68,7 +78,7 @@ export function DeliveryRowActions({
           disabled={isPending}
           className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-60"
         >
-          {isPending ? "Saving…" : "Update"}
+          {isPending ? labels.saving : labels.update}
         </button>
       </div>
       {state.message ? (

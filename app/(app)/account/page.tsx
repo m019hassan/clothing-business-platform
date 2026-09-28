@@ -22,6 +22,7 @@ import type {
 import { listOrders } from "@/modules/order/application/orders";
 import { AuthorizationError } from "@/src/lib/errors";
 import { formatDate } from "@/src/lib/format";
+import { getInterfaceLanguage } from "@/src/lib/i18n/server";
 
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
@@ -34,6 +35,7 @@ function InfoRow({ label, value }: { label: string; value: string }) {
 
 export default async function AccountPage() {
   const account = await getCurrentAccount();
+  const { t } = await getInterfaceLanguage();
 
   if (!account) {
     redirect("/login");
@@ -208,7 +210,21 @@ export default async function AccountPage() {
             <h3 className="text-base font-semibold text-slate-900">Profile</h3>
             <p className="text-xs text-slate-500">Customer code {customerProfile.customerCode}</p>
           </div>
-          <CustomerProfileForm profile={customerProfile} />
+          <CustomerProfileForm
+            profile={customerProfile}
+            labels={{
+              firstName: t.profileAdmin.firstName,
+              lastName: t.profileAdmin.lastName,
+              gender: t.profileAdmin.gender,
+              birthDate: t.profileAdmin.birthDate,
+              notSpecified: t.customers.notSpecified,
+              female: t.profileAdmin.female,
+              male: t.profileAdmin.male,
+              other: t.usersAdmin.other,
+              saveProfile: t.profileAdmin.saveProfile,
+              saving: t.catalog.form.saving,
+            }}
+          />
         </section>
       ) : null}
 
@@ -276,7 +292,7 @@ export default async function AccountPage() {
             </p>
           </div>
           <div className="mt-5">
-            <AddressManager addresses={addresses} />
+            <AddressManager addresses={addresses} labels={{ ...t.addresses, saving: t.catalog.form.saving }} />
           </div>
         </section>
       ) : null}

@@ -16,9 +16,11 @@ import type {
   PermissionCatalogEntry,
   RoleWithPermissionsView,
 } from "@/modules/employees/types";
+import { getInterfaceLanguage } from "@/src/lib/i18n/server";
 
 export default async function RolesPage() {
   const account = await getCurrentAccount();
+  const { t } = await getInterfaceLanguage();
 
   if (!account) {
     redirect("/login");
@@ -29,9 +31,9 @@ export default async function RolesPage() {
   if (!permissions.has(PERMISSIONS.ROLES_VIEW)) {
     return (
       <section className="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center">
-        <p className="text-sm font-semibold text-slate-800">Role access requires a staff role</p>
+        <p className="text-sm font-semibold text-slate-800">{t.roles.permissionTitle}</p>
         <p className="mt-1 text-sm text-slate-500">
-          Your account does not have the roles.view permission. Ask a manager to grant it.
+          {t.roles.permissionHint}
         </p>
         <Link href="/dashboard" className="mt-5 inline-flex rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100">
           Back to dashboard
@@ -68,8 +70,8 @@ export default async function RolesPage() {
   if (loadError || overview === null) {
     return (
       <section className="rounded-2xl border border-rose-200 bg-rose-50 p-6">
-        <h3 className="text-sm font-semibold text-rose-800">Unable to load roles</h3>
-        <p className="mt-1 text-sm text-rose-700">Please refresh the page to try again.</p>
+        <h3 className="text-sm font-semibold text-rose-800">{t.roles.loadErrorTitle}</h3>
+        <p className="mt-1 text-sm text-rose-700">{t.common.refreshHint}</p>
       </section>
     );
   }
@@ -80,8 +82,8 @@ export default async function RolesPage() {
     <div className="space-y-6">
       <section className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">Administration</p>
-          <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-950">Roles &amp; permissions</h2>
+          <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">{t.roles.kicker}</p>
+          <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-950">{t.roles.title}</h2>
           <p className="mt-1 text-sm text-slate-600">
             {roles.length} role{roles.length === 1 ? "" : "s"} · {catalog.reduce((sum, entry) => sum + entry.permissions.length, 0)} active permissions
           </p>
@@ -89,7 +91,7 @@ export default async function RolesPage() {
         <button
           type="button"
           disabled
-          title="Role management endpoints do not exist yet"
+          title={t.roles.editTooltip}
           className="cursor-not-allowed rounded-lg border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-400"
         >
           Create role
@@ -98,7 +100,7 @@ export default async function RolesPage() {
 
       {roles.length === 0 ? (
         <section className="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center">
-          <p className="text-sm font-semibold text-slate-800">No roles defined yet</p>
+          <p className="text-sm font-semibold text-slate-800">{t.roles.emptyTitle}</p>
         </section>
       ) : (
         <>
@@ -107,7 +109,7 @@ export default async function RolesPage() {
             <table className="min-w-full divide-y divide-slate-200 text-sm">
               <thead className="bg-slate-50 text-start text-xs font-semibold uppercase tracking-wide text-slate-500">
                 <tr>
-                  <th scope="col" className="sticky start-0 bg-slate-50 px-6 py-3">Permission</th>
+                  <th scope="col" className="sticky start-0 bg-slate-50 px-6 py-3">{t.roles.permission}</th>
                   {roles.map((role) => (
                     <th key={role.id} scope="col" className="px-4 py-3 text-center">
                       {role.name}
@@ -161,7 +163,7 @@ export default async function RolesPage() {
                     <p className="truncate text-xs text-slate-500">{role.code}</p>
                   </div>
                   <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${role.isActive ? "bg-emerald-50 text-emerald-700 ring-emerald-200" : "bg-slate-100 text-slate-600 ring-slate-200"}`}>
-                    {role.isActive ? "Active" : "Inactive"}
+                    {role.isActive ? t.roles.active : t.roles.inactive}
                   </span>
                 </div>
                 <p className="mt-2 text-xs text-slate-500">
@@ -171,7 +173,7 @@ export default async function RolesPage() {
                   {role.permissionCodes.length > 0 ? (
                     role.permissionCodes.map((code) => <li key={code}>{code}</li>)
                   ) : (
-                    <li className="text-slate-400">No permissions</li>
+                    <li className="text-slate-400">{t.roles.noPermissions}</li>
                   )}
                 </ul>
               </div>
@@ -181,11 +183,11 @@ export default async function RolesPage() {
       )}
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h3 className="text-base font-semibold text-slate-900">Edit role permissions</h3>
+        <h3 className="text-base font-semibold text-slate-900">{t.roles.editTitle}</h3>
         <p className="mt-1 text-sm text-slate-500">
           {canEditRoles
-            ? "Tick the capabilities a role should have. Employees holding the role get the change on their next request; the system role stays locked."
-            : "Your account does not have the roles.update permission, so the matrix above is read-only."}
+            ? t.roles.editHint
+            : t.roles.readOnlyHint}
         </p>
 
         <div className="mt-5 space-y-4">
@@ -198,7 +200,7 @@ export default async function RolesPage() {
                     </h4>
                     <p className="text-xs text-slate-500">{role.permissionCodes.length} permission(s)</p>
                   </div>
-                  <RolePermissionsEditor role={role} catalog={permissionCatalog} />
+                  <RolePermissionsEditor labels={{ ...t.roles, saving: t.catalog.form.saving }} role={role} catalog={permissionCatalog} />
                 </div>
               ))
             : null}

@@ -15,6 +15,7 @@ import {
 import type { UserListItemView } from "@/modules/users/types";
 import { prisma } from "@/src/lib/db";
 import { formatDate } from "@/src/lib/format";
+import { getInterfaceLanguage } from "@/src/lib/i18n/server";
 
 const PAGE_SIZE = 20;
 
@@ -50,6 +51,7 @@ function parseLimit(raw: string | undefined): number {
 
 export default async function AdminPage({ searchParams }: AdminPageProps) {
   const account = await getCurrentAccount();
+  const { t } = await getInterfaceLanguage();
 
   if (!account) {
     redirect("/login");
@@ -214,7 +216,11 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
           <p className="mt-1 text-sm text-slate-500">
             The password is hashed on the server; share it with the person and ask them to change it.
           </p>
-          <UserCreateForm branches={branches} roles={roles} />
+          <UserCreateForm
+              branches={branches}
+              roles={roles}
+              labels={{ ...t.usersAdmin, phonePlaceholder: t.addresses.phonePlaceholder }}
+            />
         </section>
       ) : null}
 
@@ -265,6 +271,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                     {canManage ? (
                       <td className="px-6 py-4">
                         <UserRowActions
+                        labels={{ ...t.usersAdmin, saving: t.catalog.form.saving, statusLabels: t.accountStatus as Record<string, string> }}
                           accountId={user.id}
                           firstName={user.displayName.split(" ")[0] ?? ""}
                           lastName={user.displayName.split(" ").slice(1).join(" ")}

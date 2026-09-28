@@ -10,12 +10,20 @@ import type { PermissionCatalogEntry, RoleWithPermissionsView } from "@/modules/
 
 const initialState: RoleFormState = { ok: true, message: "" };
 
+export type RoleEditorLabels = {
+  savePermissions: string;
+  saving: string;
+  systemNote: string;
+};
+
 export function RolePermissionsEditor({
   role,
   catalog,
+  labels,
 }: {
   role: RoleWithPermissionsView;
   catalog: PermissionCatalogEntry[];
+  labels: RoleEditorLabels;
 }) {
   const [state, formAction, isPending] = useActionState(updateRolePermissionsAction, initialState);
   const granted = new Set(role.permissionCodes);
@@ -23,7 +31,7 @@ export function RolePermissionsEditor({
   if (role.isSystem) {
     return (
       <p className="mt-3 text-sm text-slate-500">
-        {role.name} is a system role maintained by the platform (npm run make-admin) and cannot be edited here.
+        {labels.systemNote.replace("{name}", role.name)}
       </p>
     );
   }
@@ -62,7 +70,7 @@ export function RolePermissionsEditor({
           disabled={isPending}
           className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {isPending ? "Saving…" : "Save permissions"}
+          {isPending ? labels.saving : labels.savePermissions}
         </button>
         {state.message ? (
           <p role={state.ok ? "status" : "alert"} className={["text-sm", state.ok ? "text-emerald-700" : "text-rose-700"].join(" ")}>

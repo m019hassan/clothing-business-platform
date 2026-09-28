@@ -56,6 +56,10 @@ export async function resolveBranchScope(account: AuthenticatedAccount): Promise
 }
 
 /** Convenience guard used by the pages to describe the active scope. */
-export function scopeDescription(scope: BranchScope): string {
-  return scope.branchId ? `Branch: ${scope.branchLabel}` : "All branches";
+export type ScopeLabels = { all: string; branch: string };
+
+export function scopeDescription(scope: BranchScope, labels?: ScopeLabels): string {
+  return scope.branchId
+    ? `${labels?.branch ?? "Branch"}: ${scope.branchLabel}`
+    : labels?.all ?? "All branches";
 }

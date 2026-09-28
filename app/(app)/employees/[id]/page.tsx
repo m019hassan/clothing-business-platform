@@ -9,6 +9,7 @@ import { getEmployee } from "@/modules/employees/application/employees";
 import type { EmployeeDetailView } from "@/modules/employees/types";
 import { NotFoundError } from "@/src/lib/errors";
 import { formatDate } from "@/src/lib/format";
+import { getInterfaceLanguage } from "@/src/lib/i18n/server";
 
 type EmployeeDetailProps = {
   params: Promise<{ id: string }>;
@@ -25,6 +26,7 @@ function InfoRow({ label, value }: { label: string; value: string }) {
 
 export default async function EmployeeDetailPage({ params }: EmployeeDetailProps) {
   const account = await getCurrentAccount();
+  const { t } = await getInterfaceLanguage();
 
   if (!account) {
     redirect("/login");
@@ -35,7 +37,7 @@ export default async function EmployeeDetailPage({ params }: EmployeeDetailProps
   if (!permissions.has(PERMISSIONS.EMPLOYEES_VIEW)) {
     return (
       <section className="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center">
-        <p className="text-sm font-semibold text-slate-800">Employee access requires a staff role</p>
+        <p className="text-sm font-semibold text-slate-800">{t.employees.permissionTitle}</p>
         <Link href="/dashboard" className="mt-5 inline-flex rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100">
           Back to dashboard
         </Link>
@@ -61,8 +63,8 @@ export default async function EmployeeDetailPage({ params }: EmployeeDetailProps
   if (loadError || employee === null) {
     return (
       <section className="rounded-2xl border border-rose-200 bg-rose-50 p-6">
-        <h3 className="text-sm font-semibold text-rose-800">Unable to load this employee</h3>
-        <p className="mt-1 text-sm text-rose-700">Please refresh the page to try again.</p>
+        <h3 className="text-sm font-semibold text-rose-800">{t.employees.loadOneErrorTitle}</h3>
+        <p className="mt-1 text-sm text-rose-700">{t.common.refreshHint}</p>
         <Link href="/employees" className="mt-4 inline-flex text-sm font-medium text-rose-800 underline">
           Back to employees
         </Link>
@@ -85,10 +87,10 @@ export default async function EmployeeDetailPage({ params }: EmployeeDetailProps
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
-            <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">Employee</p>
+            <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">{t.employees.kickerOne}</p>
             <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-950">{fullName}</h2>
             <div className="mt-3 flex flex-wrap items-center gap-3">
-              <AccountStatusBadge status={employee.accountStatus} />
+              <AccountStatusBadge status={employee.accountStatus} labels={t.accountStatus} />
               <span className="text-sm text-slate-500">{employee.employeeNumber}</span>
               {employee.jobTitle ? <span className="text-sm text-slate-500">{employee.jobTitle}</span> : null}
             </div>
@@ -97,7 +99,7 @@ export default async function EmployeeDetailPage({ params }: EmployeeDetailProps
             <button
               type="button"
               disabled
-              title="Employee management endpoints do not exist yet"
+              title={t.employees.manageTooltip}
               className="cursor-not-allowed rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-400"
             >
               Edit employee
@@ -105,7 +107,7 @@ export default async function EmployeeDetailPage({ params }: EmployeeDetailProps
             <button
               type="button"
               disabled
-              title="Employee management endpoints do not exist yet"
+              title={t.employees.manageTooltip}
               className="cursor-not-allowed rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-400"
             >
               Assign role
@@ -116,20 +118,20 @@ export default async function EmployeeDetailPage({ params }: EmployeeDetailProps
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h3 className="text-base font-semibold text-slate-900">Account information</h3>
+          <h3 className="text-base font-semibold text-slate-900">{t.employees.accountInfo}</h3>
           <dl className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <InfoRow label="Email" value={employee.email ?? "Not provided"} />
+            <InfoRow label={t.customers.email} value={employee.email ?? t.customers.notProvided} />
             <InfoRow label="Phone" value={employee.phone} />
-            <InfoRow label="Department" value={employee.departmentName ?? "—"} />
-            <InfoRow label="Hire date" value={employee.hireDate ? formatDate(employee.hireDate) : "—"} />
-            <InfoRow label="Language" value={employee.preferredLanguage.toUpperCase()} />
-            <InfoRow label="Timezone" value={employee.timezone} />
-            <InfoRow label="Account created" value={formatDate(employee.createdAt)} />
+            <InfoRow label={t.employees.department} value={employee.departmentName ?? "—"} />
+            <InfoRow label={t.employees.hireDate} value={employee.hireDate ? formatDate(employee.hireDate) : "—"} />
+            <InfoRow label={t.employees.language} value={employee.preferredLanguage.toUpperCase()} />
+            <InfoRow label={t.employees.timezone} value={employee.timezone} />
+            <InfoRow label={t.employees.accountCreated} value={formatDate(employee.createdAt)} />
           </dl>
         </section>
 
         <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h3 className="text-base font-semibold text-slate-900">Assigned roles</h3>
+          <h3 className="text-base font-semibold text-slate-900">{t.employees.assignedRoles}</h3>
           {employee.roles.length > 0 ? (
             <ul className="mt-5 space-y-2 text-sm text-slate-700">
               {employee.roles.map((role) => (

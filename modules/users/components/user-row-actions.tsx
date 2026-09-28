@@ -13,6 +13,19 @@ const initialState: UserFormState = { ok: true, message: "" };
 const inputClass =
   "rounded-lg border border-slate-300 px-2.5 py-1.5 text-sm text-slate-900 outline-none ring-blue-500 focus:ring-2";
 
+export type UserRowLabels = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  saveAccount: string;
+  saving: string;
+  newPassword: string;
+  resetPassword: string;
+  resetting: string;
+  statusLabels: Record<string, string>;
+};
+
 export function UserRowActions({
   accountId,
   firstName,
@@ -21,6 +34,7 @@ export function UserRowActions({
   phone,
   status,
   branchId,
+  labels,
 }: {
   accountId: string;
   firstName: string;
@@ -29,6 +43,7 @@ export function UserRowActions({
   phone: string;
   status: string;
   branchId: string | null;
+  labels: UserRowLabels;
 }) {
   const displayName = [firstName, lastName].filter(Boolean).join(" ").trim() || email;
   const [updateState, updateAction, isUpdating] = useActionState(updateUserAction, initialState);
@@ -41,14 +56,14 @@ export function UserRowActions({
         <input
           name="firstName"
           defaultValue={firstName}
-          placeholder="First name"
+          placeholder={labels.firstName}
           aria-label={`First name for ${displayName}`}
           className={inputClass}
         />
         <input
           name="lastName"
           defaultValue={lastName}
-          placeholder="Last name"
+          placeholder={labels.lastName}
           aria-label={`Last name for ${displayName}`}
           className={inputClass}
         />
@@ -56,21 +71,21 @@ export function UserRowActions({
           name="email"
           type="email"
           defaultValue={email}
-          placeholder="Email"
+          placeholder={labels.email}
           aria-label={`Email for ${displayName}`}
           className={inputClass}
         />
         <input
           name="phone"
           defaultValue={phone}
-          placeholder="Phone"
+          placeholder={labels.phone}
           aria-label={`Phone for ${displayName}`}
           className={inputClass}
         />
         <select name="status" defaultValue={status} aria-label={`Status for ${displayName}`} className={inputClass}>
-          <option value="ACTIVE">ACTIVE</option>
-          <option value="SUSPENDED">SUSPENDED</option>
-          <option value="ARCHIVED">ARCHIVED</option>
+          <option value="ACTIVE">{labels.statusLabels.ACTIVE}</option>
+          <option value="SUSPENDED">{labels.statusLabels.SUSPENDED}</option>
+          <option value="ARCHIVED">{labels.statusLabels.ARCHIVED}</option>
         </select>
         <div className="flex items-center gap-2">
           <button
@@ -78,7 +93,7 @@ export function UserRowActions({
             disabled={isUpdating}
             className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-60"
           >
-            {isUpdating ? "Saving…" : "Save account"}
+            {isUpdating ? labels.saving : labels.saveAccount}
           </button>
           {branchId ? <span className="text-xs text-slate-400">branch</span> : null}
         </div>
@@ -89,7 +104,7 @@ export function UserRowActions({
         <input
           name="password"
           type="text"
-          placeholder="New password"
+          placeholder={labels.newPassword}
           aria-label={`New password for ${displayName}`}
           className={`${inputClass} w-40`}
         />
@@ -98,7 +113,7 @@ export function UserRowActions({
           disabled={isResetting}
           className="rounded-lg border border-amber-200 px-3 py-1.5 text-xs font-medium text-amber-700 transition-colors hover:bg-amber-50 disabled:opacity-60"
         >
-          {isResetting ? "Resetting…" : "Reset password"}
+          {isResetting ? labels.resetting : labels.resetPassword}
         </button>
       </form>
 

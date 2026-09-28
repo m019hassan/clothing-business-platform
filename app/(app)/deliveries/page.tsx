@@ -14,18 +14,9 @@ import {
 import { DeliveryRowActions } from "@/modules/delivery/components/delivery-row-actions";
 import type { DeliveryQueueItemView } from "@/modules/delivery/types";
 import { formatDate, formatMoney } from "@/src/lib/format";
+import { getInterfaceLanguage } from "@/src/lib/i18n/server";
 
 const PAGE_SIZE = 20;
-
-const STATUS_OPTIONS = [
-  { value: "", label: "All statuses" },
-  { value: "PENDING", label: "Pending" },
-  { value: "PROCESSING", label: "Processing" },
-  { value: "READY", label: "Ready" },
-  { value: "SHIPPED", label: "Shipped" },
-  { value: "DELIVERED", label: "Delivered" },
-  { value: "CANCELLED", label: "Cancelled" },
-] as const;
 
 type DeliveriesPageProps = {
   searchParams: Promise<{ offset?: string; limit?: string; status?: string }>;
@@ -45,6 +36,16 @@ function parseLimit(raw: string | undefined): number {
 
 export default async function DeliveriesPage({ searchParams }: DeliveriesPageProps) {
   const account = await getCurrentAccount();
+  const { t } = await getInterfaceLanguage();
+  const statusOptions = [
+    { value: "", label: t.deliveries.allStatuses },
+    { value: "PENDING", label: t.deliveryStatus.PENDING },
+    { value: "PROCESSING", label: t.deliveryStatus.PROCESSING },
+    { value: "READY", label: t.deliveryStatus.READY },
+    { value: "SHIPPED", label: t.deliveryStatus.SHIPPED },
+    { value: "DELIVERED", label: t.deliveryStatus.DELIVERED },
+    { value: "CANCELLED", label: t.deliveryStatus.CANCELLED },
+  ] as const;
 
   if (!account) {
     redirect("/login");
@@ -55,9 +56,9 @@ export default async function DeliveriesPage({ searchParams }: DeliveriesPagePro
   if (!permissions.has(PERMISSIONS.SHIPPING_MANAGE)) {
     return (
       <section className="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center">
-        <p className="text-sm font-semibold text-slate-800">Delivery access requires a staff role</p>
+        <p className="text-sm font-semibold text-slate-800">{t.deliveries.permissionTitle}</p>
         <p className="mt-1 text-sm text-slate-500">
-          Your account does not have the shipping.manage permission. Ask a manager to grant it.
+          {t.deliveries.permissionHint}
         </p>
         <Link
           href="/dashboard"
@@ -108,10 +109,10 @@ export default async function DeliveriesPage({ searchParams }: DeliveriesPagePro
   return (
     <div className="space-y-6">
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">Fulfilment</p>
-        <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-950">Deliveries</h2>
+        <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">{t.deliveries.kicker}</p>
+        <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-950">{t.deliveries.title}</h2>
         <p className="mt-1 text-sm text-slate-600">
-          {scopeDescription(scope)} — confirmed orders appear here automatically. Move each one from processing to delivered; shipping requires a
+          {scopeDescription(scope, t.scope)} — confirmed orders appear here automatically. Move each one from processing to delivered; shipping requires a
           carrier and a tracking number.
         </p>
       </section>
@@ -128,7 +129,7 @@ export default async function DeliveriesPage({ searchParams }: DeliveriesPagePro
               defaultValue={params.status ?? ""}
               className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none ring-blue-500 focus:ring-2"
             >
-              {STATUS_OPTIONS.map((option) => (
+              {statusOptions.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
                 </option>
@@ -158,12 +159,12 @@ export default async function DeliveriesPage({ searchParams }: DeliveriesPagePro
 
       {loadError ? (
         <section className="rounded-2xl border border-rose-200 bg-rose-50 p-6">
-          <h3 className="text-sm font-semibold text-rose-800">Unable to load deliveries</h3>
-          <p className="mt-1 text-sm text-rose-700">Please refresh the page to try again.</p>
+          <h3 className="text-sm font-semibold text-rose-800">{t.deliveries.loadErrorTitle}</h3>
+          <p className="mt-1 text-sm text-rose-700">{t.common.refreshHint}</p>
         </section>
       ) : deliveries.length === 0 ? (
         <section className="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center">
-          <p className="text-sm font-semibold text-slate-800">Nothing to fulfil</p>
+          <p className="text-sm font-semibold text-slate-800">{t.deliveries.emptyTitle}</p>
           <p className="mt-1 text-sm text-slate-500">
             Deliveries are created automatically when an order is confirmed by an approved payment.
           </p>
@@ -175,11 +176,11 @@ export default async function DeliveriesPage({ searchParams }: DeliveriesPagePro
               <table className="min-w-full divide-y divide-slate-200 text-sm">
                 <thead className="bg-slate-50 text-start text-xs font-semibold uppercase tracking-wide text-slate-500">
                   <tr>
-                    <th scope="col" className="px-6 py-3">Order</th>
-                    <th scope="col" className="px-6 py-3">Customer</th>
-                    <th scope="col" className="px-6 py-3 text-end">Total</th>
-                    <th scope="col" className="px-6 py-3">Status</th>
-                    <th scope="col" className="px-6 py-3">Ship / deliver</th>
+                    <th scope="col" className="px-6 py-3">{t.common.order}</th>
+                    <th scope="col" className="px-6 py-3">{t.common.customer}</th>
+                    <th scope="col" className="px-6 py-3 text-end">{t.common.total}</th>
+                    <th scope="col" className="px-6 py-3">{t.common.status}</th>
+                    <th scope="col" className="px-6 py-3">{t.deliveries.shipDeliver}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -190,7 +191,9 @@ export default async function DeliveriesPage({ searchParams }: DeliveriesPagePro
                           {delivery.orderNumber}
                         </Link>
                         <p className="text-xs text-slate-500">
-                          {delivery.dispatchedAt ? `Dispatched ${formatDate(delivery.dispatchedAt)}` : `Created ${formatDate(delivery.createdAt)}`}
+                          {delivery.dispatchedAt
+                          ? `${t.orderDetail.dispatched} ${formatDate(delivery.dispatchedAt)}`
+                          : `${t.common.created} ${formatDate(delivery.createdAt)}`}
                         </p>
                       </td>
                       <td className="px-6 py-4 text-slate-700">
@@ -212,6 +215,21 @@ export default async function DeliveriesPage({ searchParams }: DeliveriesPagePro
                       </td>
                       <td className="px-6 py-4">
                         <DeliveryRowActions
+                        labels={{
+                          saving: t.catalog.form.saving,
+                          nextStatus: t.deliveries.nextStatus,
+                          carrierPlaceholder: t.deliveries.carrierPlaceholder,
+                          trackingPlaceholder: t.deliveries.trackingPlaceholder,
+                          update: t.deliveries.update,
+                          statusLabels: t.deliveryStatus as Record<string, string>,
+                          transitions: {
+                            PROCESSING: t.deliveries.startProcessing,
+                            READY: t.deliveries.markReady,
+                            SHIPPED: t.deliveries.markShipped,
+                            DELIVERED: t.deliveries.markDelivered,
+                            CANCELLED: t.deliveries.cancelDelivery,
+                          },
+                        }}
                           deliveryId={delivery.id}
                           status={delivery.status}
                           allowedTransitions={DELIVERY_TRANSITIONS[delivery.status]}
@@ -238,20 +256,20 @@ export default async function DeliveriesPage({ searchParams }: DeliveriesPagePro
                   href={`/deliveries?offset=${Math.max(offset - limit, 0)}&limit=${limit}${filters.status ? `&status=${filters.status}` : ""}`}
                   className="rounded-lg border border-slate-300 px-3 py-1.5 font-medium text-slate-700 transition-colors hover:bg-slate-100"
                 >
-                  Previous
+                  {t.common.previous}
                 </Link>
               ) : (
-                <span className="cursor-not-allowed rounded-lg border border-slate-200 px-3 py-1.5 text-slate-400">Previous</span>
+                <span className="cursor-not-allowed rounded-lg border border-slate-200 px-3 py-1.5 text-slate-400">{t.common.previous}</span>
               )}
               {hasNext ? (
                 <Link
                   href={`/deliveries?offset=${offset + limit}&limit=${limit}${filters.status ? `&status=${filters.status}` : ""}`}
                   className="rounded-lg border border-slate-300 px-3 py-1.5 font-medium text-slate-700 transition-colors hover:bg-slate-100"
                 >
-                  Next
+                  {t.common.next}
                 </Link>
               ) : (
-                <span className="cursor-not-allowed rounded-lg border border-slate-200 px-3 py-1.5 text-slate-400">Next</span>
+                <span className="cursor-not-allowed rounded-lg border border-slate-200 px-3 py-1.5 text-slate-400">{t.common.next}</span>
               )}
             </div>
           </section>

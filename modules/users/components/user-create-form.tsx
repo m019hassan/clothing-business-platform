@@ -10,12 +10,32 @@ const inputClass =
   "w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none ring-blue-500 focus:ring-2";
 const labelClass = "mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500";
 
+export type UserCreateLabels = {
+  accountType: string;
+  customer: string;
+  employee: string;
+  distributor: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  phonePlaceholder: string;
+  password: string;
+  jobTitle: string;
+  branch: string;
+  noBranch: string;
+  create: string;
+  creating: string;
+};
+
 export function UserCreateForm({
   branches,
   roles,
+  labels,
 }: {
   branches: { id: string; name: string; code: string }[];
   roles: { id: string; name: string; code: string }[];
+  labels: UserCreateLabels;
 }) {
   const [state, formAction, isPending] = useActionState(createUserAction, initialState);
 
@@ -23,38 +43,28 @@ export function UserCreateForm({
     <form action={formAction} className="mt-5 space-y-4">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div>
-          <label htmlFor="accountType" className={labelClass}>
-            Account type
-          </label>
+          <label htmlFor="accountType" className={labelClass}>{labels.accountType}</label>
           <select id="accountType" name="accountType" defaultValue="CUSTOMER" className={inputClass}>
-            <option value="CUSTOMER">Customer</option>
-            <option value="EMPLOYEE">Employee</option>
-            <option value="DISTRIBUTOR">Distributor (point of sale)</option>
+            <option value="CUSTOMER">{labels.customer}</option>
+            <option value="EMPLOYEE">{labels.employee}</option>
+            <option value="DISTRIBUTOR">{labels.distributor}</option>
           </select>
         </div>
         <div>
-          <label htmlFor="firstName" className={labelClass}>
-            First name
-          </label>
+          <label htmlFor="firstName" className={labelClass}>{labels.firstName}</label>
           <input id="firstName" name="firstName" required className={inputClass} />
         </div>
         <div>
-          <label htmlFor="lastName" className={labelClass}>
-            Last name
-          </label>
+          <label htmlFor="lastName" className={labelClass}>{labels.lastName}</label>
           <input id="lastName" name="lastName" className={inputClass} />
         </div>
         <div>
-          <label htmlFor="email" className={labelClass}>
-            Email
-          </label>
+          <label htmlFor="email" className={labelClass}>{labels.email}</label>
           <input id="email" name="email" type="email" required className={inputClass} />
         </div>
         <div>
-          <label htmlFor="phone" className={labelClass}>
-            Phone
-          </label>
-          <input id="phone" name="phone" required placeholder="+9665..." className={inputClass} />
+          <label htmlFor="phone" className={labelClass}>{labels.phone}</label>
+          <input id="phone" name="phone" required placeholder={labels.phonePlaceholder} className={inputClass} />
         </div>
         <div>
           <label htmlFor="password" className={labelClass}>
@@ -73,7 +83,7 @@ export function UserCreateForm({
             Branch (employees and distributors — required for distributors)
           </label>
           <select id="branchId" name="branchId" defaultValue="" className={inputClass}>
-            <option value="">No branch</option>
+            <option value="">{labels.noBranch}</option>
             {branches.map((branch) => (
               <option key={branch.id} value={branch.id}>
                 {branch.name} ({branch.code})
@@ -105,7 +115,7 @@ export function UserCreateForm({
           disabled={isPending}
           className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {isPending ? "Creating…" : "Create account"}
+          {isPending ? labels.creating : labels.create}
         </button>
         {state.message ? (
           <p role={state.ok ? "status" : "alert"} className={["text-sm", state.ok ? "text-emerald-700" : "text-rose-700"].join(" ")}>

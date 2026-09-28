@@ -6,12 +6,19 @@ const ACCOUNT_STATUS_STYLES: Record<string, string> = {
   ARCHIVED: "bg-slate-100 text-slate-600 ring-slate-200",
 };
 
-export function AccountStatusBadge({ status }: { status: string }) {
+export function AccountStatusBadge({
+  status,
+  labels,
+}: {
+  status: string;
+  /** Translated labels; without them the raw status is shown. */
+  labels?: Record<string, string>;
+}) {
   const style = ACCOUNT_STATUS_STYLES[status] ?? "bg-slate-100 text-slate-700 ring-slate-200";
 
   return (
     <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${style}`}>
-      {status.charAt(0) + status.slice(1).toLowerCase()}
+      {labels?.[status] ?? status.charAt(0) + status.slice(1).toLowerCase()}
     </span>
   );
 }

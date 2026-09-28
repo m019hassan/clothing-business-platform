@@ -12,6 +12,7 @@ import {
 } from "@/modules/customers/application/customers";
 import type { CustomerListView } from "@/modules/customers/types";
 import { formatDate } from "@/src/lib/format";
+import { getInterfaceLanguage } from "@/src/lib/i18n/server";
 
 const PAGE_SIZE = 20;
 
@@ -33,6 +34,7 @@ function parseLimit(raw: string | undefined): number {
 
 export default async function CustomersPage({ searchParams }: CustomersPageProps) {
   const account = await getCurrentAccount();
+  const { t } = await getInterfaceLanguage();
 
   if (!account) {
     redirect("/login");
@@ -43,9 +45,9 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
   if (!permissions.has(PERMISSIONS.CUSTOMERS_VIEW)) {
     return (
       <section className="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center">
-        <p className="text-sm font-semibold text-slate-800">Customer access requires a staff role</p>
+        <p className="text-sm font-semibold text-slate-800">{t.customers.permissionTitle}</p>
         <p className="mt-1 text-sm text-slate-500">
-          Your account does not have the customers.view permission. Ask a manager to grant it.
+          {t.customers.permissionHint}
         </p>
         <Link
           href="/dashboard"
@@ -95,8 +97,8 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
   return (
     <div className="space-y-6">
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">Directory</p>
-        <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-950">Customers</h2>
+        <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">{t.customers.kicker}</p>
+        <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-950">{t.customers.title}</h2>
         <p className="mt-1 text-sm text-slate-600">
           Registered customers with their account status and order counts.
         </p>
@@ -113,7 +115,7 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
               name="q"
               type="search"
               defaultValue={params.q ?? ""}
-              placeholder="Name, customer code, email or phone"
+              placeholder={t.customers.searchPlaceholder}
               className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none ring-blue-500 focus:ring-2"
             />
           </div>
@@ -140,16 +142,16 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
 
       {loadError ? (
         <section className="rounded-2xl border border-rose-200 bg-rose-50 p-6">
-          <h3 className="text-sm font-semibold text-rose-800">Unable to load customers</h3>
+          <h3 className="text-sm font-semibold text-rose-800">{t.customers.loadErrorTitle}</h3>
           <p className="mt-1 text-sm text-rose-700">
-            The directory could not be retrieved right now. Please refresh the page to try again.
+            {t.customers.loadErrorBody}
           </p>
         </section>
       ) : customers.length === 0 ? (
         <section className="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center">
-          <p className="text-sm font-semibold text-slate-800">No customers found</p>
+          <p className="text-sm font-semibold text-slate-800">{t.customers.emptyTitle}</p>
           <p className="mt-1 text-sm text-slate-500">
-            {offset > 0 ? "You have reached the end of the directory." : "Try a different search term."}
+            {offset > 0 ? t.customers.emptyEnd : t.customers.emptyStart}
           </p>
         </section>
       ) : (
@@ -159,12 +161,12 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
               <table className="min-w-full divide-y divide-slate-200 text-sm">
                 <thead className="bg-slate-50 text-start text-xs font-semibold uppercase tracking-wide text-slate-500">
                   <tr>
-                    <th scope="col" className="px-6 py-3">Customer</th>
-                    <th scope="col" className="px-6 py-3">Contact</th>
-                    <th scope="col" className="px-6 py-3">Classification</th>
-                    <th scope="col" className="px-6 py-3">Status</th>
-                    <th scope="col" className="px-6 py-3 text-end">Orders</th>
-                    <th scope="col" className="px-6 py-3">Joined</th>
+                    <th scope="col" className="px-6 py-3">{t.common.customer}</th>
+                    <th scope="col" className="px-6 py-3">{t.customers.contact}</th>
+                    <th scope="col" className="px-6 py-3">{t.customers.classification}</th>
+                    <th scope="col" className="px-6 py-3">{t.common.status}</th>
+                    <th scope="col" className="px-6 py-3 text-end">{t.common.orders}</th>
+                    <th scope="col" className="px-6 py-3">{t.customers.joined}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -185,7 +187,7 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
                         </td>
                         <td className="px-6 py-4 text-slate-700">{customer.classificationName ?? "—"}</td>
                         <td className="px-6 py-4">
-                          <AccountStatusBadge status={customer.accountStatus} />
+                          <AccountStatusBadge status={customer.accountStatus} labels={t.accountStatus} />
                         </td>
                         <td className="px-6 py-4 text-end text-slate-700">{customer.orderCount}</td>
                         <td className="px-6 py-4 text-slate-600">{formatDate(customer.createdAt)}</td>
@@ -203,7 +205,8 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
                     {[customer.firstName, customer.lastName].filter(Boolean).join(" ")}
                   </Link>
                   <p className="mt-1 text-xs text-slate-500">
-                    {customer.customerCode} · {customer.orderCount} order{customer.orderCount === 1 ? "" : "s"}
+                    {customer.customerCode} · {customer.orderCount}{" "}
+                    {customer.orderCount === 1 ? t.customers.orderSingular : t.customers.orderPlural}
                   </p>
                   <p className="mt-1 text-sm text-slate-600">{customer.email ?? customer.phone}</p>
                 </li>
@@ -223,24 +226,20 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
                   href={`/customers?offset=${Math.max(offset - limit, 0)}&limit=${limit}${filters.search ? `&q=${encodeURIComponent(filters.search)}` : ""}`}
                   className="rounded-lg border border-slate-300 px-3 py-1.5 font-medium text-slate-700 transition-colors hover:bg-slate-100"
                 >
-                  Previous
+                  {t.common.previous}
                 </Link>
               ) : (
-                <span className="cursor-not-allowed rounded-lg border border-slate-200 px-3 py-1.5 text-slate-400">
-                  Previous
-                </span>
+                <span className="cursor-not-allowed rounded-lg border border-slate-200 px-3 py-1.5 text-slate-400">{t.common.previous}</span>
               )}
               {hasNext ? (
                 <Link
                   href={`/customers?offset=${offset + limit}&limit=${limit}${filters.search ? `&q=${encodeURIComponent(filters.search)}` : ""}`}
                   className="rounded-lg border border-slate-300 px-3 py-1.5 font-medium text-slate-700 transition-colors hover:bg-slate-100"
                 >
-                  Next
+                  {t.common.next}
                 </Link>
               ) : (
-                <span className="cursor-not-allowed rounded-lg border border-slate-200 px-3 py-1.5 text-slate-400">
-                  Next
-                </span>
+                <span className="cursor-not-allowed rounded-lg border border-slate-200 px-3 py-1.5 text-slate-400">{t.common.next}</span>
               )}
             </div>
           </section>
