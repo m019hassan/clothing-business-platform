@@ -14,7 +14,6 @@ import { prisma } from "@/src/lib/db";
 type TestAccount = NonNullable<SafeAccount>;
 
 let staff: TestAccount;
-let productId: string;
 let variantId: string;
 let warehouseId: string;
 const created = {
@@ -69,7 +68,6 @@ beforeEach(async () => {
   created.accountIds.push(staffRecord.id);
   created.productIds.push(product.id);
   created.variantIds.push(product.variants[0].id);
-  productId = product.id;
   variantId = product.variants[0].id;
   warehouseId = warehouse.id;
 
