@@ -10,6 +10,8 @@ import { CategoryManager } from "@/modules/catalog/components/category-manager";
 import { ProductForm } from "@/modules/catalog/components/product-form";
 import { VariantManager } from "@/modules/catalog/components/variant-manager";
 import { suggestSku } from "@/modules/catalog/application/identifiers";
+import { listProductImages } from "@/modules/catalog/application/product-images";
+import { ProductImagesManager } from "@/modules/catalog/components/product-images-manager";
 import { getInterfaceLanguage } from "@/src/lib/i18n/server";
 import type { ProductInventoryView } from "@/modules/catalog/types";
 import { NotFoundError } from "@/src/lib/errors";
@@ -60,6 +62,7 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
   }
 
   const categories = await listCategories({ includeInactive: true });
+  const productImages = await listProductImages(product.id);
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
@@ -165,6 +168,16 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
       </section>
 
       <CategoryManager categories={categories} labels={{ ...t.catalog.categories, saving: t.catalog.form.saving, slugHint: t.catalog.form.slugHint }} />
+
+        <ProductImagesManager
+          productId={product.id}
+          images={productImages}
+          variants={product.variants.map((variant) => ({
+            id: variant.id,
+            label: [variant.size, variant.color].filter(Boolean).join(" / ") || variant.sku,
+          }))}
+          labels={{ ...t.productImages, errors: t.errors }}
+        />
     </div>
   );
 }

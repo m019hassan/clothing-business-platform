@@ -299,6 +299,10 @@ requires `orders.cancel`; the other staff transitions are not implemented yet
 | POST | `/api/orders/:id/payment-simulation` | order owner, or staff with `payments.verify` | `{ order, payment }` |
 | GET | `/api/orders/:id/refund` | any authenticated account | `{ refunds }` |
 | POST | `/api/orders/:id/refund` | `payments.refund` | `{ order, refund }` |
+| GET | `/api/products/:id/images` | any signed-in account | `{ images }` |
+| POST | `/api/products/:id/images` | `products.update` | `{ image }` (multipart `file`, optional `variantId`) |
+| GET | `/api/products/images/:imageId` | any signed-in account | the stored photo |
+| DELETE | `/api/products/images/:imageId` | `products.update` | `{ ok: true }` |
 | GET | `/api/payments/:id/proof` | the order's customer, or staff with `payments.view` | the stored file |
 | POST | `/api/payments/:id/proof` | the order's customer, or staff with `payments.view` | `{ proof }` |
 
@@ -356,6 +360,16 @@ intact. An account with no history at all - a typo, for example - is deleted
 outright. Deleting your own account is refused, and so is removing the last active
 administrator. Employee fields (`jobTitle`, `departmentId`, `roleIds`) are updated
 through `PUT /api/users/:id`.
+
+## Product photos
+
+`POST /api/products/:id/images` stores a photo through the same storage layer as the
+payment receipts (JPEG/PNG/WebP, 5 MB, at most 12 per product); passing a
+`variantId` ties the photo to one colour, which is how the shop shows "the red
+version". `GET /api/products/images/:imageId` streams it back to any signed-in
+account, `DELETE` removes it, and both writes are audited
+(`PRODUCT_IMAGE_ADDED` / `PRODUCT_IMAGE_REMOVED`). The product page renders a gallery
+and the edit page hosts the upload/remove manager.
 
 ## Clothing products
 

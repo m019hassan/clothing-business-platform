@@ -12,6 +12,7 @@ import { getProductInventory } from "@/modules/catalog/application/products";
 import type { ProductInventoryView } from "@/modules/catalog/types";
 import { NotFoundError } from "@/src/lib/errors";
 import { formatDate, formatMoney, formatVariantAttributes, variantLabel } from "@/src/lib/format";
+import { listProductImages } from "@/modules/catalog/application/product-images";
 import { getInterfaceLanguage } from "@/src/lib/i18n/server";
 
 type ProductDetailProps = {
@@ -71,6 +72,8 @@ export default async function ProductDetailPage({ params }: ProductDetailProps) 
   const totalOnHand = product.variants.reduce((sum, variant) => sum + variant.quantityOnHand, 0);
   const totalReserved = product.variants.reduce((sum, variant) => sum + variant.quantityReserved, 0);
   const totalAvailable = totalOnHand - totalReserved;
+
+  const productImages = await listProductImages(product.id);
 
   return (
     <div className="space-y-6">
@@ -152,6 +155,24 @@ export default async function ProductDetailPage({ params }: ProductDetailProps) 
       </section>
 
       {/* Inventory summary */}
+      {productImages.length > 0 ? (
+        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h3 className="text-base font-semibold text-slate-900">{t.productImages.gallery}</h3>
+          <ul className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {productImages.map((image) => (
+              <li key={image.id} className="overflow-hidden rounded-xl border border-slate-200">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={`/api/products/images/${image.id}`}
+                  alt={image.originalName}
+                  className="h-40 w-full bg-slate-50 object-cover"
+                />
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <p className="text-sm font-medium text-slate-500">{t.catalog.detail.onHand}</p>
