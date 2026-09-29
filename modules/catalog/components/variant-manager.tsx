@@ -45,11 +45,13 @@ function VariantEditRow({
   productId,
   variant,
   colors,
+  sizes,
   labels,
   statusLabels,
 }: {
   productId: string;
   colors: string[];
+  sizes: { label: string; ageLabel: string }[];
   variant: VariantRow;
   labels: VariantLabels;
   statusLabels: Record<string, string>;
@@ -68,7 +70,14 @@ function VariantEditRow({
       <form action={formAction} className="contents">
         <input type="hidden" name="productId" value={productId} />
         <input type="hidden" name="variantId" value={variant.id} />
-        <input name="size" defaultValue={variant.size ?? ""} placeholder={labels.sizePlaceholder} aria-label={`${labels.ariaSize} ${variant.sku}`} className={inputClass} />
+        <select name="size" defaultValue={variant.size ?? ""} aria-label={`${labels.ariaSize} ${variant.sku}`} className={inputClass}>
+          <option value="">{labels.sizePlaceholder}</option>
+          {sizes.map((size) => (
+            <option key={size.label} value={size.label}>
+              {size.label} — {size.ageLabel}
+            </option>
+          ))}
+        </select>
         <select name="color" defaultValue={variant.color ?? ""} aria-label={`${labels.ariaColor} ${variant.sku}`} className={inputClass}>
           <option value="">{labels.colorPlaceholder}</option>
           {colors.map((color) => (
@@ -133,6 +142,7 @@ export function VariantManager({
   productId,
   variants,
   colors,
+  sizes,
   labels,
   newLabels,
   statusLabels,
@@ -141,6 +151,7 @@ export function VariantManager({
   productId: string;
   variants: VariantRow[];
   colors: string[];
+  sizes: { label: string; ageLabel: string }[];
   suggestedSku: string;
   labels: VariantLabels;
   newLabels: {
@@ -168,6 +179,16 @@ export function VariantManager({
   // Existing variants may carry a colour typed before the library existed, so the row
   // selects offer the library plus the product's own values; the new-variant form
   // offers the library only.
+  // Same idea for sizes: the library plus the product's own values.
+  const rowSizes = (() => {
+    const known = new Map(sizes.map((size) => [size.label, size]));
+    const extras = variants
+      .map((variant) => variant.size)
+      .filter((size): size is string => Boolean(size) && !known.has(size as string));
+
+    return [...sizes, ...extras.map((label) => ({ label, ageLabel: "" }))];
+  })();
+
   const rowColors = Array.from(
     new Set([...colors, ...variants.map((variant) => variant.color).filter((color): color is string => Boolean(color))]),
   );
@@ -184,6 +205,7 @@ export function VariantManager({
               productId={productId}
               variant={variant}
               colors={rowColors}
+              sizes={rowSizes}
               labels={labels}
               statusLabels={statusLabels}
             />
@@ -202,7 +224,14 @@ export function VariantManager({
             aria-label={newLabels.newSku}
             className={inputClass}
           />
-          <input name="size" placeholder={newLabels.sizePlaceholder} aria-label={newLabels.newSize} className={inputClass} />
+          <select name="size" required aria-label={newLabels.newSize} className={inputClass}>
+            <option value="">{newLabels.sizePlaceholder}</option>
+            {sizes.map((size) => (
+              <option key={size.label} value={size.label}>
+                {size.label} — {size.ageLabel}
+              </option>
+            ))}
+          </select>
           <select name="color" required aria-label={newLabels.newColor} className={inputClass}>
             <option value="">{newLabels.colorPlaceholder}</option>
             {colors.map((color) => (

@@ -314,6 +314,15 @@ enum CartStatus {
   ABANDONED
 }
 
+model SizeOption {
+  id        String   @id @default(uuid())
+  label     String   @unique
+  ageLabel  String
+  createdAt DateTime @default(now())
+
+  @@map("size_options")
+}
+
 model ColorOption {
   id        String   @id @default(uuid())
   name      String   @unique

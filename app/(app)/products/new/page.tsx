@@ -6,6 +6,7 @@ import { PERMISSIONS } from "@/modules/auth/application/permissions";
 import { getCurrentAccount } from "@/modules/auth/infrastructure/session";
 import { listCategories } from "@/modules/catalog/application/categories";
 import { listColorOptions } from "@/modules/catalog/application/colors";
+import { listSizeOptions } from "@/modules/catalog/application/sizes";
 import { ProductForm } from "@/modules/catalog/components/product-form";
 import { getInterfaceLanguage } from "@/src/lib/i18n/server";
 
@@ -38,6 +39,7 @@ export default async function NewProductPage() {
 
   const categories = await listCategories({ includeInactive: true });
   const colors = await listColorOptions();
+  const sizes = await listSizeOptions();
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -54,6 +56,7 @@ export default async function NewProductPage() {
           mode="create"
           categories={categories}
           colors={colors}
+          sizes={sizes}
           labels={{ ...t.catalog.form, status: t.common.status, category: t.catalog.category }}
           statusLabels={t.catalog.statusLabels}
         />

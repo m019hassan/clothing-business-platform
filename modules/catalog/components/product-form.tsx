@@ -40,6 +40,7 @@ export type ProductFormLabels = {
   optionalVariant: string;
   priceOverride: string;
   chooseColor: string;
+  chooseSize: string;
   material: string;
   variantsTitle: string;
   variantsHint: string;
@@ -63,6 +64,7 @@ export function ProductForm({
   product,
   categories,
   colors,
+  sizes,
   labels,
   statusLabels,
 }: {
@@ -70,6 +72,7 @@ export function ProductForm({
   product?: ProductFormValues;
   categories: { id: string; name: string; isActive: boolean }[];
   colors: { id: string; name: string }[];
+  sizes: { id: string; label: string; ageLabel: string }[];
   labels: ProductFormLabels;
   statusLabels: Record<string, string>;
 }) {
@@ -204,12 +207,20 @@ export function ProductForm({
               <div key={row.key} className="grid grid-cols-1 items-end gap-3 rounded-lg bg-slate-50 p-3 sm:grid-cols-5">
                 <label className="block">
                   <span className="mb-1 block text-xs font-medium text-slate-600">{labels.size}</span>
-                  <input
+                  <select
                     value={row.size}
                     onChange={(event) => updateRow(index, { size: event.target.value })}
-                    placeholder="10"
+                    required
+                    aria-label={labels.size}
                     className={inputClass}
-                  />
+                  >
+                    <option value="">{labels.chooseSize}</option>
+                    {sizes.map((size) => (
+                      <option key={size.id} value={size.label}>
+                        {size.label} — {size.ageLabel}
+                      </option>
+                    ))}
+                  </select>
                 </label>
                 <label className="block">
                   <span className="mb-1 block text-xs font-medium text-slate-600">{labels.color}</span>

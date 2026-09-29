@@ -6,6 +6,7 @@ import { PERMISSIONS } from "@/modules/auth/application/permissions";
 import { getCurrentAccount } from "@/modules/auth/infrastructure/session";
 import { listCategories } from "@/modules/catalog/application/categories";
 import { listColorOptions } from "@/modules/catalog/application/colors";
+import { listSizeOptions } from "@/modules/catalog/application/sizes";
 import { getProductInventory } from "@/modules/catalog/application/products";
 import { CategoryManager } from "@/modules/catalog/components/category-manager";
 import { ProductForm } from "@/modules/catalog/components/product-form";
@@ -64,6 +65,7 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
 
   const categories = await listCategories({ includeInactive: true });
   const colors = await listColorOptions();
+  const sizes = await listSizeOptions();
   const productImages = await listProductImages(product.id);
 
   return (
@@ -99,6 +101,7 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
             mode="edit"
             categories={categories}
             colors={colors}
+          sizes={sizes}
             labels={{ ...t.catalog.form, status: t.common.status, category: t.catalog.category }}
             statusLabels={t.catalog.statusLabels}
             product={{
@@ -124,6 +127,7 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
           <VariantManager
             productId={product.id}
             colors={colors.map((color) => color.name)}
+            sizes={sizes.map((size) => ({ label: size.label, ageLabel: size.ageLabel }))}
             suggestedSku={suggestSku(product.slug)}
             labels={{
               saving: t.catalog.form.saving,

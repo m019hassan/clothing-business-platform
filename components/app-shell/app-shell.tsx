@@ -32,6 +32,7 @@ const NAV_ITEMS = [
 const PRODUCT_SUB_ITEMS = [
   { href: "/products/categories", key: "productCategories" },
   { href: "/products/colors", key: "productColors" },
+  { href: "/products/sizes", key: "productSizes" },
 ] as const;
 
 /** Links shown indented under the admin entry. */
