@@ -18,10 +18,15 @@ type ErrorPayload = {
 };
 
 export async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
+  // A FormData body must keep the browser's own content type: it carries the
+  // multipart boundary, and forcing application/json makes the server unable to
+  // parse the upload.
+  const isFormData = typeof FormData !== "undefined" && init?.body instanceof FormData;
+
   const response = await fetch(path, {
     ...init,
     headers: {
-      ...(init?.body ? { "Content-Type": "application/json" } : {}),
+      ...(init?.body && !isFormData ? { "Content-Type": "application/json" } : {}),
       ...(init?.headers ?? {}),
     },
   });
