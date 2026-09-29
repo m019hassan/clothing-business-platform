@@ -29,6 +29,7 @@ export const PERMISSIONS = {
   PAYMENTS_APPROVE: "payments.approve",
   PAYMENTS_REJECT: "payments.reject",
   PAYMENTS_REFUND: "payments.refund",
+  AUDIT_VIEW: "audit.view",
 } as const;
 
 export type PermissionCode = (typeof PERMISSIONS)[keyof typeof PERMISSIONS] | (string & {});

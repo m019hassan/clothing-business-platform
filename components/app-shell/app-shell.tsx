@@ -26,6 +26,7 @@ const NAV_ITEMS = [
   { href: "/customers", key: "customers", customerOnly: false, requiresCustomers: true },
   { href: "/employees", key: "employees", customerOnly: false, requiresEmployees: true },
   { href: "/roles", key: "roles", customerOnly: false, requiresRoles: true },
+  { href: "/audit", key: "audit", customerOnly: false, requiresAudit: true },
 ] as const;
 
 function NavIcon({ href }: { href: string }) {
@@ -183,6 +184,7 @@ function SidebarContent({
   canViewShipping,
   canViewUsers,
   canViewRoles,
+  canViewAudit,
   canViewReports,
   onNavigate,
 }: {
@@ -199,6 +201,7 @@ function SidebarContent({
   canViewShipping: boolean;
   canViewUsers: boolean;
   canViewRoles: boolean;
+  canViewAudit: boolean;
   canViewReports: boolean;
   onNavigate?: () => void;
 }) {
@@ -236,6 +239,10 @@ function SidebarContent({
     }
 
     if ("requiresRoles" in item && item.requiresRoles && !canViewRoles) {
+      return false;
+    }
+
+    if ("requiresAudit" in item && item.requiresAudit && !canViewAudit) {
       return false;
     }
 
@@ -322,6 +329,7 @@ export function AppShell({
   canViewShipping,
   canViewUsers,
   canViewRoles,
+  canViewAudit,
   canViewReports,
   children,
 }: {
@@ -338,6 +346,7 @@ export function AppShell({
   canViewShipping: boolean;
   canViewUsers: boolean;
   canViewRoles: boolean;
+  canViewAudit: boolean;
   canViewReports: boolean;
   children: ReactNode;
 }) {
@@ -363,6 +372,7 @@ export function AppShell({
           canViewUsers={canViewUsers}
           isDistributor={isDistributor}
           canViewRoles={canViewRoles}
+          canViewAudit={canViewAudit}
           canViewReports={canViewReports}
         />
       </aside>
@@ -390,6 +400,7 @@ export function AppShell({
               canViewUsers={canViewUsers}
               isDistributor={isDistributor}
               canViewRoles={canViewRoles}
+          canViewAudit={canViewAudit}
               canViewReports={canViewReports}
               onNavigate={() => setMobileOpen(false)}
             />
