@@ -18,7 +18,7 @@ import {
   reserveStock,
   type TransactionClient,
 } from "@/modules/inventory/application/reservations";
-import { isUuid } from "@/src/lib/validation";
+import { isUuid, normalizeDigits } from "@/src/lib/validation";
 
 const MAX_LINE_QUANTITY = 999;
 
@@ -66,7 +66,7 @@ export function parseQuantityInput(value: unknown): number {
   }
 
   if (typeof value === "string" && value.trim() !== "") {
-    return Number(value);
+    return Number(normalizeDigits(value).trim());
   }
 
   return Number.NaN;

@@ -2,6 +2,8 @@
  * Pure FormData -> service payload mapper for the inventory screens, so the
  * translation stays free of database access and can be unit tested.
  */
+import { normalizeDigits } from "@/src/lib/validation";
+
 export function adjustmentFormToPayload(formData: FormData): Record<string, unknown> {
   const variantId = formData.get("variantId");
   const quantityChange = formData.get("quantityChange");
@@ -11,7 +13,7 @@ export function adjustmentFormToPayload(formData: FormData): Record<string, unkn
   const payload: Record<string, unknown> = {
     variantId: typeof variantId === "string" ? variantId : "",
     quantityChange: typeof quantityChange === "string" && quantityChange.trim() !== ""
-      ? Number(quantityChange.trim())
+      ? Number(normalizeDigits(quantityChange).trim())
       : Number.NaN,
   };
 

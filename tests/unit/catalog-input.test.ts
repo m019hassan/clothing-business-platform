@@ -8,6 +8,32 @@ import { parseProductListFilters } from "@/modules/catalog/application/products"
 
 const CATEGORY_ID = "11111111-2222-4333-8444-555555555555";
 
+describe("Arabic-Indic digits in numeric fields", () => {
+  it("accepts a price typed as ١٠٠ and stores 100.00", () => {
+    const input = parseProductWriteInput(
+      { name: "Arabic Price", basePrice: "١٠٠", categoryId: CATEGORY_ID },
+      { partial: false },
+    );
+
+    expect(input.basePrice).toBe("100.00");
+  });
+
+  it("accepts an Arabic decimal price", () => {
+    const input = parseProductWriteInput(
+      { name: "Arabic Decimal", basePrice: "١٢٫٥٠", categoryId: CATEGORY_ID },
+      { partial: false },
+    );
+
+    expect(input.basePrice).toBe("12.50");
+  });
+
+  it("accepts a variant quantity typed as ٢٥", () => {
+    const input = parseVariantWriteInput({ sku: "ARABIC-25", quantity: "٢٥" }, { partial: false });
+
+    expect(input.quantity).toBe(25);
+  });
+});
+
 describe("parseProductWriteInput", () => {
   const valid = {
     name: "Linen Shirt",

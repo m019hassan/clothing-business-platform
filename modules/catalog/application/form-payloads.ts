@@ -7,6 +7,7 @@
  */
 
 import { ValidationError } from "@/src/lib/errors";
+import { normalizeDigits } from "@/src/lib/validation";
 
 function text(formData: FormData, key: string): string | null {
   const value = formData.get(key);
@@ -67,7 +68,8 @@ export function productFormToPayload(
 
             if (typeof entry.size === "string" && entry.size.trim()) variant.size = entry.size.trim();
             if (typeof entry.color === "string" && entry.color.trim()) variant.color = entry.color.trim();
-            if (entry.quantity !== undefined && entry.quantity !== "") variant.quantity = Number(entry.quantity);
+            if (entry.quantity !== undefined && entry.quantity !== "")
+              variant.quantity = Number(normalizeDigits(String(entry.quantity)).trim());
             if (typeof entry.price === "string" && entry.price.trim()) variant.priceOverride = entry.price.trim();
 
             return variant;

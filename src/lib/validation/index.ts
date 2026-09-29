@@ -11,6 +11,22 @@ export type Pagination = {
   offset: number;
 };
 
+const ARABIC_INDIC_DIGITS = "٠١٢٣٤٥٦٧٨٩";
+const EXTENDED_ARABIC_INDIC_DIGITS = "۰۱۲۳۴۵۶۷۸۹";
+
+/**
+ * Rewrites Arabic-Indic digits as Latin ones, so a price typed as ١٠٠ is read as
+ * 100 instead of being refused. The Arabic decimal separator becomes a dot and the
+ * thousands separators are dropped, so ١٬٢٣٤٫٥ reads as 1234.5.
+ */
+export function normalizeDigits(value: string): string {
+  return value
+    .replace(/[٠-٩]/g, (digit) => String(ARABIC_INDIC_DIGITS.indexOf(digit)))
+    .replace(/[۰-۹]/g, (digit) => String(EXTENDED_ARABIC_INDIC_DIGITS.indexOf(digit)))
+    .replace(/\u066b/g, ".")
+    .replace(/[\u066c,\u060c]/g, "");
+}
+
 export function isUuid(value: string): boolean {
   return UUID_PATTERN.test(value);
 }

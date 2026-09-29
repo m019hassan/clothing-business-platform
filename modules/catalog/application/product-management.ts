@@ -14,7 +14,7 @@ import {
   ValidationError,
   withDatabaseError,
 } from "@/src/lib/errors";
-import { isUuid } from "@/src/lib/validation";
+import { isUuid, normalizeDigits } from "@/src/lib/validation";
 import { autoSlug, autoSku } from "@/modules/catalog/application/identifiers";
 import { applyOpeningBalance } from "@/modules/inventory/application/opening-balance";
 import { resolveStockingWarehouseId } from "@/modules/inventory/application/movements";
@@ -119,7 +119,7 @@ function parseMoney(value: unknown, field: string): string {
     typeof value === "number"
       ? String(value)
       : typeof value === "string"
-        ? value.trim()
+        ? normalizeDigits(value).trim()
         : "";
 
   if (raw === "" || !/^\d+(\.\d{1,2})?$/.test(raw)) {
@@ -328,7 +328,9 @@ export function parseVariantWriteInput(
       throw new ValidationError("quantity can only be set when a variant is created.");
     }
 
-    const quantity = Number(body.quantity);
+    const quantity = Number(
+      typeof body.quantity === "string" ? normalizeDigits(body.quantity).trim() : body.quantity,
+    );
 
     if (!Number.isInteger(quantity) || quantity < 0 || quantity > 1_000_000) {
       throw new ValidationError("quantity must be a whole number between 0 and 1000000.");
