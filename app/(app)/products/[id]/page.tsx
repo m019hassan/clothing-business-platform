@@ -12,6 +12,7 @@ import { getProductInventory } from "@/modules/catalog/application/products";
 import type { ProductInventoryView } from "@/modules/catalog/types";
 import { NotFoundError } from "@/src/lib/errors";
 import { formatDate, formatMoney, formatVariantAttributes, variantLabel } from "@/src/lib/format";
+import { ImageViewer } from "@/components/products/image-viewer";
 import { listProductImages } from "@/modules/catalog/application/product-images";
 import { getInterfaceLanguage } from "@/src/lib/i18n/server";
 
@@ -159,14 +160,20 @@ export default async function ProductDetailPage({ params }: ProductDetailProps) 
         <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <h3 className="text-base font-semibold text-slate-900">{t.productImages.gallery}</h3>
           <ul className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-            {productImages.map((image) => (
+            {productImages.map((image, position) => (
               <li key={image.id} className="overflow-hidden rounded-xl border border-slate-200">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={`/api/products/images/${image.id}`}
-                  alt={image.originalName}
-                  className="h-40 w-full bg-slate-50 object-cover"
-                />
+                <div className="flex h-40 items-center justify-center bg-slate-50">
+                  <ImageViewer
+                    size="large"
+                    imageIds={productImages.map((entry) => entry.id)}
+                    startIndex={position}
+                    alt={image.originalName}
+                    viewLabel={t.productImages.view}
+                    closeLabel={t.productImages.close}
+                    previousLabel={t.common.previous}
+                    nextLabel={t.common.next}
+                  />
+                </div>
               </li>
             ))}
           </ul>

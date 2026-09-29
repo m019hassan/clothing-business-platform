@@ -150,6 +150,18 @@ describe("product photos", () => {
     expect((await listProductImages(productId)).map((image) => image.id)).toEqual([second.id]);
   });
 
+  it("reports every photo id on the product list for the slider", async () => {
+    const first = await addProductImage(staff, productId, { data: PNG, contentType: "image/png", originalName: "a.png" });
+    const second = await addProductImage(staff, productId, { data: PNG, contentType: "image/jpeg", originalName: "b.jpg" });
+
+    const { listProducts } = await import("@/modules/catalog/application/products");
+    const rows = await listProducts({ limit: 50, offset: 0 }, { search: "Vitest Images" });
+    const row = rows.find((entry) => entry.id === productId);
+
+    expect(row?.imageId).toBe(first.id);
+    expect(row?.imageIds).toEqual([first.id, second.id]);
+  });
+
   it("refuses a file that is not an image", async () => {
     await expect(
       addProductImage(staff, productId, { data: PNG, contentType: "application/pdf", originalName: "x.pdf" }),

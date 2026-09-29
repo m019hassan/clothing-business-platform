@@ -28,6 +28,8 @@ export type ProductInventoryView = {
   categoryName: string | null;
   /** The first photo, shown as a thumbnail in lists. */
   imageId: string | null;
+  /** Every photo of the product, in display order, for the slider. */
+  imageIds: string[];
   createdAt: string;
   updatedAt: string;
   variants: ProductInventoryVariantView[];
@@ -45,6 +47,8 @@ export type ProductView = {
   categoryName: string | null;
   /** The first photo, shown as a thumbnail in lists. */
   imageId: string | null;
+  /** Every photo of the product, in display order, for the slider. */
+  imageIds: string[];
   variants: ProductVariantView[];
 };
 

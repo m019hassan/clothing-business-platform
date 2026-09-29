@@ -276,10 +276,12 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                       <div className="flex items-center gap-3">
                         {product.imageId ? (
                           <ImageViewer
-                            imageId={product.imageId}
+                            imageIds={product.imageIds}
                             alt={product.name}
                             viewLabel={t.productImages.view}
                             closeLabel={t.productImages.close}
+                            previousLabel={t.common.previous}
+                            nextLabel={t.common.next}
                           />
                         ) : (
                           <span className="flex h-[50px] w-[50px] shrink-0 items-center justify-center rounded-lg border border-dashed border-slate-200 text-[10px] text-slate-400">
@@ -334,10 +336,12 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                   <div className="flex min-w-0 items-center gap-3">
                     {product.imageId ? (
                       <ImageViewer
-                        imageId={product.imageId}
+                        imageIds={product.imageIds}
                         alt={product.name}
                         viewLabel={t.productImages.view}
                         closeLabel={t.productImages.close}
+                        previousLabel={t.common.previous}
+                        nextLabel={t.common.next}
                       />
                     ) : null}
                     <div className="min-w-0">

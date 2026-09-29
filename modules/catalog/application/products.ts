@@ -30,7 +30,7 @@ export const productSelection = {
   basePrice: true,
   currency: true,
   category: { select: { name: true } },
-  images: { orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }], take: 1, select: { id: true } },
+  images: { orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }], select: { id: true } },
   variants: {
     where: { status: ProductStatus.ACTIVE },
     orderBy: { sku: "asc" },
@@ -68,6 +68,7 @@ export function mapProduct(product: ProductRecord): ProductView {
     currency: product.currency,
     categoryName: product.category?.name ?? null,
     imageId: product.images?.[0]?.id ?? null,
+    imageIds: (product.images ?? []).map((image) => image.id),
     variants: product.variants.map((variant) => ({
       id: variant.id,
       sku: variant.sku,
@@ -255,7 +256,7 @@ export async function getProductInventory(
         updatedAt: true,
         categoryId: true,
         category: { select: { name: true } },
-        images: { orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }], take: 1, select: { id: true } },
+        images: { orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }], select: { id: true } },
         variants: {
           orderBy: { sku: "asc" },
           select: {
@@ -290,6 +291,7 @@ export async function getProductInventory(
     categoryId: product.categoryId,
     categoryName: product.category?.name ?? null,
     imageId: product.images?.[0]?.id ?? null,
+    imageIds: (product.images ?? []).map((image) => image.id),
     createdAt: product.createdAt.toISOString(),
     updatedAt: product.updatedAt.toISOString(),
     variants: product.variants.map((variant) => {
