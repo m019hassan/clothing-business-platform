@@ -852,12 +852,12 @@ export const en = {
     },
     statusOptions: {
       sellable: "Sellable only",
-      active: "Active",
+      active: "Sellable",
       draft: "Draft",
       archived: "Archived",
     },
     statusLabels: {
-      ACTIVE: "Active",
+      ACTIVE: "Sellable",
       DRAFT: "Draft",
       ARCHIVED: "Archived",
     },

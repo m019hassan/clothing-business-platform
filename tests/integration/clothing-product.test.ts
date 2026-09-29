@@ -102,6 +102,18 @@ describe("adding a clothing product with its sizes, colours and stock", () => {
     expect(product.material).toBe("قطن");
     expect(product.variants).toHaveLength(4);
 
+    // Rows inherit the product's status, so an ACTIVE garment is sellable at once
+    // and the catalog's default "sellable" filter can see it.
+    const statuses = new Set(
+      (
+        await prisma.productVariant.findMany({
+          where: { id: { in: product.variants.map((variant) => variant.id) } },
+          select: { status: true },
+        })
+      ).map((variant) => variant.status),
+    );
+    expect([...statuses]).toEqual(["ACTIVE"]);
+
     const summary = product.variants
       .map((variant) => `${variant.size}/${variant.color}/${variant.availableQuantity}/${variant.priceOverride}`)
       .sort();

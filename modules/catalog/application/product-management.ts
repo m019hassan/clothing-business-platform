@@ -424,7 +424,9 @@ export async function createProduct(
                   size: variant.size ?? null,
                   color: variant.color ?? null,
                   priceOverride: variant.priceOverride ? new Prisma.Decimal(variant.priceOverride) : null,
-                  status: variant.status ?? ProductStatus.DRAFT,
+                  // Rows inherit the product's status: an ACTIVE garment arrives
+                  // sellable, and a draft product stays fully draft.
+                  status: variant.status ?? input.status ?? ProductStatus.DRAFT,
                 })),
               }
             : undefined,

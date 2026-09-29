@@ -848,12 +848,12 @@ export const ar: Dictionary = {
     },
     statusOptions: {
       sellable: "القابل للبيع فقط",
-      active: "نشط",
+      active: "قابل للبيع",
       draft: "مسودة",
       archived: "مؤرشف",
     },
     statusLabels: {
-      ACTIVE: "نشط",
+      ACTIVE: "قابل للبيع",
       DRAFT: "مسودة",
       ARCHIVED: "مؤرشف",
     },
