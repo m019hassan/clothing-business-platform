@@ -14,6 +14,7 @@ export const ar: Dictionary = {
     pos: "نقطة البيع",
     admin: "الإدارة",
     productColors: "الألوان",
+    productCategories: "التصنيفات",
     adminAccounts: "الحسابات",
     adminBranches: "الفروع",
     deliveries: "التوصيلات",

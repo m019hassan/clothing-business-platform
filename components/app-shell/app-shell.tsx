@@ -29,7 +29,10 @@ const NAV_ITEMS = [
 ] as const;
 
 /** Links shown indented under the products entry. */
-const PRODUCT_SUB_ITEMS = [{ href: "/products/colors", key: "productColors" }] as const;
+const PRODUCT_SUB_ITEMS = [
+  { href: "/products/categories", key: "productCategories" },
+  { href: "/products/colors", key: "productColors" },
+] as const;
 
 /** Links shown indented under the admin entry. */
 const ADMIN_SUB_ITEMS = [

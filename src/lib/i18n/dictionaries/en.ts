@@ -13,6 +13,7 @@ export const en = {
     pos: "Point of sale",
     admin: "Admin",
     productColors: "Colours",
+    productCategories: "Categories",
     adminAccounts: "Accounts",
     adminBranches: "Branches",
     deliveries: "Deliveries",

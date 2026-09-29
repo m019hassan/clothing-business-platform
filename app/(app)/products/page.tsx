@@ -5,7 +5,6 @@ import { ProductStatusBadge } from "@/components/products/product-status-badge";
 import { getCurrentPermissions } from "@/modules/auth/application/authorization";
 import { PERMISSIONS } from "@/modules/auth/application/permissions";
 import { listCategories } from "@/modules/catalog/application/categories";
-import { CategoryManager } from "@/modules/catalog/components/category-manager";
 import {
   countProducts,
   listProducts,
@@ -415,7 +414,6 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
         </>
       )}
 
-      {canCreate ? <CategoryManager categories={categories} labels={{ ...t.catalog.categories, saving: t.catalog.form.saving, slugHint: t.catalog.form.slugHint }} /> : null}
     </div>
   );
 }
