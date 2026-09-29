@@ -14,6 +14,7 @@ export type PosLabels = {
   completeSaleCash: string;
   recording: string;
   newSale: string;
+  openInvoice: string;
   saleCompleted: string;
   onlyAvailable: string;
   addToSale: string;

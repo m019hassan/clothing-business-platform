@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 import { useMemo, useState } from "react";
 
 import type { PosLabels } from "@/modules/pos/components/pos-labels";
@@ -126,13 +128,21 @@ export function PosTerminal({
               </li>
             ))}
           </ul>
-          <button
-            type="button"
-            onClick={() => setReceipt(null)}
-            className="mt-5 rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-slate-700"
-          >
-            {labels.newSale}
-          </button>
+          <div className="mt-5 flex flex-wrap items-center gap-3">
+            <Link
+              href={`/pos/sales/${receipt.orderId}`}
+              className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-slate-700"
+            >
+              {labels.openInvoice}
+            </Link>
+            <button
+              type="button"
+              onClick={() => setReceipt(null)}
+              className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+            >
+              {labels.newSale}
+            </button>
+          </div>
         </div>
       </div>
     );

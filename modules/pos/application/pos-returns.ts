@@ -411,3 +411,109 @@ export async function listPosSales(account: AuthenticatedAccount, limit = 25): P
   });
 }
 
+
+export type PosInvoiceLine = {
+  orderItemId: string;
+  sku: string;
+  productName: string;
+  size: string | null;
+  color: string | null;
+  quantity: number;
+  returnedQuantity: number;
+  unitPrice: string;
+  lineTotal: string;
+};
+
+export type PosInvoiceView = {
+  orderId: string;
+  orderNumber: string;
+  createdAt: string;
+  status: string;
+  currency: string;
+  totalAmount: string;
+  refundedAmount: string;
+  soldUnits: number;
+  returnedUnits: number;
+  branchCode: string;
+  branchName: string;
+  soldBy: string;
+  paymentMethod: string | null;
+  paymentStatus: string | null;
+  lines: PosInvoiceLine[];
+};
+
+/** Every detail of one counter sale, for the invoice page. */
+export async function getPosSaleDetail(
+  account: AuthenticatedAccount,
+  orderId: string,
+): Promise<PosInvoiceView> {
+  const distributor = requireDistributor(account);
+
+  if (!isUuid(orderId)) {
+    throw new NotFoundError("The sale was not found.");
+  }
+
+  const order = await prisma.order.findFirst({
+    where: { id: orderId, channel: OrderChannel.POS },
+    select: {
+      id: true,
+      orderNumber: true,
+      createdAt: true,
+      status: true,
+      totalAmount: true,
+      currency: true,
+      branchId: true,
+      branch: { select: { code: true, name: true } },
+      soldBy: { select: { email: true, phone: true } },
+      refunds: { select: { amount: true } },
+      payments: { orderBy: { createdAt: "asc" }, select: { method: true, status: true } },
+      items: {
+        orderBy: { createdAt: "asc" },
+        select: {
+          id: true,
+          quantity: true,
+          returnedQuantity: true,
+          unitPrice: true,
+          variant: { select: { sku: true, size: true, color: true, product: { select: { name: true } } } },
+        },
+      },
+    },
+  });
+
+  if (!order || order.branchId !== distributor.branchId || !order.branch) {
+    throw new NotFoundError("The sale was not found.");
+  }
+
+  const refunded = order.refunds.reduce((sum, refund) => sum.add(refund.amount), new Prisma.Decimal(0));
+  const soldUnits = order.items.reduce((sum, item) => sum + item.quantity, 0);
+  const returnedUnits = order.items.reduce((sum, item) => sum + item.returnedQuantity, 0);
+  const payment = order.payments[0] ?? null;
+
+  return {
+    orderId: order.id,
+    orderNumber: order.orderNumber,
+    createdAt: order.createdAt.toISOString(),
+    status: order.status,
+    currency: order.currency,
+    totalAmount: order.totalAmount.toFixed(2),
+    refundedAmount: refunded.toFixed(2),
+    soldUnits,
+    returnedUnits,
+    branchCode: order.branch.code,
+    branchName: order.branch.name,
+    soldBy: order.soldBy?.email ?? order.soldBy?.phone ?? "",
+    paymentMethod: payment?.method ?? null,
+    paymentStatus: payment?.status ?? null,
+    lines: order.items.map((item) => ({
+      orderItemId: item.id,
+      sku: item.variant.sku,
+      productName: item.variant.product.name,
+      size: item.variant.size,
+      color: item.variant.color,
+      quantity: item.quantity,
+      returnedQuantity: item.returnedQuantity,
+      unitPrice: item.unitPrice.toFixed(2),
+      lineTotal: item.unitPrice.mul(item.quantity).toFixed(2),
+    })),
+  };
+}

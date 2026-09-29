@@ -10,7 +10,7 @@ import { Prisma } from "@prisma/client";
 
 import type { SafeAccount } from "@/modules/auth/infrastructure/session";
 import { getDistributorDashboard } from "@/modules/pos/application/pos-dashboard";
-import { listPosSales, returnPosSale, voidPosSale } from "@/modules/pos/application/pos-returns";
+import { getPosSaleDetail, listPosSales, returnPosSale, voidPosSale } from "@/modules/pos/application/pos-returns";
 import { createPosSale, getPosCatalog, parsePosSaleInput } from "@/modules/pos/application/pos-sales";
 import { prisma } from "@/src/lib/db";
 
@@ -439,5 +439,40 @@ describe("counter-sale returns", () => {
     } as unknown as TestAccount;
 
     await expect(voidPosSale(other, receipt.orderId)).rejects.toMatchObject({ statusCode: 404 });
+  });
+});
+
+describe("pos invoice detail", () => {
+  it("returns every line with size, colour, quantities and money", async () => {
+    const receipt = await createPosSale(distributor, { items: [{ variantId: variantA, quantity: 1 }] });
+    const invoice = await getPosSaleDetail(distributor, receipt.orderId);
+
+    expect(invoice.orderNumber).toBe(receipt.orderNumber);
+    expect(invoice.branchCode).toBeTruthy();
+    expect(invoice.soldBy).toContain("vitest-pos-");
+    expect(invoice.paymentMethod).toBe("CASH");
+    expect(invoice.soldUnits).toBe(1);
+
+    const line = invoice.lines[0];
+    expect(line.size).toBe("M");
+    expect(line.quantity).toBe(1);
+    expect(line.unitPrice).toBe("35.00");
+    expect(line.lineTotal).toBe("35.00");
+    expect(line.productName).toContain("POS Product");
+
+    await returnPosSale(distributor, receipt.orderId, {
+      lines: [{ orderItemId: line.orderItemId, quantity: 1 }],
+    });
+
+    const after = await getPosSaleDetail(distributor, receipt.orderId);
+    expect(after.returnedUnits).toBe(1);
+    expect(after.refundedAmount).toBe("35.00");
+    expect(after.status).toBe("RETURNED");
+  });
+
+  it("refuses an unknown sale id", async () => {
+    await expect(
+      getPosSaleDetail(distributor, "00000000-0000-4000-8000-000000000000"),
+    ).rejects.toMatchObject({ statusCode: 404 });
   });
 });

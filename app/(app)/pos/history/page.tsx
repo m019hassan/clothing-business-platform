@@ -93,9 +93,15 @@ export default async function PosHistoryPage() {
                     {t.posHistory.refunded}: {formatMoney(sale.refundedAmount, sale.currency)}
                     {sale.returnedUnits > 0 ? ` · ${t.posHistory.unitsReturned.replace("{count}", String(sale.returnedUnits))}` : ""}
                   </p>
-                  {remaining > 0 ? (
-                    <PosReturnPanel sale={sale} labels={t.posHistory} />
-                  ) : null}
+                  <div className="flex items-center gap-2">
+                    <Link
+                      href={`/pos/sales/${sale.orderId}`}
+                      className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+                    >
+                      {t.posInvoice.openInvoice}
+                    </Link>
+                    {remaining > 0 ? <PosReturnPanel sale={sale} labels={t.posHistory} /> : null}
+                  </div>
                 </div>
               </li>
             );

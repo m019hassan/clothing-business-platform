@@ -36,6 +36,9 @@ const PRODUCT_SUB_ITEMS = [
   { href: "/products/materials", key: "productMaterials" },
 ] as const;
 
+/** Links shown indented under the point-of-sale entry. */
+const POS_SUB_ITEMS = [{ href: "/pos/history", key: "posHistory" }] as const;
+
 /** Links shown indented under the admin entry. */
 const ADMIN_SUB_ITEMS = [
   { href: "/admin", key: "adminAccounts", requiresUsers: true },
@@ -235,6 +238,29 @@ function SidebarContent({
     return true;
   });
 
+  const renderPosSubItems = () => (
+    <div className="ms-4 space-y-1 border-s border-slate-200 ps-3">
+      {POS_SUB_ITEMS.map((sub) => {
+        const isSubActive = pathname === sub.href;
+
+        return (
+          <Link
+            key={sub.href}
+            href={sub.href}
+            onClick={onNavigate}
+            aria-current={isSubActive ? "page" : undefined}
+            className={[
+              "block rounded-lg px-3 py-1.5 text-xs font-medium transition-colors",
+              isSubActive ? "bg-slate-100 text-slate-900" : "text-slate-500 hover:bg-slate-50 hover:text-slate-800",
+            ].join(" ")}
+          >
+            {navLabels[sub.key as keyof typeof navLabels]}
+          </Link>
+        );
+      })}
+    </div>
+  );
+
   const renderProductSubItems = () => (
       <div className="ms-4 space-y-1 border-s border-slate-200 ps-3">
         {PRODUCT_SUB_ITEMS.map((sub) => {
@@ -350,6 +376,7 @@ function SidebarContent({
           // The admin links sit directly beneath the admin entry.
           const isAdminEntry = item.href === "/admin";
           const isProductEntry = item.href === "/products";
+          const isPosEntry = item.href === "/pos";
 
           return (
             <Fragment key={item.href}>
@@ -370,6 +397,7 @@ function SidebarContent({
 
               {isAdminEntry ? renderAdminSubItems() : null}
               {isProductEntry && canViewProducts ? renderProductSubItems() : null}
+              {isPosEntry && isDistributor ? renderPosSubItems() : null}
             </Fragment>
           );
         })}
