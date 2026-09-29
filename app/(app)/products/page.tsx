@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { ImageViewer } from "@/components/products/image-viewer";
 import { ProductStatusBadge } from "@/components/products/product-status-badge";
 import { getCurrentPermissions } from "@/modules/auth/application/authorization";
 import { PERMISSIONS } from "@/modules/auth/application/permissions";
@@ -272,10 +273,29 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                 {products.map((product) => (
                   <tr key={product.id} className="transition-colors hover:bg-slate-50">
                     <td className="px-6 py-4">
-                      <Link href={`/products/${product.id}`} className="font-medium text-slate-900 hover:text-blue-700">
-                        {product.name}
-                      </Link>
-                      <p className="text-xs text-slate-500">{product.categoryName ?? t.catalog.uncategorized}</p>
+                      <div className="flex items-center gap-3">
+                        {product.imageId ? (
+                          <ImageViewer
+                            imageId={product.imageId}
+                            alt={product.name}
+                            viewLabel={t.productImages.view}
+                            closeLabel={t.productImages.close}
+                          />
+                        ) : (
+                          <span className="flex h-[50px] w-[50px] shrink-0 items-center justify-center rounded-lg border border-dashed border-slate-200 text-[10px] text-slate-400">
+                            —
+                          </span>
+                        )}
+                        <div className="min-w-0">
+                          <Link
+                            href={`/products/${product.id}`}
+                            className="font-medium text-slate-900 hover:text-blue-700"
+                          >
+                            {product.name}
+                          </Link>
+                          <p className="text-xs text-slate-500">{product.categoryName ?? t.catalog.uncategorized}</p>
+                        </div>
+                      </div>
                     </td>
                     <td className="px-6 py-4 text-slate-700">
                       <span className="font-medium">{product.variants.length}</span>
@@ -311,9 +331,21 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                 className="block rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md"
               >
                 <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="truncate font-semibold text-slate-900">{product.name}</p>
-                    <p className="truncate text-xs text-slate-500">{product.categoryName ?? t.catalog.uncategorized}</p>
+                  <div className="flex min-w-0 items-center gap-3">
+                    {product.imageId ? (
+                      <ImageViewer
+                        imageId={product.imageId}
+                        alt={product.name}
+                        viewLabel={t.productImages.view}
+                        closeLabel={t.productImages.close}
+                      />
+                    ) : null}
+                    <div className="min-w-0">
+                      <p className="truncate font-semibold text-slate-900">{product.name}</p>
+                      <p className="truncate text-xs text-slate-500">
+                        {product.categoryName ?? t.catalog.uncategorized}
+                      </p>
+                    </div>
                   </div>
                   <ProductStatusBadge status={product.status} />
                 </div>

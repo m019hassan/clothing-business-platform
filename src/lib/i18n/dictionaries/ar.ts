@@ -811,6 +811,8 @@ export const ar: Dictionary = {
     },
   },
   productImages: {
+    view: "عرض الصورة",
+    close: "إغلاق",
     title: "صور المنتج",
     hint: "JPEG أو PNG أو WebP حتى 5 ميجابايت. اربط الصورة بلون معيّن ليظهر اللون الصحيح للعميل.",
     colour: "اللون",

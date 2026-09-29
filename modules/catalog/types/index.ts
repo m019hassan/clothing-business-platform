@@ -26,6 +26,8 @@ export type ProductInventoryView = {
   currency: string;
   categoryId: string;
   categoryName: string | null;
+  /** The first photo, shown as a thumbnail in lists. */
+  imageId: string | null;
   createdAt: string;
   updatedAt: string;
   variants: ProductInventoryVariantView[];
@@ -41,6 +43,8 @@ export type ProductView = {
   basePrice: string;
   currency: string;
   categoryName: string | null;
+  /** The first photo, shown as a thumbnail in lists. */
+  imageId: string | null;
   variants: ProductVariantView[];
 };
 

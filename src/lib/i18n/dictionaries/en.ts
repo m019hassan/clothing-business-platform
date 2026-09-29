@@ -815,6 +815,8 @@ export const en = {
     },
   },
   productImages: {
+    view: "View the photo",
+    close: "Close",
     title: "Product photos",
     hint: "JPEG, PNG or WebP up to 5 MB. Tie a photo to a colour so customers see the right one.",
     colour: "Colour",
