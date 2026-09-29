@@ -36,6 +36,7 @@ export type UserCreateInput = {
   lastName?: string | null;
   classificationCode?: string;
   departmentCode?: string;
+  departmentId?: string;
   jobTitle?: string | null;
   branchId?: string | null;
   roleIds?: string[];
@@ -145,6 +146,7 @@ export function parseUserCreateInput(payload: unknown): UserCreateInput {
     "lastName",
     "classificationCode",
     "departmentCode",
+    "departmentId",
     "jobTitle",
     "branchId",
     "roleIds",
@@ -180,6 +182,14 @@ export function parseUserCreateInput(payload: unknown): UserCreateInput {
 
   if (body.departmentCode !== undefined) {
     input.departmentCode = parseRequiredText(body.departmentCode, "departmentCode", 50).toUpperCase();
+  }
+
+  if (body.departmentId !== undefined) {
+    if (typeof body.departmentId !== "string" || !isUuid(body.departmentId)) {
+      throw new ValidationError("departmentId must be a department id.");
+    }
+
+    input.departmentId = body.departmentId;
   }
 
   if (body.branchId !== undefined) {
@@ -553,7 +563,21 @@ export async function createUser(
           });
         }
 
-        const departmentCode = input.departmentCode ?? "OPS";
+        // The employees screen sends an id, the admin form a code; both end up here.
+        let departmentCode = input.departmentCode ?? "OPS";
+
+        if (input.departmentId) {
+          const chosen = await transaction.department.findUnique({
+            where: { id: input.departmentId },
+            select: { code: true },
+          });
+
+          if (!chosen) {
+            throw new ValidationError("The selected department does not exist.");
+          }
+
+          departmentCode = chosen.code;
+        }
         const department = await transaction.department.upsert({
           where: { code: departmentCode },
           create: { code: departmentCode, name: departmentCode },

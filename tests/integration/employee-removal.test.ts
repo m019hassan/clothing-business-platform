@@ -8,7 +8,7 @@ vi.mock("@/modules/auth/application/authorization", () => ({
 
 import { requirePermission } from "@/modules/auth/application/authorization";
 import type { SafeAccount } from "@/modules/auth/infrastructure/session";
-import { deleteUser, updateUser } from "@/modules/users/application/users";
+import { createUser, deleteUser, updateUser } from "@/modules/users/application/users";
 import { createRole } from "@/modules/employees/application/role-permissions";
 import { AuthorizationError } from "@/src/lib/errors";
 import { prisma } from "@/src/lib/db";
@@ -18,6 +18,7 @@ type TestAccount = NonNullable<SafeAccount>;
 let manager: TestAccount;
 let departmentId: string;
 const created = { accountIds: [] as string[], profileIds: [] as string[], roleIds: [] as string[] };
+const created_states: { accountId: string }[] = [];
 
 async function makeEmployee(name: string, withHistory = false): Promise<{ id: string; profileId: string }> {
   const suffix = `${Date.now().toString(36)}${Math.floor(Math.random() * 10000)}`;
@@ -101,6 +102,10 @@ beforeEach(async () => {
 });
 
 afterAll(async () => {
+  for (const entry of created_states) {
+    created.accountIds.push(entry.accountId);
+  }
+
   await prisma.employeeRole.deleteMany({ where: { employeeId: { in: created.profileIds } } });
   await prisma.auditLog.deleteMany({ where: { OR: [{ accountId: { in: created.accountIds } }, { entity: "Account" }] } });
   await prisma.rolePermission.deleteMany({ where: { roleId: { in: created.roleIds } } });
@@ -194,5 +199,45 @@ describe("updateUser employee fields", () => {
 
     expect(updated.jobTitle).toBe("Store Lead");
     expect(updated.departmentName).toBe("Vitest Dept");
+  });
+});
+
+describe("creating employees with a department", () => {
+  it("accepts the departmentId the employees screen sends", async () => {
+    const department = await prisma.department.upsert({
+      where: { code: "VITEMP_DEPT" },
+      create: { code: "VITEMP_DEPT", name: "Vitest Employees" },
+      update: {},
+    });
+
+    const created = await createUser(manager, {
+      accountType: "EMPLOYEE",
+      firstName: "منى",
+      lastName: "التجريبية",
+      email: `vitest-emp-dept-${Date.now()}@example.com`,
+      phone: `+9665${Math.floor(10000000 + Math.random() * 89999999)}`,
+      password: "Vitest12345!",
+      jobTitle: "بائعة",
+      departmentId: department.id,
+    });
+
+    created_states.push({ accountId: created.id });
+
+    expect(created.departmentName).toBe("Vitest Employees");
+    expect(created.jobTitle).toBe("بائعة");
+  });
+
+  it("rejects a department id that does not exist", async () => {
+    await expect(
+      createUser(manager, {
+        accountType: "EMPLOYEE",
+        firstName: "بلا",
+        lastName: "قسم",
+        email: `vitest-emp-bad-${Date.now()}@example.com`,
+        phone: `+9665${Math.floor(10000000 + Math.random() * 89999999)}`,
+        password: "Vitest12345!",
+        departmentId: "11111111-2222-4333-8444-555555555555",
+      }),
+    ).rejects.toMatchObject({ statusCode: 400 });
   });
 });
