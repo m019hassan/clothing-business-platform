@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { requireAuthenticated } from "@/modules/auth/infrastructure/session";
 import {
   createCategory,
+  deleteCategory,
   updateCategory,
 } from "@/modules/catalog/application/categories";
 import {
@@ -191,6 +192,28 @@ export async function createCategoryAction(
 
   revalidateCatalog();
   return { ok: true, message: "Category created." };
+}
+
+export async function deleteCategoryAction(
+  _previousState: CatalogFormState,
+  formData: FormData,
+): Promise<CatalogFormState> {
+  const categoryId = formData.get("categoryId");
+
+  try {
+    const account = await requireAuthenticated();
+
+    if (typeof categoryId !== "string" || categoryId.length === 0) {
+      throw new Error("Missing category id");
+    }
+
+    await deleteCategory(account, categoryId);
+  } catch (error) {
+    return failure(error);
+  }
+
+  revalidateCatalog();
+  return { ok: true, message: "Category deleted." };
 }
 
 export async function toggleCategoryAction(

@@ -987,6 +987,8 @@ export const ar: Dictionary = {
       ariaName: "اسم التصنيف الجديد",
       ariaSlug: "معرّف التصنيف الجديد",
       ariaDescription: "وصف التصنيف الجديد",
+      remove: "حذف",
+      removeConfirm: "حذف التصنيف «{name}»؟ لا يمكن التراجع.",
     },
     newPage: {
       permissionTitle: "إنشاء المنتجات يتطلب دور موظف",

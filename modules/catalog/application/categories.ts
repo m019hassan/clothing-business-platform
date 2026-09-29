@@ -275,3 +275,43 @@ export async function updateCategory(
 
   return mapCategory(category);
 }
+
+/**
+ * Removes an empty category. Categories that still hold products are kept, because
+ * deleting them would orphan the catalogue; the caller sees how many products block it.
+ */
+export async function deleteCategory(account: AuthenticatedAccount, categoryId: string): Promise<{ name: string }> {
+  await requirePermission(PERMISSIONS.PRODUCTS_DELETE);
+
+  if (!isUuid(categoryId)) {
+    throw new NotFoundError("The category was not found.");
+  }
+
+  const category = await prisma.category.findUnique({
+    where: { id: categoryId },
+    select: { ...categorySelection, _count: { select: { products: true } } },
+  });
+
+  if (!category) {
+    throw new NotFoundError("The category was not found.");
+  }
+
+  if (category._count.products > 0) {
+    throw new ConflictError(`${category._count.products} product(s) still use the category "${category.name}".`);
+  }
+
+  await prisma.$transaction([
+    prisma.category.delete({ where: { id: category.id } }),
+    prisma.auditLog.create({
+      data: {
+        accountId: account.id,
+        action: "CATEGORY_DELETED",
+        entity: "Category",
+        entityId: category.id,
+        newValue: category.name,
+      },
+    }),
+  ]);
+
+  return { name: category.name };
+}

@@ -10,6 +10,7 @@ import { hasPermission } from "@/modules/auth/application/authorization";
 import type { SafeAccount } from "@/modules/auth/infrastructure/session";
 import {
   createCategory,
+  deleteCategory,
   listCategories,
   parseCategoryWriteInput,
   updateCategory,
@@ -22,10 +23,13 @@ const account = { id: "00000000-0000-4000-8000-00000000cafe", accountType: "EMPL
 
 const suffix = Date.now().toString(36) + Math.floor(Math.random() * 1000);
 const createdIds: string[] = [];
+const recordedAccountIds: string[] = [];
 
 afterAll(async () => {
   await prisma.product.deleteMany({ where: { categoryId: { in: createdIds } } });
   await prisma.category.deleteMany({ where: { id: { in: createdIds } } });
+  await prisma.auditLog.deleteMany({ where: { accountId: { in: recordedAccountIds } } });
+  await prisma.account.deleteMany({ where: { id: { in: recordedAccountIds } } });
 });
 
 describe("parseCategoryWriteInput", () => {
@@ -102,6 +106,47 @@ describe("category writes", () => {
     await expect(
       updateCategory(account, second.id, { slug: `vitest-a-${suffix}` }),
     ).rejects.toMatchObject({ statusCode: 409 });
+  });
+
+  it("deletes an empty category and refuses one that still holds products", async () => {
+    // Deletion writes an audit row, so the actor has to be a real account.
+    const actorRecord = await prisma.account.create({
+      data: {
+        accountType: "CUSTOMER",
+        status: "ACTIVE",
+        phone: `+9665${Math.floor(10000000 + Math.random() * 89999999)}`,
+        passwordHash: "test-hash",
+      },
+    });
+    recordedAccountIds.push(actorRecord.id);
+    const actor = { id: actorRecord.id, accountType: "CUSTOMER" } as TestAccount;
+
+    const category = await createCategory(actor, { name: `Vitest Del ${suffix}`, slug: `vitest-del-${suffix}` });
+    createdIds.push(category.id);
+
+    const removed = await deleteCategory(actor, category.id);
+    expect(removed.name).toBe(`Vitest Del ${suffix}`);
+
+    await expect(deleteCategory(actor, category.id)).rejects.toMatchObject({ statusCode: 404 });
+
+    const held = await createCategory(account, { name: `Vitest Hold ${suffix}`, slug: `vitest-hold-${suffix}` });
+    createdIds.push(held.id);
+    const product = await prisma.product.create({
+      data: {
+        name: `Vitest Held Product ${suffix}`,
+        slug: `vitest-held-product-${suffix}`,
+        status: "DRAFT",
+        basePrice: "10.00",
+        currency: "SAR",
+        categoryId: held.id,
+      },
+    });
+
+    await expect(deleteCategory(actor, held.id)).rejects.toMatchObject({ statusCode: 409 });
+
+    await prisma.product.delete({ where: { id: product.id } });
+    await deleteCategory(actor, held.id);
+    createdIds.splice(createdIds.indexOf(held.id), 1);
   });
 
   it("refuses includeInactive without catalog access", async () => {

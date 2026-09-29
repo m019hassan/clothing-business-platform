@@ -991,6 +991,8 @@ export const en = {
       ariaName: "New category name",
       ariaSlug: "New category slug",
       ariaDescription: "New category description",
+      remove: "Remove",
+      removeConfirm: "Remove the category \u201c{name}\u201d? This cannot be undone.",
     },
     newPage: {
       permissionTitle: "Creating products requires a staff role",
