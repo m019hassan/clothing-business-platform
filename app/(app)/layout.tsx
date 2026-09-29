@@ -38,6 +38,7 @@ export default async function AppLayout({
       isDistributor={account.accountType === "DISTRIBUTOR"}
       canViewRoles={permissions.has(PERMISSIONS.ROLES_VIEW)}
       canViewAudit={permissions.has(PERMISSIONS.AUDIT_VIEW)}
+      canViewBranches={permissions.has(PERMISSIONS.BRANCHES_VIEW)}
       canViewReports={
         permissions.has(PERMISSIONS.ORDERS_VIEW) ||
         permissions.has(PERMISSIONS.PAYMENTS_VIEW) ||

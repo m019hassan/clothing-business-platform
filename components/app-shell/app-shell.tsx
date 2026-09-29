@@ -29,6 +29,12 @@ const NAV_ITEMS = [
   { href: "/audit", key: "audit", customerOnly: false, requiresAudit: true },
 ] as const;
 
+/** Links shown indented under the admin entry. */
+const ADMIN_SUB_ITEMS = [
+  { href: "/admin", key: "adminAccounts", requiresUsers: true },
+  { href: "/admin/branches", key: "adminBranches", requiresBranches: true },
+] as const;
+
 function NavIcon({ href }: { href: string }) {
   const common = {
     className: "h-5 w-5 shrink-0",
@@ -185,6 +191,7 @@ function SidebarContent({
   canViewUsers,
   canViewRoles,
   canViewAudit,
+  canViewBranches,
   canViewReports,
   onNavigate,
 }: {
@@ -202,9 +209,14 @@ function SidebarContent({
   canViewUsers: boolean;
   canViewRoles: boolean;
   canViewAudit: boolean;
+  canViewBranches: boolean;
   canViewReports: boolean;
   onNavigate?: () => void;
 }) {
+  const adminSubItems = ADMIN_SUB_ITEMS.filter(
+    (sub) => !("requiresBranches" in sub) || !sub.requiresBranches || canViewBranches,
+  );
+
   const visibleItems = NAV_ITEMS.filter((item) => {
     if (item.customerOnly && !isCustomer) {
       return false;
@@ -283,6 +295,31 @@ function SidebarContent({
             </Link>
           );
         })}
+
+        {adminSubItems.length > 0 ? (
+          <div className="ms-4 space-y-1 border-s border-slate-200 ps-3">
+            {adminSubItems.map((sub) => {
+              const isSubActive = pathname === sub.href;
+
+              return (
+                <Link
+                  key={sub.href}
+                  href={sub.href}
+                  onClick={onNavigate}
+                  aria-current={isSubActive ? "page" : undefined}
+                  className={[
+                    "block rounded-lg px-3 py-1.5 text-xs font-medium transition-colors",
+                    isSubActive
+                      ? "bg-slate-100 text-slate-900"
+                      : "text-slate-500 hover:bg-slate-50 hover:text-slate-800",
+                  ].join(" ")}
+                >
+                  {navLabels[sub.key as keyof typeof navLabels]}
+                </Link>
+              );
+            })}
+          </div>
+        ) : null}
       </nav>
 
       <div className="border-t border-slate-200 px-3 py-4">
@@ -330,6 +367,7 @@ export function AppShell({
   canViewUsers,
   canViewRoles,
   canViewAudit,
+  canViewBranches,
   canViewReports,
   children,
 }: {
@@ -347,6 +385,7 @@ export function AppShell({
   canViewUsers: boolean;
   canViewRoles: boolean;
   canViewAudit: boolean;
+  canViewBranches: boolean;
   canViewReports: boolean;
   children: ReactNode;
 }) {
@@ -373,6 +412,7 @@ export function AppShell({
           isDistributor={isDistributor}
           canViewRoles={canViewRoles}
           canViewAudit={canViewAudit}
+          canViewBranches={canViewBranches}
           canViewReports={canViewReports}
         />
       </aside>
@@ -401,6 +441,7 @@ export function AppShell({
               isDistributor={isDistributor}
               canViewRoles={canViewRoles}
           canViewAudit={canViewAudit}
+          canViewBranches={canViewBranches}
               canViewReports={canViewReports}
               onNavigate={() => setMobileOpen(false)}
             />

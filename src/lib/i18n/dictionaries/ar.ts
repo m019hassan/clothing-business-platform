@@ -13,6 +13,8 @@ export const ar: Dictionary = {
     payments: "المدفوعات",
     pos: "نقطة البيع",
     admin: "الإدارة",
+    adminAccounts: "الحسابات",
+    adminBranches: "الفروع",
     deliveries: "التوصيلات",
     customers: "العملاء",
     employees: "الموظفون",

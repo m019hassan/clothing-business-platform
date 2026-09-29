@@ -12,6 +12,8 @@ export const en = {
     payments: "Payments",
     pos: "Point of sale",
     admin: "Admin",
+    adminAccounts: "Accounts",
+    adminBranches: "Branches",
     deliveries: "Deliveries",
     customers: "Customers",
     employees: "Employees",
