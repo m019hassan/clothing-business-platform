@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState, type ReactNode } from "react";
+import { Fragment, useState, type ReactNode } from "react";
 
 import { logoutAction } from "@/modules/auth/application/actions";
 import { NotificationBell } from "@/modules/notification/components/notification-bell";
@@ -26,13 +26,13 @@ const NAV_ITEMS = [
   { href: "/customers", key: "customers", customerOnly: false, requiresCustomers: true },
   { href: "/employees", key: "employees", customerOnly: false, requiresEmployees: true },
   { href: "/roles", key: "roles", customerOnly: false, requiresRoles: true },
-  { href: "/audit", key: "audit", customerOnly: false, requiresAudit: true },
 ] as const;
 
 /** Links shown indented under the admin entry. */
 const ADMIN_SUB_ITEMS = [
   { href: "/admin", key: "adminAccounts", requiresUsers: true },
   { href: "/admin/branches", key: "adminBranches", requiresBranches: true },
+  { href: "/audit", key: "audit", requiresAudit: true },
 ] as const;
 
 function NavIcon({ href }: { href: string }) {
@@ -213,9 +213,45 @@ function SidebarContent({
   canViewReports: boolean;
   onNavigate?: () => void;
 }) {
-  const adminSubItems = ADMIN_SUB_ITEMS.filter(
-    (sub) => !("requiresBranches" in sub) || !sub.requiresBranches || canViewBranches,
-  );
+  const adminSubItems = ADMIN_SUB_ITEMS.filter((sub) => {
+    if ("requiresBranches" in sub && sub.requiresBranches) {
+      return canViewBranches;
+    }
+
+    if ("requiresAudit" in sub && sub.requiresAudit) {
+      return canViewAudit;
+    }
+
+    return true;
+  });
+
+  const parentVisible = canViewUsers;
+
+  const renderAdminSubItems = () =>
+    adminSubItems.length === 0 ? null : (
+      <div className="ms-4 space-y-1 border-s border-slate-200 ps-3">
+        {adminSubItems.map((sub) => {
+          const isSubActive = pathname === sub.href;
+
+          return (
+            <Link
+              key={sub.href}
+              href={sub.href}
+              onClick={onNavigate}
+              aria-current={isSubActive ? "page" : undefined}
+              className={[
+                "block rounded-lg px-3 py-1.5 text-xs font-medium transition-colors",
+                isSubActive
+                  ? "bg-slate-100 text-slate-900"
+                  : "text-slate-500 hover:bg-slate-50 hover:text-slate-800",
+              ].join(" ")}
+            >
+              {navLabels[sub.key as keyof typeof navLabels]}
+            </Link>
+          );
+        })}
+      </div>
+    );
 
   const visibleItems = NAV_ITEMS.filter((item) => {
     if (item.customerOnly && !isCustomer) {
@@ -276,28 +312,36 @@ function SidebarContent({
       <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4" aria-label="Main navigation">
         {visibleItems.map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+          // The admin links sit directly beneath the admin entry.
+          const isAdminEntry = item.href === "/admin";
 
           return (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={onNavigate}
-              aria-current={isActive ? "page" : undefined}
-              className={[
-                "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-                isActive
-                  ? "bg-slate-900 text-white"
-                  : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
-              ].join(" ")}
-            >
-              <NavIcon href={item.href} />
-              {navLabels[item.key]}
-            </Link>
+            <Fragment key={item.href}>
+              <Link
+                href={item.href}
+                onClick={onNavigate}
+                aria-current={isActive ? "page" : undefined}
+                className={[
+                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                  isActive
+                    ? "bg-slate-900 text-white"
+                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
+                ].join(" ")}
+              >
+                <NavIcon href={item.href} />
+                {navLabels[item.key]}
+              </Link>
+
+              {isAdminEntry ? renderAdminSubItems() : null}
+            </Fragment>
           );
         })}
 
-        {adminSubItems.length > 0 ? (
+        {adminSubItems.length > 0 && !parentVisible ? (
           <div className="ms-4 space-y-1 border-s border-slate-200 ps-3">
+            <p className="px-3 pb-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
+              {navLabels.admin}
+            </p>
             {adminSubItems.map((sub) => {
               const isSubActive = pathname === sub.href;
 
