@@ -82,9 +82,9 @@ export function parsePosSaleInput(payload: unknown): PosSaleInput {
   return { items: [...merged.entries()].map(([variantId, quantity]) => ({ variantId, quantity })) };
 }
 
-type DistributorContext = { distributorId: string; branchId: string; displayName: string };
+export type DistributorContext = { distributorId: string; branchId: string; displayName: string };
 
-function requireDistributor(account: AuthenticatedAccount): DistributorContext {
+export function requireDistributor(account: AuthenticatedAccount): DistributorContext {
   const profile = account.distributorProfile;
 
   if (account.accountType !== "DISTRIBUTOR" || !profile) {
@@ -99,7 +99,7 @@ function requireDistributor(account: AuthenticatedAccount): DistributorContext {
 }
 
 /** The branch's warehouses; branches without their own use the central one. */
-async function resolveWarehouseIds(branchId: string): Promise<string[]> {
+export async function resolveWarehouseIds(branchId: string): Promise<string[]> {
   const branchWarehouses = await withDatabaseError(() =>
     prisma.warehouse.findMany({ where: { branchId, isActive: true }, select: { id: true } }),
   );

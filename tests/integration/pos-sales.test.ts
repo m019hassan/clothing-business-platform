@@ -10,6 +10,7 @@ import { Prisma } from "@prisma/client";
 
 import type { SafeAccount } from "@/modules/auth/infrastructure/session";
 import { getDistributorDashboard } from "@/modules/pos/application/pos-dashboard";
+import { listPosSales, returnPosSale, voidPosSale } from "@/modules/pos/application/pos-returns";
 import { createPosSale, getPosCatalog, parsePosSaleInput } from "@/modules/pos/application/pos-sales";
 import { prisma } from "@/src/lib/db";
 
@@ -166,6 +167,7 @@ afterAll(async () => {
   const orders = await prisma.order.findMany({ where: { branchId: { in: created.branchIds } }, select: { id: true } });
   const orderIds = orders.map((order) => order.id);
   await prisma.auditLog.deleteMany({ where: { accountId: { in: created.accountIds } } });
+  await prisma.refund.deleteMany({ where: { orderId: { in: orderIds } } });
   await prisma.payment.deleteMany({ where: { orderId: { in: orderIds } } });
   await prisma.orderItem.deleteMany({ where: { orderId: { in: orderIds } } });
   await prisma.order.deleteMany({ where: { id: { in: orderIds } } });
@@ -313,5 +315,129 @@ describe("createPosSale", () => {
     ).rejects.toMatchObject({ statusCode: 404 });
 
     await expect(createPosSale(customer, payload())).rejects.toMatchObject({ statusCode: 403 });
+  });
+});
+
+describe("counter-sale returns", () => {
+  it("returns part of a line, restocks it and records the refund", async () => {
+    const receipt = await createPosSale(distributor, payload());
+    const orderId = receipt.orderId;
+    const lines = await prisma.orderItem.findMany({ where: { orderId }, select: { id: true, quantity: true } });
+
+    const result = await returnPosSale(distributor, orderId, {
+      lines: [{ orderItemId: lines[0].id, quantity: 1 }],
+    });
+
+    expect(result.refundedAmount).toBe("35.00");
+    expect(result.returnedUnits).toBe(1);
+    expect(result.fullyReturned).toBe(false);
+    expect(result.status).toBe("CONFIRMED");
+
+    const balance = await prisma.inventoryItem.findFirst({
+      where: { variantId: variantA },
+      select: { quantityOnHand: true },
+    });
+    // 5 on hand, 2 sold, 1 returned
+    expect(balance?.quantityOnHand).toBe(4);
+
+    const refund = await prisma.refund.findFirst({ where: { orderId } });
+    expect(refund?.amount.toFixed(2)).toBe("35.00");
+
+    const audit = await prisma.auditLog.findFirst({ where: { entityId: orderId, action: "POS_SALE_RETURNED" } });
+    expect(audit).not.toBeNull();
+  });
+
+  it("refuses returning more than was sold and any second over-return", async () => {
+    const receipt = await createPosSale(distributor, payload());
+    const lines = await prisma.orderItem.findMany({ where: { orderId: receipt.orderId }, select: { id: true } });
+
+    await expect(
+      returnPosSale(distributor, receipt.orderId, { lines: [{ orderItemId: lines[0].id, quantity: 3 }] }),
+    ).rejects.toMatchObject({ statusCode: 409 });
+
+    await returnPosSale(distributor, receipt.orderId, { lines: [{ orderItemId: lines[0].id, quantity: 2 }] });
+
+    await expect(
+      returnPosSale(distributor, receipt.orderId, { lines: [{ orderItemId: lines[0].id, quantity: 1 }] }),
+    ).rejects.toMatchObject({ statusCode: 409 });
+  });
+
+  it("voids a sale after a partial return and flips it to RETURNED", async () => {
+    const receipt = await createPosSale(distributor, payload());
+    const lines = await prisma.orderItem.findMany({ where: { orderId: receipt.orderId }, select: { id: true } });
+
+    await returnPosSale(distributor, receipt.orderId, { lines: [{ orderItemId: lines[0].id, quantity: 1 }] });
+    const voided = await voidPosSale(distributor, receipt.orderId);
+
+    expect(voided.fullyReturned).toBe(true);
+    expect(voided.status).toBe("RETURNED");
+
+    const order = await prisma.order.findUnique({ where: { id: receipt.orderId }, select: { status: true } });
+    expect(order?.status).toBe("RETURNED");
+
+    await expect(voidPosSale(distributor, receipt.orderId)).rejects.toMatchObject({ statusCode: 409 });
+  });
+
+  it("lists the branch history with sold and returned units", async () => {
+    const receipt = await createPosSale(distributor, payload());
+    const lines = await prisma.orderItem.findMany({ where: { orderId: receipt.orderId }, select: { id: true } });
+    await returnPosSale(distributor, receipt.orderId, { lines: [{ orderItemId: lines[0].id, quantity: 2 }] });
+
+    const history = await listPosSales(distributor);
+    const row = history.find((entry) => entry.orderId === receipt.orderId);
+
+    expect(row?.soldUnits).toBe(2);
+    expect(row?.returnedUnits).toBe(2);
+    expect(row?.refundedAmount).toBe("70.00");
+    expect(row?.status).toBe("RETURNED");
+  });
+
+  it("keeps returns inside the distributor's own branch", async () => {
+    const receipt = await createPosSale(distributor, payload());
+
+    const otherBranch = await prisma.branch.create({
+      data: { code: `POSB2-${Date.now().toString(36).toUpperCase()}`, name: "Other POS Branch" },
+    });
+    created.branchIds.push(otherBranch.id);
+    const otherAccount = await prisma.account.create({
+      data: {
+        accountType: "DISTRIBUTOR",
+        status: "ACTIVE",
+        email: `vitest-pos2-${Date.now().toString(36)}@example.com`,
+        phone: `+9665${Math.floor(10000000 + Math.random() * 89999999)}`,
+        passwordHash: "test-hash",
+        distributorProfile: {
+          create: {
+            distributorCode: `D2-${Date.now().toString(36).toUpperCase()}`,
+            branchId: otherBranch.id,
+            firstName: "Other",
+            lastName: "Distributor",
+          },
+        },
+      },
+      include: { distributorProfile: true },
+    });
+    created.accountIds.push(otherAccount.id);
+
+    const other = {
+      id: otherAccount.id,
+      accountType: "DISTRIBUTOR",
+      status: "ACTIVE",
+      email: otherAccount.email,
+      phone: otherAccount.phone,
+      emailVerified: false,
+      phoneVerified: false,
+      preferredLanguage: "ar",
+      timezone: "Asia/Riyadh",
+      createdAt: otherAccount.createdAt,
+      updatedAt: otherAccount.updatedAt,
+      distributorProfile: {
+        id: otherAccount.distributorProfile!.id,
+        branchId: otherBranch.id,
+        distributorCode: otherAccount.distributorProfile!.distributorCode,
+      },
+    } as unknown as TestAccount;
+
+    await expect(voidPosSale(other, receipt.orderId)).rejects.toMatchObject({ statusCode: 404 });
   });
 });

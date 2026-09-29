@@ -53,10 +53,20 @@ export default async function PosPage() {
   return (
     <div className="space-y-6">
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">{t.pos.kicker}</p>
-        <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-950">
-          {catalog.branchName} ({catalog.branchCode})
-        </h2>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">{t.pos.kicker}</p>
+            <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-950">
+              {catalog.branchName} ({catalog.branchCode})
+            </h2>
+          </div>
+          <Link
+            href="/pos/history"
+            className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+          >
+            {t.posHistory.link}
+          </Link>
+        </div>
         <p className="mt-1 text-sm text-slate-600">
           {t.pos.subtitle}
         </p>
