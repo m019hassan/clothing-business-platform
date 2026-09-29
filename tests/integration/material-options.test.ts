@@ -9,22 +9,22 @@ vi.mock("@/modules/auth/application/authorization", () => ({
 import { requirePermission } from "@/modules/auth/application/authorization";
 import type { SafeAccount } from "@/modules/auth/infrastructure/session";
 import {
-  createSizeOption,
-  deleteSizeOption,
-  listSizeOptions,
-} from "@/modules/catalog/application/sizes";
+  createMaterialOption,
+  deleteMaterialOption,
+  listMaterialOptions,
+} from "@/modules/catalog/application/materials";
 import { ConflictError, ValidationError } from "@/src/lib/errors";
 import { prisma } from "@/src/lib/db";
 
 type TestAccount = NonNullable<SafeAccount>;
 
 let staff: TestAccount;
-const created = { accountIds: [] as string[], sizeIds: [] as string[], productIds: [] as string[], variantIds: [] as string[] };
+const created = { accountIds: [] as string[], materialIds: [] as string[], productIds: [] as string[], variantIds: [] as string[] };
 
 beforeEach(async () => {
   vi.mocked(requirePermission).mockResolvedValue(undefined);
-  // leftovers from an aborted run must not break the duplicate-label assertions
-  await prisma.sizeOption.deleteMany({ where: { label: { startsWith: "VIT" } } });
+  // leftovers from an aborted run must not break the duplicate-name assertions
+  await prisma.materialOption.deleteMany({ where: { name: { startsWith: "VIT" } } });
 
   const department =
     (await prisma.department.findFirst({ where: { code: "OPS" } })) ??
@@ -71,64 +71,61 @@ beforeEach(async () => {
 afterAll(async () => {
   await prisma.productVariant.deleteMany({ where: { id: { in: created.variantIds } } });
   await prisma.product.deleteMany({ where: { id: { in: created.productIds } } });
-  await prisma.sizeOption.deleteMany({ where: { id: { in: created.sizeIds } } });
+  await prisma.sizeOption.deleteMany({ where: { id: { in: created.materialIds } } });
   await prisma.auditLog.deleteMany({ where: { accountId: { in: created.accountIds } } });
   await prisma.employeeProfile.deleteMany({ where: { accountId: { in: created.accountIds } } });
   await prisma.account.deleteMany({ where: { id: { in: created.accountIds } } });
 });
 
-describe("size library", () => {
-  it("ships the seeded 5 to 30 range with ages, in numeric order", async () => {
-    const sizes = await listSizeOptions();
-    const labels = sizes.map((entry) => entry.label);
+describe("material library", () => {
+  it("ships the seeded cotton, leather, linen, melton and velvet", async () => {
+    const names = (await listMaterialOptions()).map((entry) => entry.name);
 
-    expect(labels).toContain("5");
-    expect(labels).toContain("30");
-    expect(sizes.find((entry) => entry.label === "12")?.ageLabel).toContain("12");
-    expect(labels.indexOf("9")).toBeLessThan(labels.indexOf("10"));
+    expect(names).toContain("قطن");
+    expect(names).toContain("جلد");
+    expect(names).toContain("كتان");
+    expect(names).toContain("ملتون");
+    expect(names).toContain("قطيفة");
   });
 
-  it("creates a size and rejects duplicates and empty ages", async () => {
-    const size = await createSizeOption(staff, { label: "VIT-S", ageLabel: "6–7 سنة" });
-    created.sizeIds.push(size.id);
+  it("creates a material and rejects duplicates and empty names", async () => {
+    const material = await createMaterialOption(staff, { name: "VIT خامة" });
+    created.materialIds.push(material.id);
 
-    expect(size.label).toBe("VIT-S");
+    expect(material.name).toBe("VIT خامة");
 
-    await expect(createSizeOption(staff, { label: "VIT-S", ageLabel: "6–7 سنة" })).rejects.toBeInstanceOf(
-      ConflictError,
-    );
-    await expect(createSizeOption(staff, { label: "VIT-T", ageLabel: "" })).rejects.toBeInstanceOf(ValidationError);
+    await expect(createMaterialOption(staff, { name: "VIT خامة" })).rejects.toBeInstanceOf(ConflictError);
+    await expect(createMaterialOption(staff, { name: "" })).rejects.toBeInstanceOf(ValidationError);
   });
 
-  it("refuses to delete a size a variant uses, then deletes it once free", async () => {
+  it("refuses to delete a material a product uses, then deletes it once free", async () => {
     const suffix = Date.now().toString(36);
     const category =
       (await prisma.category.findFirst({ where: { slug: "vitest" } })) ??
       (await prisma.category.create({ data: { name: "Vitest", slug: "vitest" } }));
-    const size = await createSizeOption(staff, { label: "VIT-USE", ageLabel: "8–9 سنة" });
-    created.sizeIds.push(size.id);
+    const material = await createMaterialOption(staff, { name: "VIT-USE材质" });
+    created.materialIds.push(material.id);
 
     const product = await prisma.product.create({
       data: {
-        name: `Vitest Size Use ${suffix}`,
-        slug: `vitest-size-use-${suffix}`,
+        name: `Vitest Material Use ${suffix}`,
+        slug: `vitest-material-use-${suffix}`,
         status: "ACTIVE",
         basePrice: "40.00",
         currency: "SAR",
+        material: "VIT-USE材质",
         categoryId: category.id,
-        variants: { create: [{ sku: `VITSZ-U-${suffix.toUpperCase()}`, size: "VIT-USE", status: "ACTIVE" }] },
       },
       include: { variants: true },
     });
     created.productIds.push(product.id);
     created.variantIds.push(...product.variants.map((variant) => variant.id));
 
-    await expect(deleteSizeOption(staff, size.id)).rejects.toBeInstanceOf(ConflictError);
+    await expect(deleteMaterialOption(staff, material.id)).rejects.toBeInstanceOf(ConflictError);
 
-    await prisma.productVariant.deleteMany({ where: { id: { in: product.variants.map((variant) => variant.id) } } });
     await prisma.product.delete({ where: { id: product.id } });
-    const removed = await deleteSizeOption(staff, size.id);
-    expect(removed.label).toBe("VIT-USE");
-    created.sizeIds = created.sizeIds.filter((id) => id !== size.id);
+    const removed = await deleteMaterialOption(staff, material.id);
+    expect(removed.name).toBe("VIT-USE材质");
+    created.materialIds = created.materialIds.filter((id) => id !== material.id);
   });
 });

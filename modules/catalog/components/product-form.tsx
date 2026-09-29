@@ -41,6 +41,7 @@ export type ProductFormLabels = {
   priceOverride: string;
   chooseColor: string;
   chooseSize: string;
+  chooseMaterial: string;
   material: string;
   variantsTitle: string;
   variantsHint: string;
@@ -65,6 +66,7 @@ export function ProductForm({
   categories,
   colors,
   sizes,
+  materials,
   labels,
   statusLabels,
 }: {
@@ -73,6 +75,7 @@ export function ProductForm({
   categories: { id: string; name: string; isActive: boolean }[];
   colors: { id: string; name: string }[];
   sizes: { id: string; label: string; ageLabel: string }[];
+  materials: { id: string; name: string }[];
   labels: ProductFormLabels;
   statusLabels: Record<string, string>;
 }) {
@@ -109,14 +112,17 @@ export function ProductForm({
           <label htmlFor="material" className={labelClass}>
             {labels.material}
           </label>
-          <input
-            id="material"
-            name="material"
-            type="text"
-            defaultValue={product?.material ?? ""}
-            placeholder="قطن"
-            className={inputClass}
-          />
+          <select id="material" name="material" defaultValue={product?.material ?? ""} className={inputClass}>
+            <option value="">{labels.chooseMaterial}</option>
+            {materials.map((material) => (
+              <option key={material.id} value={material.name}>
+                {material.name}
+              </option>
+            ))}
+            {product?.material && !materials.some((material) => material.name === product.material) ? (
+              <option value={product.material}>{product.material}</option>
+            ) : null}
+          </select>
         </div>
         <div>
           <label htmlFor="slug" className={labelClass}>

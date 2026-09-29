@@ -7,6 +7,7 @@ import { getCurrentAccount } from "@/modules/auth/infrastructure/session";
 import { listCategories } from "@/modules/catalog/application/categories";
 import { listColorOptions } from "@/modules/catalog/application/colors";
 import { listSizeOptions } from "@/modules/catalog/application/sizes";
+import { listMaterialOptions } from "@/modules/catalog/application/materials";
 import { getProductInventory } from "@/modules/catalog/application/products";
 import { CategoryManager } from "@/modules/catalog/components/category-manager";
 import { ProductForm } from "@/modules/catalog/components/product-form";
@@ -66,6 +67,7 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
   const categories = await listCategories({ includeInactive: true });
   const colors = await listColorOptions();
   const sizes = await listSizeOptions();
+  const materials = await listMaterialOptions();
   const productImages = await listProductImages(product.id);
 
   return (
@@ -102,6 +104,7 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
             categories={categories}
             colors={colors}
           sizes={sizes}
+          materials={materials}
             labels={{ ...t.catalog.form, status: t.common.status, category: t.catalog.category }}
             statusLabels={t.catalog.statusLabels}
             product={{
