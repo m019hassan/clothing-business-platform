@@ -6,6 +6,8 @@
  * can be unit tested directly.
  */
 
+import { ValidationError } from "@/src/lib/errors";
+
 function text(formData: FormData, key: string): string | null {
   const value = formData.get(key);
 
@@ -41,9 +43,41 @@ export function productFormToPayload(
   assign("basePrice", text(formData, "basePrice") ?? "");
   assign("categoryId", text(formData, "categoryId") ?? "");
   assign("description", text(formData, "description"));
+  // Sent only when filled, so an empty box on the edit form leaves the value alone.
+  const material = text(formData, "material");
+
+  if (material !== null) {
+    payload.material = material;
+  }
+
   assign("status", text(formData, "status") ?? "");
 
   if (!partial) {
+    // The clothing form sends its size/colour/quantity/price rows as JSON.
+    const rowsJson = text(formData, "variantsJson");
+
+    if (rowsJson) {
+      try {
+        const rows = JSON.parse(rowsJson);
+
+        if (Array.isArray(rows) && rows.length > 0) {
+          payload.variants = rows.map((row) => {
+            const entry = row as Record<string, unknown>;
+            const variant: Record<string, unknown> = {};
+
+            if (typeof entry.size === "string" && entry.size.trim()) variant.size = entry.size.trim();
+            if (typeof entry.color === "string" && entry.color.trim()) variant.color = entry.color.trim();
+            if (entry.quantity !== undefined && entry.quantity !== "") variant.quantity = Number(entry.quantity);
+            if (typeof entry.price === "string" && entry.price.trim()) variant.priceOverride = entry.price.trim();
+
+            return variant;
+          });
+        }
+      } catch {
+        throw new ValidationError("The variant rows could not be read.");
+      }
+    }
+
     const sku = text(formData, "variantSku");
 
     if (sku) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 
 import {
   createProductAction,
@@ -20,6 +20,7 @@ export type ProductFormValues = {
   id?: string;
   name: string;
   slug: string;
+  material?: string | null;
   description: string | null;
   basePrice: string;
   status: string;
@@ -38,6 +39,15 @@ export type ProductFormLabels = {
   description: string;
   optionalVariant: string;
   priceOverride: string;
+  material: string;
+  variantsTitle: string;
+  variantsHint: string;
+  size: string;
+  color: string;
+  quantity: string;
+  rowPrice: string;
+  addRow: string;
+  removeRow: string;
   variantStatus: string;
   variantHint: string;
   saving: string;
@@ -45,22 +55,32 @@ export type ProductFormLabels = {
   saveChanges: string;
 };
 
+type VariantRow = { key: string; size: string; color: string; quantity: string; price: string };
+
 export function ProductForm({
   mode,
   product,
   categories,
   labels,
   statusLabels,
-  suggestedVariantSku,
 }: {
   mode: "create" | "edit";
   product?: ProductFormValues;
   categories: { id: string; name: string; isActive: boolean }[];
   labels: ProductFormLabels;
   statusLabels: Record<string, string>;
-  /** Ready-to-use SKU for the optional first variant (create mode). */
-  suggestedVariantSku: string;
 }) {
+
+  // Size/colour/quantity/price rows for the variants that ship with the product.
+  const [rows, setRows] = useState<VariantRow[]>([{ key: "row-1", size: "", color: "", quantity: "", price: "" }]);
+
+  const addRow = () =>
+    setRows((current) => [...current, { key: `row-${Date.now()}-${current.length}`, size: "", color: "", quantity: "", price: "" }]);
+
+  const removeRow = (index: number) => setRows((current) => current.filter((_, position) => position !== index));
+
+  const updateRow = (index: number, patch: Partial<VariantRow>) =>
+    setRows((current) => current.map((row, position) => (position === index ? { ...row, ...patch } : row)));
   const [state, formAction, isPending] = useActionState(
     mode === "create" ? createProductAction : updateProductAction,
     initialState,
@@ -78,6 +98,19 @@ export function ProductForm({
             {labels.name}
           </label>
           <input id="name" name="name" type="text" required defaultValue={product?.name ?? ""} className={inputClass} />
+        </div>
+        <div>
+          <label htmlFor="material" className={labelClass}>
+            {labels.material}
+          </label>
+          <input
+            id="material"
+            name="material"
+            type="text"
+            defaultValue={product?.material ?? ""}
+            placeholder="قطن"
+            className={inputClass}
+          />
         </div>
         <div>
           <label htmlFor="slug" className={labelClass}>
@@ -157,62 +190,72 @@ export function ProductForm({
       {mode === "create" ? (
         <fieldset className="rounded-xl border border-slate-200 p-4">
           <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
-            {labels.optionalVariant}
+            {labels.variantsTitle}
           </legend>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <div>
-              <label htmlFor="variantSku" className={labelClass}>
-                SKU
-              </label>
-              <input
-                id="variantSku"
-                name="variantSku"
-                type="text"
-                defaultValue={suggestedVariantSku}
-                placeholder="SHIRT-M"
-                className={inputClass}
-              />
-            </div>
-            <div>
-              <label htmlFor="variantSize" className={labelClass}>
-                Size
-              </label>
-              <input id="variantSize" name="variantSize" type="text" className={inputClass} />
-            </div>
-            <div>
-              <label htmlFor="variantColor" className={labelClass}>
-                Color
-              </label>
-              <input id="variantColor" name="variantColor" type="text" className={inputClass} />
-            </div>
-            <div>
-              <label htmlFor="variantPriceOverride" className={labelClass}>
-                {labels.priceOverride}
-              </label>
-              <input
-                id="variantPriceOverride"
-                name="variantPriceOverride"
-                type="text"
-                inputMode="decimal"
-                className={inputClass}
-              />
-            </div>
-            <div>
-              <label htmlFor="variantStatus" className={labelClass}>
-                {labels.variantStatus}
-              </label>
-              <select id="variantStatus" name="variantStatus" defaultValue="ACTIVE" className={inputClass}>
-                {STATUS_OPTIONS.map((status) => (
-                  <option key={status} value={status}>
-                    {status}
-                  </option>
-                ))}
-              </select>
-            </div>
+          <p className="mt-1 text-xs text-slate-400">{labels.variantsHint}</p>
+
+          <input type="hidden" name="variantsJson" value={JSON.stringify(rows)} />
+
+          <div className="mt-3 space-y-3">
+            {rows.map((row, index) => (
+              <div key={row.key} className="grid grid-cols-1 items-end gap-3 rounded-lg bg-slate-50 p-3 sm:grid-cols-5">
+                <label className="block">
+                  <span className="mb-1 block text-xs font-medium text-slate-600">{labels.size}</span>
+                  <input
+                    value={row.size}
+                    onChange={(event) => updateRow(index, { size: event.target.value })}
+                    placeholder="10"
+                    className={inputClass}
+                  />
+                </label>
+                <label className="block">
+                  <span className="mb-1 block text-xs font-medium text-slate-600">{labels.color}</span>
+                  <input
+                    value={row.color}
+                    onChange={(event) => updateRow(index, { color: event.target.value })}
+                    placeholder="أحمر"
+                    className={inputClass}
+                  />
+                </label>
+                <label className="block">
+                  <span className="mb-1 block text-xs font-medium text-slate-600">{labels.quantity}</span>
+                  <input
+                    value={row.quantity}
+                    onChange={(event) => updateRow(index, { quantity: event.target.value })}
+                    inputMode="numeric"
+                    placeholder="100"
+                    className={inputClass}
+                  />
+                </label>
+                <label className="block">
+                  <span className="mb-1 block text-xs font-medium text-slate-600">{labels.rowPrice}</span>
+                  <input
+                    value={row.price}
+                    onChange={(event) => updateRow(index, { price: event.target.value })}
+                    inputMode="decimal"
+                    placeholder="200"
+                    className={inputClass}
+                  />
+                </label>
+                <button
+                  type="button"
+                  onClick={() => removeRow(index)}
+                  disabled={rows.length === 1}
+                  className="rounded-lg border border-rose-200 px-3 py-2 text-xs font-medium text-rose-700 transition-colors hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {labels.removeRow}
+                </button>
+              </div>
+            ))}
           </div>
-          <p className="mt-3 text-xs text-slate-500">
-            {labels.variantHint}
-          </p>
+
+          <button
+            type="button"
+            onClick={addRow}
+            className="mt-3 rounded-lg border border-slate-300 px-3 py-2 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-100"
+          >
+            {labels.addRow}
+          </button>
         </fieldset>
       ) : null}
 

@@ -337,6 +337,9 @@ model Product {
   slug        String  @unique @db.VarChar(150)
   description String? @db.Text
 
+  /// The fabric the garment is made of, e.g. cotton, linen, polyester.
+  material String? @db.VarChar(100)
+
   status    ProductStatus @default(DRAFT)
   basePrice Decimal       @db.Decimal(12, 2)
   currency  String        @default("SAR") @db.VarChar(10)

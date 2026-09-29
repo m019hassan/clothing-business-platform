@@ -147,6 +147,8 @@ export function VariantManager({
     sizePlaceholder: string;
     colorPlaceholder: string;
     pricePlaceholder: string;
+    quantityPlaceholder: string;
+    newQuantity: string;
   };
   statusLabels: Record<string, string>;
 }) {
@@ -188,6 +190,13 @@ export function VariantManager({
             placeholder={newLabels.pricePlaceholder}
             inputMode="decimal"
             aria-label={newLabels.newPrice}
+            className={inputClass}
+          />
+          <input
+            name="quantity"
+            placeholder={newLabels.quantityPlaceholder}
+            inputMode="numeric"
+            aria-label={newLabels.newQuantity}
             className={inputClass}
           />
           <select name="status" defaultValue="ACTIVE" aria-label={newLabels.newStatus} className={inputClass}>

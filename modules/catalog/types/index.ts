@@ -20,6 +20,7 @@ export type ProductInventoryView = {
   name: string;
   slug: string;
   description: string | null;
+  material: string | null;
   status: ProductStatus;
   basePrice: string;
   currency: string;
@@ -35,6 +36,7 @@ export type ProductView = {
   name: string;
   slug: string;
   description: string | null;
+  material: string | null;
   status: ProductStatus;
   basePrice: string;
   currency: string;

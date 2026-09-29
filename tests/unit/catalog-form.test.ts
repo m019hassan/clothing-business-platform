@@ -18,6 +18,33 @@ function form(entries: Record<string, string>): FormData {
 }
 
 describe("productFormToPayload", () => {
+  it("maps the clothing variant rows sent as JSON", () => {
+    const payload = productFormToPayload(
+      form({
+        name: "ترنج اولادي",
+        slug: "",
+        basePrice: "200",
+        categoryId: "11111111-2222-4333-8444-555555555555",
+        description: "قطن",
+        material: "قطن",
+        status: "ACTIVE",
+        variantsJson: JSON.stringify([
+          { size: "10", color: "أحمر", quantity: "100", price: "200" },
+          { size: "10", color: "أزرق", quantity: "100", price: "200" },
+          { size: "12", color: "بامبي", quantity: "60", price: "150" },
+        ]),
+      }),
+      { partial: false },
+    );
+
+    expect(payload.material).toBe("قطن");
+    expect(payload.variants).toEqual([
+      { size: "10", color: "أحمر", quantity: 100, priceOverride: "200" },
+      { size: "10", color: "أزرق", quantity: 100, priceOverride: "200" },
+      { size: "12", color: "بامبي", quantity: 60, priceOverride: "150" },
+    ]);
+  });
+
   it("maps a create form, including the optional first variant", () => {
     const payload = productFormToPayload(
       form({

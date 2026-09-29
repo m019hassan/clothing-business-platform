@@ -16,6 +16,8 @@ import {
 } from "@/src/lib/errors";
 import { isUuid } from "@/src/lib/validation";
 import { autoSlug, autoSku } from "@/modules/catalog/application/identifiers";
+import { applyOpeningBalance } from "@/modules/inventory/application/opening-balance";
+import { resolveStockingWarehouseId } from "@/modules/inventory/application/movements";
 
 type AuthenticatedAccount = NonNullable<SafeAccount>;
 
@@ -31,6 +33,7 @@ const SUPPORTED_CURRENCIES = ["SAR"];
 const PRODUCT_STATUSES: readonly ProductStatus[] = ["DRAFT", "ACTIVE", "ARCHIVED"];
 
 export type ProductWriteInput = {
+  material?: string | null;
   name?: string;
   slug?: string;
   description?: string | null;
@@ -47,6 +50,7 @@ export type VariantWriteInput = {
   color?: string | null;
   priceOverride?: string | null;
   status?: ProductStatus;
+  quantity?: number;
 };
 
 function asRecord(payload: unknown): Record<string, unknown> {
@@ -213,6 +217,7 @@ export function parseProductWriteInput(
     "basePrice",
     "currency",
     "categoryId",
+    "material",
     "variants",
   ];
   const unknown = Object.keys(body).filter((key) => !allowed.includes(key));
@@ -259,6 +264,11 @@ export function parseProductWriteInput(
     throw new ValidationError("categoryId is required.");
   }
 
+  if (body.material !== undefined) {
+    input.material =
+      body.material === null ? null : parseAttribute(body.material, "material");
+  }
+
   if (body.variants !== undefined) {
     if (!Array.isArray(body.variants)) {
       throw new ValidationError("variants must be an array.");
@@ -279,7 +289,7 @@ export function parseVariantWriteInput(
   { partial }: { partial: boolean },
 ): VariantWriteInput {
   const body = asRecord(payload);
-  const allowed = ["sku", "size", "color", "priceOverride", "status"];
+  const allowed = ["sku", "size", "color", "priceOverride", "status", "quantity"];
   const unknown = Object.keys(body).filter((key) => !allowed.includes(key));
 
   if (unknown.length > 0) {
@@ -310,6 +320,21 @@ export function parseVariantWriteInput(
 
   if (body.status !== undefined) {
     input.status = parseStatus(body.status);
+  }
+
+  if (body.quantity !== undefined) {
+    // Opening stock belongs to creation; later stock goes through the ledger screen.
+    if (partial) {
+      throw new ValidationError("quantity can only be set when a variant is created.");
+    }
+
+    const quantity = Number(body.quantity);
+
+    if (!Number.isInteger(quantity) || quantity < 0 || quantity > 1_000_000) {
+      throw new ValidationError("quantity must be a whole number between 0 and 1000000.");
+    }
+
+    input.quantity = quantity;
   }
 
   if (partial && Object.keys(input).length === 0) {
@@ -370,16 +395,23 @@ export async function createProduct(
   const providedSlug = input.slug;
   const maxAttempts = providedSlug ? 1 : 5;
 
+  // Stock entered with the product is written through the ledger inside the same
+  // transaction, so a product never exists with stock that has no movement.
+  const initialStock = (input.variants ?? []).filter((variant) => (variant.quantity ?? 0) > 0);
+  const stockingWarehouseId = initialStock.length > 0 ? await resolveStockingWarehouseId(account) : null;
+
   const product = await withDatabaseError(async () => {
     for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
       const slug = providedSlug ?? autoSlug("product", input.name);
 
       try {
-        return await prisma.product.create({
+        return await prisma.$transaction(async (transaction) => {
+        const created = await transaction.product.create({
         data: {
           name: input.name!,
           slug,
           description: input.description ?? null,
+          material: input.material ?? null,
           status: input.status ?? ProductStatus.DRAFT,
           basePrice: new Prisma.Decimal(input.basePrice!),
           currency: input.currency ?? "SAR",
@@ -387,7 +419,8 @@ export async function createProduct(
           variants: input.variants
             ? {
                 create: input.variants.map((variant) => ({
-                  sku: variant.sku!,
+                  // A generated SKU keeps every row unique when the form leaves it out.
+                  sku: variant.sku ?? autoSku(),
                   size: variant.size ?? null,
                   color: variant.color ?? null,
                   priceOverride: variant.priceOverride ? new Prisma.Decimal(variant.priceOverride) : null,
@@ -396,8 +429,36 @@ export async function createProduct(
               }
             : undefined,
         },
-        select: { id: true },
+        select: { id: true, variants: { select: { id: true, sku: true } } },
         });
+
+        // Opening stock for the rows that came with a quantity. Nested creates are
+        // returned in the order they were sent, and a typed SKU pins the match
+        // exactly - matching on the SKU alone would send every row to the first one.
+        for (const [index, variant] of (input.variants ?? []).entries()) {
+          if (!variant.quantity || variant.quantity <= 0 || !stockingWarehouseId) {
+            continue;
+          }
+
+          const createdVariant = variant.sku
+            ? created.variants.find((entry) => entry.sku === variant.sku)
+            : created.variants[index];
+
+          if (!createdVariant) {
+            continue;
+          }
+
+          await applyOpeningBalance(transaction, {
+            variantId: createdVariant.id,
+            warehouseId: stockingWarehouseId,
+            quantity: variant.quantity,
+            reason: "Opening stock",
+            actorAccountId: account.id,
+          });
+        }
+
+        return created;
+      });
       } catch (error) {
         const clash = uniqueFieldOf(error);
 
@@ -449,6 +510,7 @@ export async function updateProduct(
   if (input.name !== undefined) data.name = input.name;
   if (input.slug !== undefined) data.slug = input.slug;
   if (input.description !== undefined) data.description = input.description;
+        if (input.material !== undefined) data.material = input.material;
   if (input.status !== undefined) data.status = input.status;
   if (input.basePrice !== undefined) data.basePrice = new Prisma.Decimal(input.basePrice);
   if (input.currency !== undefined) data.currency = input.currency;
@@ -502,12 +564,16 @@ export async function createVariant(
   const providedSku = input.sku;
   const maxAttempts = providedSku ? 1 : 5;
 
+  const openingQuantity = input.quantity ?? 0;
+  const stockingWarehouseId = openingQuantity > 0 ? await resolveStockingWarehouseId(account) : null;
+
   await withDatabaseError(async () => {
     for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
       const sku = providedSku ?? autoSku();
 
       try {
-      await prisma.productVariant.create({
+      await prisma.$transaction(async (transaction) => {
+      const created = await transaction.productVariant.create({
         data: {
           productId,
           sku,
@@ -517,6 +583,18 @@ export async function createVariant(
           status: input.status ?? ProductStatus.DRAFT,
         },
         select: { id: true },
+      });
+
+        if (openingQuantity > 0 && stockingWarehouseId) {
+          await applyOpeningBalance(transaction, {
+            variantId: created.id,
+            warehouseId: stockingWarehouseId,
+            quantity: openingQuantity,
+            reason: "Opening stock",
+            actorAccountId: account.id,
+          });
+        }
+
       });
 
         return;

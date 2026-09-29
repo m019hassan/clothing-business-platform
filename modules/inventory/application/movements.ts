@@ -89,7 +89,8 @@ export function parseAdjustmentInput(payload: unknown): AdjustmentInput {
  * Warehouse for a manual adjustment: an explicit id wins, otherwise the branch of
  * the signed-in account decides, then the central MAIN warehouse.
  */
-async function resolveWarehouseId(
+/** The warehouse a caller writes stock to: an explicit one, else the branch's. */
+export async function resolveStockingWarehouseId(
   account: AuthenticatedAccount,
   warehouseId?: string,
 ): Promise<string> {
@@ -152,7 +153,7 @@ export async function adjustStock(
   await requirePermission(PERMISSIONS.INVENTORY_ADJUST);
 
   const input = parseAdjustmentInput(payload);
-  const warehouseId = await resolveWarehouseId(account, input.warehouseId);
+  const warehouseId = await resolveStockingWarehouseId(account, input.warehouseId);
 
   const runAdjustment = () =>
     prisma.$transaction(async (transaction) => {

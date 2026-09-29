@@ -6,7 +6,6 @@ import { PERMISSIONS } from "@/modules/auth/application/permissions";
 import { getCurrentAccount } from "@/modules/auth/infrastructure/session";
 import { listCategories } from "@/modules/catalog/application/categories";
 import { ProductForm } from "@/modules/catalog/components/product-form";
-import { suggestSku } from "@/modules/catalog/application/identifiers";
 import { getInterfaceLanguage } from "@/src/lib/i18n/server";
 
 export default async function NewProductPage() {
@@ -54,7 +53,6 @@ export default async function NewProductPage() {
           categories={categories}
           labels={{ ...t.catalog.form, status: t.common.status, category: t.catalog.category }}
           statusLabels={t.catalog.statusLabels}
-          suggestedVariantSku={suggestSku()}
         />
       </section>
     </div>

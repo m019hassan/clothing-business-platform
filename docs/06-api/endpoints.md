@@ -357,6 +357,27 @@ outright. Deleting your own account is refused, and so is removing the last acti
 administrator. Employee fields (`jobTitle`, `departmentId`, `roleIds`) are updated
 through `PUT /api/users/:id`.
 
+## Clothing products
+
+A product carries the fabric in `material`, and creation accepts the size/colour rows
+directly:
+
+```json
+{
+  "name": "ترنج اولادي", "basePrice": "200.00", "material": "قطن", "categoryId": "…",
+  "variants": [
+    { "size": "10", "color": "أحمر", "quantity": 100, "priceOverride": "200.00" },
+    { "size": "12", "color": "بامبي", "quantity": 60,  "priceOverride": "150.00" }
+  ]
+}
+```
+
+`quantity` is opening stock: it is written through the ledger as an ADJUSTMENT
+("Opening stock") inside the same transaction, in the account's branch warehouse, so
+stock never exists without a movement behind it. A row may omit the quantity and be
+topped up later, and `quantity` is refused on updates - later stock goes through the
+inventory screen. SKUs are generated per row when they are not typed.
+
 ## Catalog identifiers
 
 Product and category **slugs are optional**. When one is omitted (or blank) the

@@ -95,12 +95,12 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
             categories={categories}
             labels={{ ...t.catalog.form, status: t.common.status, category: t.catalog.category }}
             statusLabels={t.catalog.statusLabels}
-            suggestedVariantSku={suggestSku(product.slug)}
             product={{
               id: product.id,
               name: product.name,
               slug: product.slug,
               description: product.description,
+              material: product.material,
               basePrice: product.basePrice,
               status: product.status,
               categoryId: product.categoryId,
@@ -147,6 +147,8 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
               sizePlaceholder: t.catalog.detail.size,
               colorPlaceholder: t.catalog.detail.color,
               pricePlaceholder: t.catalog.form.priceOverride,
+              quantityPlaceholder: t.catalog.variantsAdmin.quantityPlaceholder,
+              newQuantity: t.catalog.variantsAdmin.newQuantity,
             }}
             statusLabels={t.catalog.statusLabels}
             variants={product.variants.map((variant) => ({
