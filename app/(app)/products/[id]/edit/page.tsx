@@ -5,6 +5,7 @@ import { getCurrentPermissions } from "@/modules/auth/application/authorization"
 import { PERMISSIONS } from "@/modules/auth/application/permissions";
 import { getCurrentAccount } from "@/modules/auth/infrastructure/session";
 import { listCategories } from "@/modules/catalog/application/categories";
+import { listColorOptions } from "@/modules/catalog/application/colors";
 import { getProductInventory } from "@/modules/catalog/application/products";
 import { CategoryManager } from "@/modules/catalog/components/category-manager";
 import { ProductForm } from "@/modules/catalog/components/product-form";
@@ -62,6 +63,7 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
   }
 
   const categories = await listCategories({ includeInactive: true });
+  const colors = await listColorOptions();
   const productImages = await listProductImages(product.id);
 
   return (
@@ -96,6 +98,7 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
           <ProductForm
             mode="edit"
             categories={categories}
+            colors={colors}
             labels={{ ...t.catalog.form, status: t.common.status, category: t.catalog.category }}
             statusLabels={t.catalog.statusLabels}
             product={{
@@ -120,6 +123,7 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
         <div className="mt-5">
           <VariantManager
             productId={product.id}
+            colors={colors.map((color) => color.name)}
             suggestedSku={suggestSku(product.slug)}
             labels={{
               saving: t.catalog.form.saving,

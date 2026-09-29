@@ -39,6 +39,7 @@ export type ProductFormLabels = {
   description: string;
   optionalVariant: string;
   priceOverride: string;
+  chooseColor: string;
   material: string;
   variantsTitle: string;
   variantsHint: string;
@@ -61,12 +62,14 @@ export function ProductForm({
   mode,
   product,
   categories,
+  colors,
   labels,
   statusLabels,
 }: {
   mode: "create" | "edit";
   product?: ProductFormValues;
   categories: { id: string; name: string; isActive: boolean }[];
+  colors: { id: string; name: string }[];
   labels: ProductFormLabels;
   statusLabels: Record<string, string>;
 }) {
@@ -210,12 +213,20 @@ export function ProductForm({
                 </label>
                 <label className="block">
                   <span className="mb-1 block text-xs font-medium text-slate-600">{labels.color}</span>
-                  <input
+                  <select
                     value={row.color}
                     onChange={(event) => updateRow(index, { color: event.target.value })}
-                    placeholder="أحمر"
+                    required
+                    aria-label={labels.color}
                     className={inputClass}
-                  />
+                  >
+                    <option value="">{labels.chooseColor}</option>
+                    {colors.map((color) => (
+                      <option key={color.id} value={color.name}>
+                        {color.name}
+                      </option>
+                    ))}
+                  </select>
                 </label>
                 <label className="block">
                   <span className="mb-1 block text-xs font-medium text-slate-600">{labels.quantity}</span>

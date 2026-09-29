@@ -44,10 +44,12 @@ type VariantLabels = {
 function VariantEditRow({
   productId,
   variant,
+  colors,
   labels,
   statusLabels,
 }: {
   productId: string;
+  colors: string[];
   variant: VariantRow;
   labels: VariantLabels;
   statusLabels: Record<string, string>;
@@ -67,7 +69,14 @@ function VariantEditRow({
         <input type="hidden" name="productId" value={productId} />
         <input type="hidden" name="variantId" value={variant.id} />
         <input name="size" defaultValue={variant.size ?? ""} placeholder={labels.sizePlaceholder} aria-label={`${labels.ariaSize} ${variant.sku}`} className={inputClass} />
-        <input name="color" defaultValue={variant.color ?? ""} placeholder={labels.colorPlaceholder} aria-label={`${labels.ariaColor} ${variant.sku}`} className={inputClass} />
+        <select name="color" defaultValue={variant.color ?? ""} aria-label={`${labels.ariaColor} ${variant.sku}`} className={inputClass}>
+          <option value="">{labels.colorPlaceholder}</option>
+          {colors.map((color) => (
+            <option key={color} value={color}>
+              {color}
+            </option>
+          ))}
+        </select>
         <input
           name="priceOverride"
           defaultValue={variant.priceOverride ?? ""}
@@ -123,6 +132,7 @@ function VariantEditRow({
 export function VariantManager({
   productId,
   variants,
+  colors,
   labels,
   newLabels,
   statusLabels,
@@ -130,6 +140,7 @@ export function VariantManager({
 }: {
   productId: string;
   variants: VariantRow[];
+  colors: string[];
   suggestedSku: string;
   labels: VariantLabels;
   newLabels: {
@@ -154,6 +165,13 @@ export function VariantManager({
 }) {
   const [state, formAction, isPending] = useActionState(createVariantAction, initialState);
 
+  // Existing variants may carry a colour typed before the library existed, so the row
+  // selects offer the library plus the product's own values; the new-variant form
+  // offers the library only.
+  const rowColors = Array.from(
+    new Set([...colors, ...variants.map((variant) => variant.color).filter((color): color is string => Boolean(color))]),
+  );
+
   return (
     <div className="space-y-5">
       <ul className="divide-y divide-slate-200 rounded-xl border border-slate-200">
@@ -165,6 +183,7 @@ export function VariantManager({
               key={variant.id}
               productId={productId}
               variant={variant}
+              colors={rowColors}
               labels={labels}
               statusLabels={statusLabels}
             />
@@ -184,7 +203,14 @@ export function VariantManager({
             className={inputClass}
           />
           <input name="size" placeholder={newLabels.sizePlaceholder} aria-label={newLabels.newSize} className={inputClass} />
-          <input name="color" placeholder={newLabels.colorPlaceholder} aria-label={newLabels.newColor} className={inputClass} />
+          <select name="color" required aria-label={newLabels.newColor} className={inputClass}>
+            <option value="">{newLabels.colorPlaceholder}</option>
+            {colors.map((color) => (
+              <option key={color} value={color}>
+                {color}
+              </option>
+            ))}
+          </select>
           <input
             name="priceOverride"
             placeholder={newLabels.pricePlaceholder}
