@@ -950,6 +950,7 @@ export const en = {
     orders: "Orders",
     placed: "Placed",
     skus: "SKUs",
+    sizesLabel: "Sizes:",
     uncategorized: "Uncategorized",
     sortOptions: {
       name: "Name (A-Z)",

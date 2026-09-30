@@ -145,6 +145,7 @@ afterAll(async () => {
   await prisma.inventoryItem.deleteMany({ where: { variantId: { in: created.variantIds } } });
   await prisma.productVariant.deleteMany({ where: { id: { in: created.variantIds } } });
   await prisma.product.deleteMany({ where: { id: { in: created.productIds } } });
+  await prisma.cart.deleteMany({ where: { customerProfileId: { in: created.profileIds } } });
   await prisma.customerProfile.deleteMany({ where: { id: { in: created.profileIds } } });
   await prisma.account.deleteMany({ where: { id: { in: created.accountIds } } });
 

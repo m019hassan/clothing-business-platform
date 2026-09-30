@@ -141,6 +141,8 @@ export async function getInventoryPage(
 export type VariantWithoutBalance = {
   variantId: string;
   sku: string;
+  size: string | null;
+  color: string | null;
   productId: string;
   productName: string;
 };
@@ -162,6 +164,8 @@ export async function listVariantsWithoutBalances(limit = 20): Promise<VariantWi
     select: {
       id: true,
       sku: true,
+      size: true,
+      color: true,
       product: { select: { id: true, name: true } },
     },
   });
@@ -169,6 +173,8 @@ export async function listVariantsWithoutBalances(limit = 20): Promise<VariantWi
   return variants.map((variant) => ({
     variantId: variant.id,
     sku: variant.sku,
+    size: variant.size,
+    color: variant.color,
     productId: variant.product.id,
     productName: variant.product.name,
   }));

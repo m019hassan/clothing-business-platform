@@ -149,30 +149,32 @@ export default async function EmployeesPage({ searchParams }: EmployeesPageProps
                       {row.hireDate ? formatDate(row.hireDate) : "—"}
                     </td>
                     <td className="whitespace-nowrap px-6 py-4 text-end">
-                      <Link
-                        href={`/employees/${row.id}`}
-                        className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-100"
-                      >
-                        View
-                      </Link>
+                      <div className="flex flex-wrap items-center justify-end gap-1">
+                        <Link
+                          href={`/employees/${row.id}`}
+                          className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-100"
+                        >
+                          View
+                        </Link>
 
-                      {canManageEmployees ? (
-                        <div className="mt-2">
-                          <EmployeeRowActions
-                            employee={{
-                              accountId: row.id,
-                              firstName: row.firstName,
-                              lastName: row.lastName,
-                              jobTitle: row.jobTitle,
-                              accountStatus: row.accountStatus,
-                              departmentName: row.departmentName,
-                              roleIds: row.roleIds,
-                            }}
-                            roles={roleOptions}
-                            labels={{ ...t.employees.editor, statusLabels: t.accountStatus, errors: t.errors }}
-                          />
-                        </div>
-                      ) : null}
+                        {canManageEmployees ? (
+                          <div className="">
+                            <EmployeeRowActions
+                              employee={{
+                                accountId: row.id,
+                                firstName: row.firstName,
+                                lastName: row.lastName,
+                                jobTitle: row.jobTitle,
+                                accountStatus: row.accountStatus,
+                                departmentName: row.departmentName,
+                                roleIds: row.roleIds,
+                              }}
+                              roles={roleOptions}
+                              labels={{ ...t.employees.editor, statusLabels: t.accountStatus, errors: t.errors }}
+                            />
+                          </div>
+                        ) : null}
+                      </div>
                     </td>
                   </tr>
                 ))}

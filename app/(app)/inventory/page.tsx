@@ -151,7 +151,10 @@ export default async function InventoryPage({ searchParams }: InventoryPageProps
                     <Link href={`/products/${variant.productId}`} className="text-sm font-medium text-slate-900 hover:text-blue-700">
                       {variant.productName}
                     </Link>
-                    <p className="text-xs text-slate-500">{variant.sku}</p>
+                    <p className="text-base font-bold text-slate-800">
+                      {formatVariantAttributes(variant.size, variant.color, "—")}
+                    </p>
+                    <p className="font-mono text-xs text-slate-400">{variant.sku}</p>
                   </div>
                   <StockAdjustForm
                     variantId={variant.variantId}
@@ -196,10 +199,10 @@ export default async function InventoryPage({ searchParams }: InventoryPageProps
                       <Link href={`/products/${row.productId}`} className="font-medium text-slate-900 hover:text-blue-700">
                         {row.productName}
                       </Link>
-                      <p className="text-xs text-slate-500">
-                        {row.sku}
-                        {row.size || row.color ? ` · ${formatVariantAttributes(row.size, row.color, "")}` : ""}
+                      <p className="mt-0.5 text-base font-bold text-slate-800">
+                        {formatVariantAttributes(row.size, row.color, "—")}
                       </p>
+                      <p className="font-mono text-xs text-slate-400">{row.sku}</p>
                     </td>
                     <td className="whitespace-nowrap px-6 py-4 text-slate-700">
                       {row.warehouseName}
@@ -234,7 +237,10 @@ export default async function InventoryPage({ searchParams }: InventoryPageProps
                     <Link href={`/products/${row.productId}`} className="truncate font-semibold text-slate-900">
                       {row.productName}
                     </Link>
-                    <p className="truncate text-xs text-slate-500">{row.sku}</p>
+                    <p className="truncate text-base font-bold text-slate-800">
+                      {formatVariantAttributes(row.size, row.color, "—")}
+                    </p>
+                    <p className="truncate font-mono text-xs text-slate-400">{row.sku}</p>
                   </div>
                   <StockBadge availableQuantity={row.availableQuantity} labels={t.catalog.stockLabels} />
                 </div>

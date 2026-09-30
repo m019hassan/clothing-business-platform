@@ -40,15 +40,22 @@ function parseLimit(raw: string | undefined): number {
   return Number.isInteger(value) && value >= 1 && value <= 100 ? value : PAGE_SIZE;
 }
 
-function variantSummary(product: ProductView): string {
-  if (product.variants.length === 0) {
-    return "No active variants";
+/** The distinct sizes of a product's active variants, smallest number first. */
+function productSizes(product: ProductView): string[] {
+  const sizes = new Set<string>();
+
+  for (const variant of product.variants) {
+    if (variant.size) {
+      sizes.add(variant.size);
+    }
   }
 
-  const skus = product.variants.slice(0, 2).map((variant) => variant.sku);
-  const remaining = product.variants.length - skus.length;
+  return [...sizes].sort((left, right) => {
+    const leftValue = /^\d+$/.test(left) ? Number(left) : Number.POSITIVE_INFINITY;
+    const rightValue = /^\d+$/.test(right) ? Number(right) : Number.POSITIVE_INFINITY;
 
-  return remaining > 0 ? `${skus.join(", ")} +${remaining}` : skus.join(", ");
+    return leftValue === rightValue ? left.localeCompare(right) : leftValue - rightValue;
+  });
 }
 
 function totalAvailable(product: ProductView): number {
@@ -295,12 +302,24 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                             {product.name}
                           </Link>
                           <p className="text-xs text-slate-500">{product.categoryName ?? t.catalog.uncategorized}</p>
+                          {productSizes(product).length > 0 ? (
+                            <p className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                              <span className="text-[11px] text-slate-400">{t.catalog.sizesLabel}</span>
+                              {productSizes(product).map((size) => (
+                                <span
+                                  key={size}
+                                  className="rounded-md bg-slate-100 px-2 py-0.5 text-sm font-bold leading-5 text-slate-800"
+                                >
+                                  {size}
+                                </span>
+                              ))}
+                            </p>
+                          ) : null}
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 text-slate-700">
                       <span className="font-medium">{product.variants.length}</span>
-                      <p className="text-xs text-slate-500">{variantSummary(product)}</p>
                     </td>
                     <td className="px-6 py-4">
                       <ProductStatusBadge status={product.status} />
@@ -348,6 +367,18 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                       <p className="truncate text-xs text-slate-500">
                         {product.categoryName ?? t.catalog.uncategorized}
                       </p>
+                      {productSizes(product).length > 0 ? (
+                        <p className="mt-1 flex flex-wrap items-center gap-1.5">
+                          {productSizes(product).map((size) => (
+                            <span
+                              key={size}
+                              className="rounded-md bg-slate-100 px-2 py-0.5 text-sm font-bold leading-5 text-slate-800"
+                            >
+                              {size}
+                            </span>
+                          ))}
+                        </p>
+                      ) : null}
                     </div>
                   </div>
                   <ProductStatusBadge status={product.status} />
@@ -366,8 +397,10 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                     <dd className="text-slate-800">{totalAvailable(product)}</dd>
                   </div>
                   <div className="min-w-0">
-                    <dt className="text-xs text-slate-500">{t.catalog.skus}</dt>
-                    <dd className="truncate text-slate-800">{variantSummary(product)}</dd>
+                    <dt className="text-xs text-slate-500">{t.catalog.sizesLabel}</dt>
+                    <dd className="truncate text-slate-800">
+                      {productSizes(product).length > 0 ? productSizes(product).join(" · ") : "—"}
+                    </dd>
                   </div>
                 </dl>
               </Link>

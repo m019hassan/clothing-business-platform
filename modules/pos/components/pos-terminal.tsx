@@ -182,11 +182,13 @@ export function PosTerminal({
             <li key={item.variantId} className="flex items-center justify-between gap-3 py-3">
               <div className="min-w-0">
                 <p className="truncate text-sm font-medium text-slate-900">{item.productName}</p>
-                <p className="text-xs text-slate-500">
-                  {item.sku}
-                  {item.size ? ` · ${item.size}` : ""}
-                  {item.color ? ` · ${item.color}` : ""} · {labels.availableInRow} {item.availableQuantity}
+                <p className="truncate text-base font-bold text-slate-800">
+                  {[item.size, item.color].filter(Boolean).join(" · ") || "—"}
+                  <span className="ms-2 text-xs font-normal text-slate-500">
+                    {labels.availableInRow} {item.availableQuantity}
+                  </span>
                 </p>
+                <p className="truncate font-mono text-xs text-slate-400">{item.sku}</p>
               </div>
               <div className="flex shrink-0 items-center gap-3">
                 <span className="text-sm font-semibold text-slate-800">

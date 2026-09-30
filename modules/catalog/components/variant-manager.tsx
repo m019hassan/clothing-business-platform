@@ -63,7 +63,10 @@ function VariantEditRow({
   return (
     <li className="grid grid-cols-1 gap-3 px-5 py-4 sm:grid-cols-[1.2fr_0.8fr_0.8fr_0.9fr_auto] sm:items-center">
       <div className="min-w-0">
-        <p className="truncate text-sm font-medium text-slate-900">{variant.sku}</p>
+        <p className="truncate text-base font-bold text-slate-900">
+          {[variant.size, variant.color].filter(Boolean).join(" · ") || variant.sku}
+        </p>
+        <p className="truncate font-mono text-xs text-slate-400">{variant.sku}</p>
         <p className="text-xs text-slate-500">{labels.available} {variant.availableQuantity}</p>
       </div>
 

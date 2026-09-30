@@ -11,7 +11,7 @@ import { getCurrentAccount } from "@/modules/auth/infrastructure/session";
 import { getProductInventory } from "@/modules/catalog/application/products";
 import type { ProductInventoryView } from "@/modules/catalog/types";
 import { NotFoundError } from "@/src/lib/errors";
-import { formatDate, formatMoney, formatVariantAttributes, variantLabel } from "@/src/lib/format";
+import { formatDate, formatMoney, variantLabel } from "@/src/lib/format";
 import { ImageViewer } from "@/components/products/image-viewer";
 import { listProductImages } from "@/modules/catalog/application/product-images";
 import { getInterfaceLanguage } from "@/src/lib/i18n/server";
@@ -228,9 +228,9 @@ export default async function ProductDetailPage({ params }: ProductDetailProps) 
               <table className="min-w-full divide-y divide-slate-200 text-sm">
                 <thead className="bg-slate-50 text-start text-xs font-semibold uppercase tracking-wide text-slate-500">
                   <tr>
-                    <th scope="col" className="px-6 py-3">{t.catalog.detail.sku}</th>
                     <th scope="col" className="px-6 py-3">{t.catalog.detail.size}</th>
                     <th scope="col" className="px-6 py-3">{t.catalog.detail.color}</th>
+                    <th scope="col" className="px-6 py-3">{t.catalog.detail.sku}</th>
                     <th scope="col" className="px-6 py-3">{t.common.status}</th>
                     <th scope="col" className="px-6 py-3">{t.catalog.detail.unitPrice}</th>
                     <th scope="col" className="px-6 py-3 text-end">{t.catalog.detail.onHand}</th>
@@ -243,9 +243,11 @@ export default async function ProductDetailPage({ params }: ProductDetailProps) 
                 <tbody className="divide-y divide-slate-100">
                   {product.variants.map((variant) => (
                     <tr key={variant.id} className="transition-colors hover:bg-slate-50">
-                      <td className="whitespace-nowrap px-6 py-4 font-medium text-slate-900">{variant.sku}</td>
-                      <td className="whitespace-nowrap px-6 py-4 text-slate-600">{variant.size ?? "—"}</td>
-                      <td className="whitespace-nowrap px-6 py-4 text-slate-600">{variant.color ?? "—"}</td>
+                      <td className="whitespace-nowrap px-6 py-4 text-lg font-bold text-slate-900">
+                        {variant.size ?? "—"}
+                      </td>
+                      <td className="whitespace-nowrap px-6 py-4 font-medium text-slate-700">{variant.color ?? "—"}</td>
+                      <td className="whitespace-nowrap px-6 py-4 font-mono text-xs text-slate-400">{variant.sku}</td>
                       <td className="whitespace-nowrap px-6 py-4">
                         <ProductStatusBadge status={variant.status} />
                       </td>
@@ -284,10 +286,10 @@ export default async function ProductDetailPage({ params }: ProductDetailProps) 
                 <div key={variant.id} className="p-5">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="truncate font-semibold text-slate-900">{variant.sku}</p>
-                      <p className="truncate text-xs text-slate-500">
-                        {formatVariantAttributes(variant.size, variant.color)}
+                      <p className="truncate text-lg font-bold text-slate-900">
+                        {[variant.size, variant.color].filter(Boolean).join(" · ") || variant.sku}
                       </p>
+                      <p className="truncate font-mono text-xs text-slate-400">{variant.sku}</p>
                     </div>
                     <StockBadge availableQuantity={variant.availableQuantity} labels={t.catalog.stockLabels} />
                   </div>
