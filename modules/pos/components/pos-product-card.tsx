@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import type { PosCatalogItemView } from "@/modules/pos/types";
 import { formatMoney } from "@/src/lib/format";
@@ -13,10 +13,23 @@ type Labels = {
   sizeLabel: string;
 };
 
+/** Numeric sizes first, smallest to largest; anything else after them. */
+function orderSizes(sizes: string[]): string[] {
+  const rank = (size: string) => (/^\d+$/.test(size) ? Number(size) : Number.POSITIVE_INFINITY);
+
+  return [...sizes].sort((left, right) => {
+    const leftRank = rank(left);
+    const rightRank = rank(right);
+
+    return leftRank === rightRank ? left.localeCompare(right) : leftRank - rightRank;
+  });
+}
+
 /**
- * One card per product: its photo and name, then the colours (each with its swatch
- * from the library) and the sizes of the chosen colour. Picking a combination is
- * what the add button puts in the sale, so a product never appears twice.
+ * One card per product: its photo and name, then every colour and every size. A chip
+ * that cannot be picked for the current combination is dashed and greyed rather than
+ * hidden, so the choices stay visible. Colour first, then size; picking a colour keeps
+ * a size the new colour also has.
  */
 export function PosProductCard({
   items,
@@ -39,27 +52,41 @@ export function PosProductCard({
     return [...seen.entries()].map(([name, hex]) => ({ name, hex }));
   }, [items]);
 
-  const [color, setColor] = useState<string | null>(colors[0]?.name ?? null);
-
-  const sizes = useMemo(
-    () => items.filter((item) => (color === null ? true : item.color === color)),
-    [items, color],
+  const allSizes = useMemo(
+    () => orderSizes([...new Set(items.map((item) => item.size).filter((size): size is string => Boolean(size)))]),
+    [items],
   );
 
+  const [color, setColor] = useState<string | null>(colors[0]?.name ?? null);
   const [size, setSize] = useState<string | null>(null);
 
-  const selected =
-    sizes.find((item) => (size === null ? sizes[0]?.variantId === item.variantId : item.size === size)) ??
-    sizes[0] ??
-    items[0];
+  const findItem = (colorName: string | null, sizeName: string | null) =>
+    items.find(
+      (item) => (colorName === null || item.color === colorName) && (sizeName === null || item.size === sizeName),
+    ) ?? null;
+
+  const selected = useMemo(() => {
+    const exact = findItem(color, size);
+
+    if (exact) {
+      return exact;
+    }
+
+    return items.find((item) => item.availableQuantity > 0) ?? items[0];
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items, color, size]);
+
+  // When the colour changes, keep the size only if the new colour has it.
+  useEffect(() => {
+    if (size !== null && !findItem(color, size)) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setSize(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [color]);
 
   const level = selected ? stockLevel(selected.availableQuantity) : "IN_STOCK";
   const soldOut = !selected || selected.availableQuantity <= 0;
-
-  const pickColor = (name: string) => {
-    setColor(name);
-    setSize(null);
-  };
 
   return (
     <li className="flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
@@ -83,26 +110,41 @@ export function PosProductCard({
           <div>
             <p className="text-[11px] font-medium uppercase tracking-wide text-slate-400">{labels.colorLabel}</p>
             <div className="mt-1 flex flex-wrap gap-1.5">
-              {colors.map((entry) => (
-                <button
-                  key={entry.name}
-                  type="button"
-                  onClick={() => pickColor(entry.name)}
-                  aria-pressed={color === entry.name}
-                  className={[
-                    "flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs font-medium transition-colors",
-                    color === entry.name
-                      ? "border-slate-900 bg-slate-900 text-white"
-                      : "border-slate-200 text-slate-600 hover:bg-slate-100",
-                  ].join(" ")}
-                >
-                  <span
-                    className="inline-block h-3 w-3 rounded-full border border-black/10"
-                    style={{ backgroundColor: entry.hex ?? "transparent" }}
-                  />
-                  {entry.name}
-                </button>
-              ))}
+              {colors.map((entry) => {
+                const variants = items.filter((item) => item.color === entry.name);
+                const hasSize = size === null || variants.some((item) => item.size === size);
+                const sellable = variants.some((item) => item.availableQuantity > 0);
+                const unavailable = !hasSize || !sellable;
+                const isSelected = color === entry.name;
+
+                return (
+                  <button
+                    key={entry.name}
+                    type="button"
+                    onClick={() => setColor(entry.name)}
+                    disabled={unavailable && !isSelected}
+                    aria-pressed={isSelected}
+                    title={unavailable ? `${entry.name} · ${labels.availableInRow} 0` : entry.name}
+                    className={[
+                      "flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs font-medium transition-colors",
+                      isSelected
+                        ? "border-slate-900 bg-slate-900 text-white"
+                        : unavailable
+                          ? "cursor-not-allowed border-dashed border-slate-300 text-slate-400 line-through decoration-slate-400"
+                          : "border-slate-200 text-slate-600 hover:bg-slate-100",
+                    ].join(" ")}
+                  >
+                    <span
+                      className={[
+                        "inline-block h-3 w-3 rounded-full border border-black/10",
+                        unavailable && !isSelected ? "opacity-40" : "",
+                      ].join(" ")}
+                      style={{ backgroundColor: entry.hex ?? "transparent" }}
+                    />
+                    {entry.name}
+                  </button>
+                );
+              })}
             </div>
           </div>
         ) : null}
@@ -110,26 +152,33 @@ export function PosProductCard({
         <div>
           <p className="text-[11px] font-medium uppercase tracking-wide text-slate-400">{labels.sizeLabel}</p>
           <div className="mt-1 flex flex-wrap gap-1.5">
-            {sizes.map((item) => {
-              const itemSoldOut = item.availableQuantity <= 0;
+            {allSizes.map((sizeName) => {
+              const variant = findItem(color, sizeName);
+              const unavailable = !variant || variant.availableQuantity <= 0;
+              const isSelected = selected?.size === sizeName && selected?.color === color;
 
               return (
                 <button
-                  key={item.variantId}
+                  key={sizeName}
                   type="button"
-                  onClick={() => setSize(item.size)}
-                  disabled={itemSoldOut}
-                  aria-pressed={selected?.variantId === item.variantId}
-                  title={`${item.sku} · ${labels.availableInRow} ${item.availableQuantity}`}
+                  onClick={() => setSize(sizeName)}
+                  disabled={unavailable}
+                  aria-pressed={isSelected}
+                  title={
+                    variant
+                      ? `${variant.sku} · ${labels.availableInRow} ${variant.availableQuantity}`
+                      : `${sizeName} · ${labels.availableInRow} 0`
+                  }
                   className={[
                     "rounded-md border px-2 py-0.5 text-sm font-bold transition-colors",
-                    selected?.variantId === item.variantId
+                    isSelected
                       ? "border-slate-900 bg-slate-900 text-white"
-                      : "border-slate-200 text-slate-800 hover:bg-slate-100",
-                    itemSoldOut ? "cursor-not-allowed line-through opacity-40" : "",
+                      : unavailable
+                        ? "cursor-not-allowed border-dashed border-slate-300 text-slate-400 line-through decoration-slate-400"
+                        : "border-slate-200 text-slate-800 hover:bg-slate-100",
                   ].join(" ")}
                 >
-                  {item.size ?? "—"}
+                  {sizeName}
                 </button>
               );
             })}
