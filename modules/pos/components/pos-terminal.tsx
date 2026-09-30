@@ -45,21 +45,37 @@ export function PosTerminal({
     window.localStorage.setItem("pos-catalog-view", next);
   };
 
+  // Availability shown anywhere in the catalogue is what is left after the units the
+  // running sale already holds, so a card that had one unit reads 0 and disables its
+  // add button the moment that unit joins the sale.
+  const itemsWithRemaining = useMemo(() => {
+    const inCart = new Map<string, number>();
+
+    for (const line of lines) {
+      inCart.set(line.item.variantId, line.quantity);
+    }
+
+    return catalog.items.map((item) => ({
+      ...item,
+      availableQuantity: Math.max(item.availableQuantity - (inCart.get(item.variantId) ?? 0), 0),
+    }));
+  }, [catalog.items, lines]);
+
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
 
     if (needle.length === 0) {
-      return catalog.items;
+      return itemsWithRemaining;
     }
 
-    return catalog.items.filter(
+    return itemsWithRemaining.filter(
       (item) =>
         item.sku.toLowerCase().includes(needle) ||
         item.productName.toLowerCase().includes(needle) ||
         (item.size ?? "").toLowerCase().includes(needle) ||
         (item.color ?? "").toLowerCase().includes(needle),
     );
-  }, [catalog.items, query]);
+  }, [itemsWithRemaining, query]);
 
   // The sale groups its lines by product: the name appears once and the size, colour
   // and quantity of each variant sit underneath.
@@ -259,7 +275,7 @@ export function PosTerminal({
         </div>
 
         {view === "cards" ? (
-          <ul className="mt-3 grid grid-cols-2 gap-3 xl:grid-cols-3">
+          <ul className="mt-3 grid md:grid-cols-2 gap-3 xl:grid-cols-3">
             {cardGroups.map((group) => (
               <PosProductCard
                 key={group[0].productId}
