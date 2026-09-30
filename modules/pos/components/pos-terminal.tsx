@@ -157,6 +157,20 @@ export function PosTerminal({
         <input
           id="pos-search"
           type="search"
+          onKeyDown={(event) => {
+            if (event.key !== "Enter") {
+              return;
+            }
+
+            const needle = query.trim().toLowerCase();
+            const exact = catalog.items.find((item) => item.sku.toLowerCase() === needle);
+
+            if (exact) {
+              event.preventDefault();
+              addItem(exact);
+              setQuery("");
+            }
+          }}
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder={labels.searchPlaceholder}

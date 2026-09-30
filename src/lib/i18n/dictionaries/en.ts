@@ -884,6 +884,13 @@ export const en = {
     removeConfirm: "Remove the size \u201c{label}\u201d?",
     nav: "Sizes",
   },
+  barcodes: {
+    title: "Product barcodes",
+    hint: "One label per size and colour: name, price and a Code 128 barcode of the SKU. Print them and stick them on the pieces.",
+    print: "Print labels",
+    size: "Size",
+    link: "Product barcodes",
+  },
   colors: {
     title: "Colours",
     subtitle: "The store colour library — products and photos pick from here instead of free text.",

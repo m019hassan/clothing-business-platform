@@ -117,6 +117,12 @@ export default async function ProductDetailPage({ params }: ProductDetailProps) 
                 >
                   {t.catalog.detail.manageVariants}
                 </Link>
+                <Link
+                  href={`/products/${product.id}/barcodes`}
+                  className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-50"
+                >
+                  {t.barcodes.link}
+                </Link>
               </div>
             ) : null}
           </div>
