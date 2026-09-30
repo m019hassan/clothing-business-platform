@@ -16,6 +16,7 @@ export const ar: Dictionary = {
     productColors: "الألوان",
     productSizes: "المقاسات",
     productMaterials: "الخامات",
+    posHistory: "سجل العمليات",
     productCategories: "التصنيفات",
     adminAccounts: "الحسابات",
     adminBranches: "الفروع",

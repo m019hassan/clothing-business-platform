@@ -15,6 +15,7 @@ export const en = {
     productColors: "Colours",
     productSizes: "Sizes",
     productMaterials: "Materials",
+    posHistory: "Action history",
     productCategories: "Categories",
     adminAccounts: "Accounts",
     adminBranches: "Branches",
