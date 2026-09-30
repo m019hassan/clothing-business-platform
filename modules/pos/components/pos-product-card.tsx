@@ -121,7 +121,16 @@ export function PosProductCard({
                   <button
                     key={entry.name}
                     type="button"
-                    onClick={() => setColor(entry.name)}
+                    // Tapping the chosen colour lets go of the size, which frees every
+                    // colour that the current size was greying out.
+                    onClick={() => {
+                      if (isSelected) {
+                        setSize(null);
+                        return;
+                      }
+
+                      setColor(entry.name);
+                    }}
                     disabled={unavailable && !isSelected}
                     aria-pressed={isSelected}
                     title={unavailable ? `${entry.name} · ${labels.availableInRow} 0` : entry.name}
