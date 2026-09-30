@@ -3,7 +3,12 @@ import { redirect } from "next/navigation";
 import { getCurrentAccount } from "@/modules/auth/infrastructure/session";
 import { resolveBranchScope } from "@/modules/branches/application/scope";
 import { OrderStatusBadge } from "@/components/orders/order-status-badge";
+import Link from "next/link";
+
 import { OperationsOverview } from "@/components/dashboard/operations-overview";
+import { getDistributorDashboard } from "@/modules/pos/application/pos-dashboard";
+import { PosBranchInsights } from "@/modules/pos/components/pos-branch-insights";
+import { PosDashboardCards } from "@/modules/pos/components/pos-dashboard-cards";
 import { getCurrentPermissions } from "@/modules/auth/application/authorization";
 import { getDashboardOperations, getDashboardSummary } from "@/modules/dashboard/application/summary";
 import type { DashboardSummary } from "@/modules/dashboard/types";
@@ -45,6 +50,41 @@ export default async function DashboardPage() {
     summary = await getDashboardSummary(account);
   } catch {
     loadError = true;
+  }
+
+  if (account.accountType === "DISTRIBUTOR") {
+    let posDashboard = null;
+
+    try {
+      posDashboard = await getDistributorDashboard(account);
+    } catch {
+      posDashboard = null;
+    }
+
+    if (posDashboard) {
+      return (
+        <div className="space-y-6">
+          <section className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">{t.pos.kicker}</p>
+              <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-950">
+                {posDashboard.branchName} ({posDashboard.branchCode})
+              </h2>
+              <p className="mt-1 text-sm text-slate-600">{t.dashboard.accountSubtitle}</p>
+            </div>
+            <Link
+              href="/pos"
+              className="rounded-lg bg-slate-900 px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-slate-700"
+            >
+              {t.pos.completeSale}
+            </Link>
+          </section>
+
+          <PosDashboardCards dashboard={posDashboard} labels={{ ...t.pos, each: t.cart.each, openInvoice: t.posInvoice.openInvoice }} />
+          <PosBranchInsights dashboard={posDashboard} labels={{ ...t.pos, each: t.cart.each, openInvoice: t.posInvoice.openInvoice }} />
+        </div>
+      );
+    }
   }
 
   if (account.accountType === "EMPLOYEE") {

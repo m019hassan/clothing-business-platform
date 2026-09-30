@@ -358,12 +358,12 @@ export function PosTerminal({
                                 {preferEnglish ? (line.item.colorNameEn ?? line.item.color) : line.item.color}
                               </span>
                             ) : null}
-                            {!line.item.size && !line.item.color ? (
+                            {/* {!line.item.size && !line.item.color ? (
                               <span className="truncate font-mono text-xs text-slate-400">{line.item.sku}</span>
-                            ) : null}
+                            ) : null} */}
                           </p>
-                          <p className="mt-0.5 truncate font-mono text-[11px] text-slate-400">{line.item.sku}</p>
-                          <p className="text-xs text-slate-500">
+                          {/* <p className="mt-0.5 truncate font-mono text-[11px] text-slate-400">{line.item.sku}</p> */}
+                          <p className="text-xs font-medium text-slate-600 mt-1">
                             {formatMoney(line.item.unitPrice, line.item.currency)} {labels.each}
                           </p>
                         </div>
