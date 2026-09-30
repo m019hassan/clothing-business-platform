@@ -112,16 +112,21 @@ export function PosTerminal({
   const total = lines.reduce((sum, line) => sum + Number(line.item.unitPrice) * line.quantity, 0);
 
   function addItem(item: PosCatalogItemView) {
+    // The views show the shelf quantity minus what the sale already holds, so the guard
+    // has to run against the untouched shelf numbers, not the displayed remainder.
+    const shelfItem = catalog.items.find((entry) => entry.variantId === item.variantId) ?? item;
+    const shelfQuantity = shelfItem.availableQuantity;
+
     setError(null);
     setLines((current) => {
       const existing = current.find((line) => line.item.variantId === item.variantId);
 
       if (!existing) {
-        return [...current, { item, quantity: 1 }];
+        return shelfQuantity <= 0 ? current : [...current, { item: shelfItem, quantity: 1 }];
       }
 
-      if (existing.quantity + 1 > item.availableQuantity) {
-        setError(`${item.sku}: only ${item.availableQuantity} available.`);
+      if (existing.quantity + 1 > shelfQuantity) {
+        setError(`${shelfItem.sku}: only ${shelfQuantity} available.`);
         return current;
       }
 
@@ -140,12 +145,13 @@ export function PosTerminal({
           }
 
           const next = line.quantity + delta;
+          const shelfItem = catalog.items.find((entry) => entry.variantId === line.item.variantId) ?? line.item;
 
-          if (next > line.item.availableQuantity) {
+          if (next > shelfItem.availableQuantity) {
             setError(
               labels.onlyAvailable
-                .replace("{sku}", line.item.sku)
-                .replace("{count}", String(line.item.availableQuantity)),
+                .replace("{sku}", shelfItem.sku)
+                .replace("{count}", String(shelfItem.availableQuantity)),
             );
 
             return line;
