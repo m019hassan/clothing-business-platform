@@ -5,9 +5,10 @@ import { getCurrentPermissions } from "@/modules/auth/application/authorization"
 import { PERMISSIONS } from "@/modules/auth/application/permissions";
 import { getCurrentAccount } from "@/modules/auth/infrastructure/session";
 import { listBranches } from "@/modules/branches/application/branches";
+import { listBranchOverviews } from "@/modules/branches/application/branch-details";
 import { BranchForm } from "@/modules/branches/components/branch-form";
 import { prisma } from "@/src/lib/db";
-import { formatDate } from "@/src/lib/format";
+import { formatDate, formatMoney } from "@/src/lib/format";
 import { getInterfaceLanguage } from "@/src/lib/i18n/server";
 
 export default async function AdminBranchesPage() {
@@ -39,6 +40,8 @@ export default async function AdminBranchesPage() {
 
   const canManage = permissions.has(PERMISSIONS.BRANCHES_MANAGE);
   const branches = await listBranches(account, { includeInactive: true });
+  const overviews = await listBranchOverviews(account);
+  const overviewById = new Map(overviews.map((entry) => [entry.branchId, entry]));
   const warehouses = await prisma.warehouse.findMany({
     select: { id: true, code: true, name: true, branchId: true, isActive: true },
     orderBy: { code: "asc" },
@@ -96,6 +99,41 @@ export default async function AdminBranchesPage() {
                 </Link>
               </div>
             </div>
+
+            {(() => {
+              const overview = overviewById.get(branch.id);
+
+              if (!overview) {
+                return null;
+              }
+
+              return (
+                <div className="mt-4 grid grid-cols-2 gap-2 text-center sm:grid-cols-4">
+                  <div className="rounded-xl bg-slate-50 px-3 py-2">
+                    <p className="text-[11px] text-slate-500">{t.branchDetails.salesToday}</p>
+                    <p className="text-sm font-semibold text-slate-900">{formatMoney(overview.salesToday, "SAR")}</p>
+                  </div>
+                  <div className="rounded-xl bg-slate-50 px-3 py-2">
+                    <p className="text-[11px] text-slate-500">{t.branchDetails.salesMonth}</p>
+                    <p className="text-sm font-semibold text-slate-900">{formatMoney(overview.salesMonth, "SAR")}</p>
+                  </div>
+                  <div className="rounded-xl bg-slate-50 px-3 py-2">
+                    <p className="text-[11px] text-slate-500">{t.branchDetails.stockAvailable}</p>
+                    <p className="text-sm font-semibold text-slate-900">{overview.available}</p>
+                  </div>
+                  <div className="rounded-xl bg-slate-50 px-3 py-2">
+                    <p className="text-[11px] text-slate-500">
+                      {t.branchDetails.stockLow} / {t.branchDetails.stockOut}
+                    </p>
+                    <p className="text-sm font-semibold text-slate-900">
+                      <span className="text-amber-700">{overview.lowCount}</span>
+                      {" / "}
+                      <span className="text-rose-700">{overview.outCount}</span>
+                    </p>
+                  </div>
+                </div>
+              );
+            })()}
 
             {canManage ? (
               <div className="mt-5">

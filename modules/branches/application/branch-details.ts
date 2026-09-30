@@ -255,3 +255,82 @@ export async function getBranchDetails(
     };
   });
 }
+
+export type BranchOverview = {
+  branchId: string;
+  salesToday: string;
+  salesMonth: string;
+  available: number;
+  lowCount: number;
+  outCount: number;
+};
+
+/**
+ * A compact per-branch scoreboard for the branches list: money per day and month plus
+ * the stock that needs attention. One aggregate per branch keeps it cheap enough for a
+ * handful of branches without loading the full details page.
+ */
+export async function listBranchOverviews(account: AuthenticatedAccount): Promise<BranchOverview[]> {
+  await requirePermission(PERMISSIONS.BRANCHES_VIEW);
+
+  const timeZone = account.timezone || "Asia/Riyadh";
+
+  return withDatabaseError(async () => {
+    const branches = await prisma.branch.findMany({
+      where: { isActive: true },
+      orderBy: { code: "asc" },
+      select: { id: true, warehouses: { where: { isActive: true }, select: { id: true } } },
+    });
+
+    const dayStart = startOfDayInTimeZone(timeZone);
+    const monthStart = startOfMonthInTimeZone(timeZone);
+    const salesWhere = { channel: OrderChannel.POS, status: { in: SALE_STATUSES } };
+
+    return Promise.all(
+      branches.map(async (branch) => {
+        const warehouseIds = branch.warehouses.map((warehouse) => warehouse.id);
+
+        const [today, month, stockRows] = await Promise.all([
+          prisma.order.aggregate({
+            where: { ...salesWhere, branchId: branch.id, createdAt: { gte: dayStart } },
+            _sum: { totalAmount: true },
+          }),
+          prisma.order.aggregate({
+            where: { ...salesWhere, branchId: branch.id, createdAt: { gte: monthStart } },
+            _sum: { totalAmount: true },
+          }),
+          warehouseIds.length
+            ? prisma.inventoryItem.findMany({
+                where: { warehouseId: { in: warehouseIds } },
+                select: { quantityOnHand: true, quantityReserved: true },
+              })
+            : Promise.resolve([]),
+        ]);
+
+        let available = 0;
+        let lowCount = 0;
+        let outCount = 0;
+
+        for (const row of stockRows) {
+          const free = row.quantityOnHand - row.quantityReserved;
+          available += free;
+
+          if (free <= 0) {
+            outCount += 1;
+          } else if (free < LOW_THRESHOLD) {
+            lowCount += 1;
+          }
+        }
+
+        return {
+          branchId: branch.id,
+          salesToday: (today._sum.totalAmount ?? 0).toFixed(2),
+          salesMonth: (month._sum.totalAmount ?? 0).toFixed(2),
+          available,
+          lowCount,
+          outCount,
+        };
+      }),
+    );
+  });
+}
