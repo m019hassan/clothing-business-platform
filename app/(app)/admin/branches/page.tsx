@@ -72,7 +72,9 @@ export default async function AdminBranchesPage() {
           <section key={branch.id} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
               <h3 className="text-base font-semibold text-slate-900">
-                {branch.name}{" "}
+                <Link href={`/admin/branches/${branch.id}`} className="hover:text-blue-700 hover:underline">
+                  {branch.name}
+                </Link>{" "}
                 <span className="text-sm font-normal text-slate-500">({branch.code})</span>
                 {branch.isActive ? null : (
                   <span className="ms-2 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
@@ -80,11 +82,19 @@ export default async function AdminBranchesPage() {
                   </span>
                 )}
               </h3>
-              <p className="text-xs text-slate-500">
-                {t.branches.warehousesCount
-                  .replace("{count}", String(branch.warehouses.length))
-                  .replace("{date}", formatDate(branch.createdAt))}
-              </p>
+              <div className="flex items-center gap-3">
+                <p className="text-xs text-slate-500">
+                  {t.branches.warehousesCount
+                    .replace("{count}", String(branch.warehouses.length))
+                    .replace("{date}", formatDate(branch.createdAt))}
+                </p>
+                <Link
+                  href={`/admin/branches/${branch.id}`}
+                  className="rounded-lg border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-50"
+                >
+                  {t.branchDetails.details}
+                </Link>
+              </div>
             </div>
 
             {canManage ? (
