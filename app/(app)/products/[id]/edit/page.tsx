@@ -9,7 +9,6 @@ import { listColorOptions } from "@/modules/catalog/application/colors";
 import { listSizeOptions } from "@/modules/catalog/application/sizes";
 import { listMaterialOptions } from "@/modules/catalog/application/materials";
 import { getProductInventory } from "@/modules/catalog/application/products";
-import { CategoryManager } from "@/modules/catalog/components/category-manager";
 import { ProductForm } from "@/modules/catalog/components/product-form";
 import { VariantManager } from "@/modules/catalog/components/variant-manager";
 import { suggestSku } from "@/modules/catalog/application/identifiers";
@@ -77,7 +76,7 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
           <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">{t.catalog.kicker}</p>
           <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-950">{product.name}</h2>
           <p className="mt-1 text-sm text-slate-600">
-            {product.slug} · {product.categoryName ?? t.catalog.uncategorized} · {product.status}
+            {product.slug} · {product.status}
           </p>
         </div>
         <div className="flex shrink-0 gap-2">
@@ -178,7 +177,6 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
         </div>
       </section>
 
-      <CategoryManager categories={categories} labels={{ ...t.catalog.categories, saving: t.catalog.form.saving, slugHint: t.catalog.form.slugHint }} />
 
         <ProductImagesManager
           productId={product.id}

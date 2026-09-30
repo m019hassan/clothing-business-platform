@@ -129,7 +129,6 @@ export default async function ProductDetailPage({ params }: ProductDetailProps) 
         </div>
 
         <dl className="mt-6 grid grid-cols-1 gap-4 border-t border-slate-100 pt-5 sm:grid-cols-2 lg:grid-cols-4">
-          <InfoRow label={t.catalog.detail.category} value={product.categoryName ?? t.catalog.uncategorized} />
           <InfoRow label={t.catalog.form.material} value={product.material ?? "—"} />
           <InfoRow label={t.catalog.detail.slug} value={product.slug} />
           <InfoRow label={t.catalog.detail.created} value={formatDate(product.createdAt)} />
