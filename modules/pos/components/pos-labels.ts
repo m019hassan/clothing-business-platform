@@ -18,6 +18,8 @@ export type PosLabels = {
   results: string;
   viewList: string;
   viewCards: string;
+  colorLabel: string;
+  sizeLabel: string;
   saleCompleted: string;
   onlyAvailable: string;
   addToSale: string;

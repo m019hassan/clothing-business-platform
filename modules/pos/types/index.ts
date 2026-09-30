@@ -7,6 +7,8 @@ export type PosCatalogItemView = {
   productName: string;
   /** The product's first photo, for the card view. */
   imageId: string | null;
+  /** The library colour behind the name, for the swatch; null for legacy names. */
+  colorHex: string | null;
   unitPrice: string;
   currency: string;
   availableQuantity: number;

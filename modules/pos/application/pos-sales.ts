@@ -235,6 +235,12 @@ export async function getPosCatalog(account: AuthenticatedAccount): Promise<PosC
     }),
   );
 
+  // Colour swatches come from the shared library, matched by name.
+  const colorOptions = await withDatabaseError(() =>
+    prisma.colorOption.findMany({ select: { name: true, hex: true } }),
+  );
+  const hexByColor = new Map(colorOptions.map((option) => [option.name, option.hex]));
+
   // A variant can sit in several warehouses of the branch: aggregate availability.
   const aggregated = new Map<string, PosCatalogView["items"][number]>();
 
@@ -255,6 +261,7 @@ export async function getPosCatalog(account: AuthenticatedAccount): Promise<PosC
       productId: item.variant.product.id,
       productName: item.variant.product.name,
       imageId: item.variant.product.images[0]?.id ?? null,
+      colorHex: item.variant.color ? (hexByColor.get(item.variant.color) ?? null) : null,
       unitPrice: (item.variant.priceOverride ?? item.variant.product.basePrice).toString(),
       currency: item.variant.product.currency,
       availableQuantity: available,

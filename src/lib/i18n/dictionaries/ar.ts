@@ -674,6 +674,8 @@ export const ar: Dictionary = {
     results: "نتيجة",
     viewList: "قائمة",
     viewCards: "بطاقات",
+    colorLabel: "اللون",
+    sizeLabel: "المقاس",
     saleCompleted: "تمت عملية البيع",
     newSaleHint: "الإيصال أعلاه هو سجل هذه العملية.",
     onlyAvailable: "{sku}: المتاح {count} فقط.",

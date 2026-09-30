@@ -234,10 +234,16 @@ describe("getPosCatalog", () => {
       select: { id: true },
     });
 
+    // give the variant one of the seeded library colours
+    await prisma.productVariant.update({ where: { id: variantA }, data: { color: "أحمر" } });
+
     const catalog = await getPosCatalog(distributor);
     const item = catalog.items.find((entry) => entry.variantId === variantA);
 
     expect(item?.imageId).toBe(image.id);
+    // the library maps the colour "أحمر" to #DC2626
+    expect(item?.colorHex).toBe("#DC2626");
+    expect(catalog.items.find((entry) => entry.variantId === variantB)?.colorHex).toBeNull();
 
     // the photo belongs to the product, so its other variants show it too
     const otherVariant = catalog.items.find((entry) => entry.variantId === variantB);

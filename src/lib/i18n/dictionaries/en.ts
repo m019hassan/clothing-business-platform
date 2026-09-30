@@ -675,6 +675,8 @@ export const en = {
     results: "result(s)",
     viewList: "List",
     viewCards: "Cards",
+    colorLabel: "Colour",
+    sizeLabel: "Size",
     saleCompleted: "Sale completed",
     newSaleHint: "The receipt above is the record of this counter sale.",
     onlyAvailable: "{sku}: only {count} available.",
