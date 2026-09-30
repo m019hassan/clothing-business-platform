@@ -343,10 +343,26 @@ export function PosTerminal({
                     {group.lines.map((line) => (
                       <li key={line.item.variantId} className="flex items-center justify-between gap-2 px-3 py-2">
                         <div className="min-w-0">
-                          <p className="truncate text-sm font-bold text-slate-800">
-                            {[line.item.size, line.item.color].filter(Boolean).join(" · ") || line.item.sku}
+                          <p className="flex flex-wrap items-center gap-1.5">
+                            {line.item.size ? (
+                              <span className="rounded-md bg-slate-900 px-2 py-0.5 text-sm font-bold leading-5 text-white">
+                                {line.item.size}
+                              </span>
+                            ) : null}
+                            {line.item.color ? (
+                              <span className="flex items-center gap-1.5 rounded-full border border-slate-200 px-2 py-0.5 text-xs font-medium text-slate-600">
+                                <span
+                                  className="inline-block h-3 w-3 rounded-full border border-black/10"
+                                  style={{ backgroundColor: line.item.colorHex ?? "transparent" }}
+                                />
+                                {preferEnglish ? (line.item.colorNameEn ?? line.item.color) : line.item.color}
+                              </span>
+                            ) : null}
+                            {!line.item.size && !line.item.color ? (
+                              <span className="truncate font-mono text-xs text-slate-400">{line.item.sku}</span>
+                            ) : null}
                           </p>
-                          <p className="truncate font-mono text-[11px] text-slate-400">{line.item.sku}</p>
+                          <p className="mt-0.5 truncate font-mono text-[11px] text-slate-400">{line.item.sku}</p>
                           <p className="text-xs text-slate-500">
                             {formatMoney(line.item.unitPrice, line.item.currency)} {labels.each}
                           </p>
