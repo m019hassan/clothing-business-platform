@@ -681,3 +681,67 @@ export async function archiveVariant(
 
   return getProductInventory(productId);
 }
+
+/**
+ * Removes a product for good, with everything that hangs off it: its variants, stock
+ * rows, ledger movements, photos and any cart line holding it. Products referenced by
+ * an order line are refused, because deleting them would tear a sale apart - archiving
+ * is the answer there.
+ */
+export async function deleteProduct(account: AuthenticatedAccount, productId: string): Promise<{ name: string }> {
+  await requirePermission(PERMISSIONS.PRODUCTS_DELETE);
+
+  if (!isUuid(productId)) {
+    throw new NotFoundError("Product not found.");
+  }
+
+  const product = await prisma.product.findUnique({
+    where: { id: productId },
+    select: {
+      id: true,
+      name: true,
+      variants: { select: { id: true } },
+    },
+  });
+
+  if (!product) {
+    throw new NotFoundError("Product not found.");
+  }
+
+  const variantIds = product.variants.map((variant) => variant.id);
+  const orderLines = variantIds.length
+    ? await prisma.orderItem.count({ where: { variantId: { in: variantIds } } })
+    : 0;
+
+  if (orderLines > 0) {
+    throw new ConflictError(
+      `${orderLines} order line(s) reference "${product.name}", so it cannot be deleted. Archive it instead.`,
+    );
+  }
+
+  await withDatabaseError(() =>
+    prisma.$transaction(async (transaction) => {
+      if (variantIds.length > 0) {
+        await transaction.cartItem.deleteMany({ where: { variantId: { in: variantIds } } });
+        await transaction.stockMovement.deleteMany({ where: { variantId: { in: variantIds } } });
+        await transaction.inventoryItem.deleteMany({ where: { variantId: { in: variantIds } } });
+      }
+
+      await transaction.productImage.deleteMany({ where: { productId: product.id } });
+      await transaction.productVariant.deleteMany({ where: { productId: product.id } });
+      await transaction.product.delete({ where: { id: product.id } });
+
+      await transaction.auditLog.create({
+        data: {
+          accountId: account.id,
+          action: "PRODUCT_DELETED",
+          entity: "Product",
+          entityId: product.id,
+          newValue: product.name,
+        },
+      });
+    }),
+  );
+
+  return { name: product.name };
+}

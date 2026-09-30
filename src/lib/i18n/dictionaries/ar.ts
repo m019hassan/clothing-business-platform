@@ -1093,6 +1093,11 @@ export const ar: Dictionary = {
       allProducts: "كل المنتجات",
       productDetails: "تفاصيل المنتج",
       variantsSubtitle: "كل البدائل (بما فيها المسودات والمؤرشفة) مع المتاح اللحظي.",
+      deleteZone: "منطقة الخطر",
+      deleteHint: "الحذف نهائي: يشيل البدائل والمخزون والحركات والصور. المنتجات المربوطة بطلبات لا تُحذف — تُؤرشف.",
+      deleteProduct: "حذف المنتج نهائياً",
+      deleteConfirm: "حذف «{name}» نهائياً؟ مفيش رجوع.",
+      deleting: "جارٍ الحذف…",
     },
     addToCart: {
       title: "أضف إلى السلة",

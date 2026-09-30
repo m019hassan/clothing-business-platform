@@ -1097,6 +1097,11 @@ export const en = {
       allProducts: "All products",
       productDetails: "Product details",
       variantsSubtitle: "Every variant (including draft and archived ones) with its live availability.",
+      deleteZone: "Danger zone",
+      deleteHint: "Deletion is permanent: it removes the variants, stock, ledger movements and photos. A product tied to an order cannot be deleted - archive it instead.",
+      deleteProduct: "Delete the product",
+      deleteConfirm: "Delete \u201c{name}\u201d for good? This cannot be undone.",
+      deleting: "Deleting\u2026",
     },
     addToCart: {
       title: "Add to cart",

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { requireAuthenticated } from "@/modules/auth/infrastructure/session";
 import {
-  archiveProduct,
+  deleteProduct,
   updateProduct,
 } from "@/modules/catalog/application/product-management";
 import { getProduct } from "@/modules/catalog/application/products";
@@ -52,9 +52,9 @@ export async function DELETE(_request: Request, context: RouteContext) {
   try {
     await requireAuthenticated();
     const { id } = await context.params;
-    const product = await archiveProduct(await requireAuthenticated(), id);
+    const removed = await deleteProduct(await requireAuthenticated(), id);
 
-    return NextResponse.json({ product });
+    return NextResponse.json({ removed });
   } catch (error) {
     const { status, body } = toErrorResponse(error);
 

@@ -14,6 +14,7 @@ import { VariantManager } from "@/modules/catalog/components/variant-manager";
 import { suggestSku } from "@/modules/catalog/application/identifiers";
 import { listProductImages } from "@/modules/catalog/application/product-images";
 import { ProductImagesManager } from "@/modules/catalog/components/product-images-manager";
+import { ProductDeleteButton } from "@/modules/catalog/components/product-delete-button";
 import { getInterfaceLanguage } from "@/src/lib/i18n/server";
 import type { ProductInventoryView } from "@/modules/catalog/types";
 import { NotFoundError } from "@/src/lib/errors";
@@ -178,7 +179,23 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
       </section>
 
 
-        <ProductImagesManager
+        <section className="rounded-2xl border border-rose-200 bg-white p-6 shadow-sm">
+        <h3 className="text-base font-semibold text-rose-800">{t.catalog.editPage.deleteZone}</h3>
+        <p className="mt-1 text-sm text-slate-600">{t.catalog.editPage.deleteHint}</p>
+        <div className="mt-4">
+          <ProductDeleteButton
+            productId={product.id}
+            productName={product.name}
+            labels={{
+              deleteProduct: t.catalog.editPage.deleteProduct,
+              deleteConfirm: t.catalog.editPage.deleteConfirm,
+              deleting: t.catalog.editPage.deleting,
+            }}
+          />
+        </div>
+      </section>
+
+      <ProductImagesManager
           productId={product.id}
           images={productImages}
           variants={product.variants.map((variant) => ({
