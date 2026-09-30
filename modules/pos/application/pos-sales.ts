@@ -328,6 +328,8 @@ export async function createPosSale(
           select: {
             id: true,
             sku: true,
+            size: true,
+            color: true,
             priceOverride: true,
             product: { select: { name: true, basePrice: true, currency: true, status: true, deletedAt: true } },
           },
@@ -351,7 +353,10 @@ export async function createPosSale(
           });
         } catch (error) {
           if (error instanceof ConflictError) {
-            throw new ConflictError(`Insufficient stock for ${variant.sku}.`);
+            const attributes = [variant.size, variant.color].filter(Boolean).join(" · ");
+            const described = attributes ? `${variant.product.name} · ${attributes}` : variant.product.name;
+
+            throw new ConflictError(`Insufficient stock for ${described}.`);
           }
 
           throw error;

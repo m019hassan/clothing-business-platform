@@ -111,6 +111,14 @@ export function PosTerminal({
 
   const total = lines.reduce((sum, line) => sum + Number(line.item.unitPrice) * line.quantity, 0);
 
+  // Messages name the product with its size and colour: the SKU means nothing at the
+  // counter.
+  const describeItem = (item: PosCatalogItemView) => {
+    const attributes = [item.size, item.color].filter(Boolean).join(" · ");
+
+    return attributes ? `${item.productName} · ${attributes}` : item.productName;
+  };
+
   function addItem(item: PosCatalogItemView) {
     // The views show the shelf quantity minus what the sale already holds, so the guard
     // has to run against the untouched shelf numbers, not the displayed remainder.
@@ -126,7 +134,11 @@ export function PosTerminal({
       }
 
       if (existing.quantity + 1 > shelfQuantity) {
-        setError(`${shelfItem.sku}: only ${shelfQuantity} available.`);
+        setError(
+          labels.onlyAvailable
+            .replace("{name}", describeItem(shelfItem))
+            .replace("{count}", String(shelfQuantity)),
+        );
         return current;
       }
 
@@ -150,7 +162,7 @@ export function PosTerminal({
           if (next > shelfItem.availableQuantity) {
             setError(
               labels.onlyAvailable
-                .replace("{sku}", shelfItem.sku)
+                .replace("{name}", describeItem(shelfItem))
                 .replace("{count}", String(shelfItem.availableQuantity)),
             );
 

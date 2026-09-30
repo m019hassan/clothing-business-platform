@@ -678,7 +678,7 @@ export const ar: Dictionary = {
     sizeLabel: "المقاس",
     saleCompleted: "تمت عملية البيع",
     newSaleHint: "الإيصال أعلاه هو سجل هذه العملية.",
-    onlyAvailable: "{sku}: المتاح {count} فقط.",
+    onlyAvailable: "{name}: المتاح {count} فقط.",
     salesToday: "مبيعاتي اليوم",
     salesThisMonth: "مبيعاتي هذا الشهر",
     stockLeft: "المخزون المتبقي في الفرع",

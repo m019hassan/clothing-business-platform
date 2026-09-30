@@ -679,7 +679,7 @@ export const en = {
     sizeLabel: "Size",
     saleCompleted: "Sale completed",
     newSaleHint: "The receipt above is the record of this counter sale.",
-    onlyAvailable: "{sku}: only {count} available.",
+    onlyAvailable: "{name}: only {count} available.",
     salesToday: "My sales today",
     salesThisMonth: "My sales this month",
     stockLeft: "Stock left in the branch",
