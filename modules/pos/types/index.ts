@@ -5,6 +5,8 @@ export type PosCatalogItemView = {
   color: string | null;
   productId: string;
   productName: string;
+  /** The product's first photo, for the card view. */
+  imageId: string | null;
   unitPrice: string;
   currency: string;
   availableQuantity: number;

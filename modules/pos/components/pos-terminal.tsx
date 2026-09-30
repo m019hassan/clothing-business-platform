@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 
 import type { PosLabels } from "@/modules/pos/components/pos-labels";
 import type { PosCatalogItemView, PosCatalogView, PosReceiptView } from "@/modules/pos/types";
 import { apiErrorMessage, apiRequest, type ApiErrorLabels } from "@/src/lib/api";
 import { formatMoney } from "@/src/lib/format";
+import { stockLevel } from "@/src/lib/inventory/stock-level";
 
 type CartLine = { item: PosCatalogItemView; quantity: number };
 
@@ -25,6 +26,22 @@ export function PosTerminal({
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [receipt, setReceipt] = useState<PosReceiptView | null>(null);
+  const [view, setView] = useState<"list" | "cards">("list");
+
+  // The stored preference is read after mount so the server and the first client
+  // render agree; the rule guard is deliberate.
+  useEffect(() => {
+    const remembered = window.localStorage.getItem("pos-catalog-view");
+    if (remembered === "cards" || remembered === "list") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setView(remembered);
+    }
+  }, []);
+
+  const changeView = (next: "list" | "cards") => {
+    setView(next);
+    window.localStorage.setItem("pos-catalog-view", next);
+  };
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
@@ -177,6 +194,99 @@ export function PosTerminal({
           className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none ring-blue-500 focus:ring-2"
         />
 
+        <div className="mt-4 flex items-center justify-between gap-2 border-b border-slate-100 pb-2">
+          <span className="text-xs text-slate-500">
+            {filtered.length} {labels.results}
+          </span>
+          <div className="flex items-center gap-1 rounded-lg border border-slate-200 p-0.5">
+            <button
+              type="button"
+              onClick={() => changeView("list")}
+              aria-pressed={view === "list"}
+              className={[
+                "rounded-md px-2.5 py-1 text-xs font-semibold transition-colors",
+                view === "list" ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-100",
+              ].join(" ")}
+            >
+              {labels.viewList}
+            </button>
+            <button
+              type="button"
+              onClick={() => changeView("cards")}
+              aria-pressed={view === "cards"}
+              className={[
+                "rounded-md px-2.5 py-1 text-xs font-semibold transition-colors",
+                view === "cards" ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-100",
+              ].join(" ")}
+            >
+              {labels.viewCards}
+            </button>
+          </div>
+        </div>
+
+        {view === "cards" ? (
+          <ul className="mt-3 grid grid-cols-2 gap-3 xl:grid-cols-3">
+            {filtered.slice(0, 25).map((item) => {
+              const level = stockLevel(item.availableQuantity);
+              const soldOut = item.availableQuantity <= 0;
+
+              return (
+                <li
+                  key={item.variantId}
+                  className="flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm"
+                >
+                  {item.imageId ? (
+                    /* eslint-disable-next-line @next/next/no-img-element */
+                    <img
+                      src={`/api/products/images/${item.imageId}`}
+                      alt={item.productName}
+                      className="h-28 w-full bg-slate-50 object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-28 w-full items-center justify-center bg-slate-50 text-2xl font-bold text-slate-300">
+                      {item.size ?? "—"}
+                    </div>
+                  )}
+                  <div className="flex flex-1 flex-col gap-1 p-3">
+                    <p className="truncate text-xs font-medium text-slate-500">{item.productName}</p>
+                    <p className="truncate text-base font-bold text-slate-900">
+                      {[item.size, item.color].filter(Boolean).join(" · ") || "—"}
+                    </p>
+                    <p className="truncate font-mono text-[11px] text-slate-400">{item.sku}</p>
+                    <div className="mt-auto flex items-center justify-between gap-2 pt-2">
+                      <span className="text-sm font-semibold text-slate-800">
+                        {formatMoney(item.unitPrice, item.currency)}
+                      </span>
+                      <span
+                        className={[
+                          "rounded-full px-2 py-0.5 text-[11px] font-semibold",
+                          soldOut
+                            ? "bg-rose-100 text-rose-800"
+                            : level === "LOW_STOCK"
+                              ? "bg-amber-100 text-amber-800"
+                              : "bg-emerald-100 text-emerald-800",
+                        ].join(" ")}
+                      >
+                        {labels.availableInRow} {item.availableQuantity}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => addItem(item)}
+                      disabled={soldOut}
+                      className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      {labels.addToSale}
+                    </button>
+                  </div>
+                </li>
+              );
+            })}
+            {filtered.length === 0 ? (
+              <li className="col-span-full py-6 text-center text-sm text-slate-500">{labels.noMatches}</li>
+            ) : null}
+          </ul>
+        ) : (
         <ul className="mt-4 divide-y divide-slate-100">
           {filtered.slice(0, 25).map((item) => (
             <li key={item.variantId} className="flex items-center justify-between gap-3 py-3">
@@ -207,6 +317,7 @@ export function PosTerminal({
           ))}
           {filtered.length === 0 ? <li className="py-6 text-sm text-slate-500">{labels.noMatches}</li> : null}
         </ul>
+        )}
         {filtered.length > 25 ? (
           <p className="mt-3 text-xs text-slate-400">{labels.firstMatches}</p>
         ) : null}

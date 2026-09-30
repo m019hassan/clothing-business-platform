@@ -220,6 +220,30 @@ describe("getPosCatalog", () => {
     expect(noOverride?.unitPrice).toBe("40");
   });
 
+  it("carries the product photo for the card view", async () => {
+    const image = await prisma.productImage.create({
+      data: {
+        // the newest product belongs to this test
+        productId: created.productIds[created.productIds.length - 1],
+        variantId: variantA,
+        fileKey: "vitest-pos-card.png",
+        originalName: "card.png",
+        mimeType: "image/png",
+        sizeBytes: 68,
+      },
+      select: { id: true },
+    });
+
+    const catalog = await getPosCatalog(distributor);
+    const item = catalog.items.find((entry) => entry.variantId === variantA);
+
+    expect(item?.imageId).toBe(image.id);
+
+    // the photo belongs to the product, so its other variants show it too
+    const otherVariant = catalog.items.find((entry) => entry.variantId === variantB);
+    expect(otherVariant?.imageId).toBe(image.id);
+  });
+
   it("refuses non-distributor accounts", async () => {
     await expect(getPosCatalog(customer)).rejects.toMatchObject({ statusCode: 403 });
   });
