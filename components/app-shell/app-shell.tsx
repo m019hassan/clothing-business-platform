@@ -227,6 +227,10 @@ function SidebarContent({
   onNavigate?: () => void;
 }) {
   const adminSubItems = ADMIN_SUB_ITEMS.filter((sub) => {
+    if ("requiresUsers" in sub && sub.requiresUsers) {
+      return canViewUsers;
+    }
+
     if ("requiresBranches" in sub && sub.requiresBranches) {
       return canViewBranches;
     }
