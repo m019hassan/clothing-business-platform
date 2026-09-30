@@ -566,6 +566,7 @@ enum StockMovementType {
   RESERVATION
   RELEASE
   CONSUMPTION
+  TRANSFER
 }
 
 model StockMovement {

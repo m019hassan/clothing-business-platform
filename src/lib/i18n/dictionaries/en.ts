@@ -739,6 +739,11 @@ export const en = {
     reasonPlaceholder: "Reason",
     adjustAria: "Adjustment for {sku}",
     reasonAria: "Adjustment reason for {sku}",
+    transfer: "Move to a branch",
+    toBranch: "To branch",
+    transferQuantity: "Quantity to move",
+    confirmTransfer: "Confirm the move",
+    cancel: "Cancel",
   },
   movementTypes: {
     RESERVATION: "Reservation",

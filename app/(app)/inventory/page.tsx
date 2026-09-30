@@ -14,6 +14,8 @@ import {
 } from "@/modules/branches/application/scope";
 import { listStockMovements } from "@/modules/inventory/application/movements";
 import { StockAdjustForm } from "@/modules/inventory/components/stock-adjust-form";
+import { StockTransferForm } from "@/modules/inventory/components/stock-transfer-form";
+import { listTransferTargets } from "@/modules/inventory/application/transfers";
 import type { InventoryPageView, StockMovementView } from "@/modules/inventory/types";
 import { formatDate, formatVariantAttributes } from "@/src/lib/format";
 import { parsePaginationParams } from "@/src/lib/validation";
@@ -37,6 +39,7 @@ export default async function InventoryPage({ searchParams }: InventoryPageProps
   const permissions = await getCurrentPermissions();
   const canViewInventory = permissions.has(PERMISSIONS.INVENTORY_VIEW);
   const canAdjustInventory = permissions.has(PERMISSIONS.INVENTORY_ADJUST);
+  const transferTargets = canAdjustInventory ? await listTransferTargets() : [];
 
   if (!canViewInventory) {
     return (
@@ -219,7 +222,22 @@ export default async function InventoryPage({ searchParams }: InventoryPageProps
                     <td className="whitespace-nowrap px-6 py-4 text-slate-500">{formatDate(row.updatedAt)}</td>
                     {canAdjustInventory ? (
                       <td className="px-6 py-4">
-                        <StockAdjustForm labels={{ ...t.inventory, saving: t.catalog.form.saving }} variantId={row.variantId} warehouseId={row.warehouseId} sku={row.sku} />
+                        <div className="flex flex-wrap items-start gap-2">
+                          <StockAdjustForm labels={{ ...t.inventory, saving: t.catalog.form.saving }} variantId={row.variantId} warehouseId={row.warehouseId} sku={row.sku} />
+                          <StockTransferForm
+                            variantId={row.variantId}
+                            fromWarehouseId={row.warehouseId}
+                            sku={row.sku}
+                            targets={transferTargets}
+                            labels={{
+                              transfer: t.inventory.transfer,
+                              toBranch: t.inventory.toBranch,
+                              quantity: t.inventory.transferQuantity,
+                              confirmTransfer: t.inventory.confirmTransfer,
+                              cancel: t.inventory.cancel,
+                            }}
+                          />
+                        </div>
                       </td>
                     ) : null}
                   </tr>
@@ -263,7 +281,20 @@ export default async function InventoryPage({ searchParams }: InventoryPageProps
                   </div>
                 </dl>
                 {canAdjustInventory ? (
-                  <div className="mt-4 border-t border-slate-100 pt-4">
+                  <div className="mt-4 flex flex-wrap items-start gap-2 border-t border-slate-100 pt-4">
+                    <StockTransferForm
+                      variantId={row.variantId}
+                      fromWarehouseId={row.warehouseId}
+                      sku={row.sku}
+                      targets={transferTargets}
+                      labels={{
+                        transfer: t.inventory.transfer,
+                        toBranch: t.inventory.toBranch,
+                        quantity: t.inventory.transferQuantity,
+                        confirmTransfer: t.inventory.confirmTransfer,
+                        cancel: t.inventory.cancel,
+                      }}
+                    />
                     <StockAdjustForm labels={{ ...t.inventory, saving: t.catalog.form.saving }} variantId={row.variantId} warehouseId={row.warehouseId} sku={row.sku} />
                   </div>
                 ) : null}

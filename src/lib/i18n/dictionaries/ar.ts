@@ -738,6 +738,11 @@ export const ar: Dictionary = {
     reasonPlaceholder: "السبب",
     adjustAria: "تسوية لـ {sku}",
     reasonAria: "سبب التسوية لـ {sku}",
+    transfer: "نقل لفرع",
+    toBranch: "إلى فرع",
+    transferQuantity: "الكمية المنقولة",
+    confirmTransfer: "تأكيد النقل",
+    cancel: "تراجع",
   },
   movementTypes: {
     RESERVATION: "حجز",
