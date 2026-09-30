@@ -61,6 +61,25 @@ export function PosTerminal({
     );
   }, [catalog.items, query]);
 
+  // The sale groups its lines by product: the name appears once and the size, colour
+  // and quantity of each variant sit underneath.
+  const saleGroups = useMemo(() => {
+    const groups = new Map<string, { productId: string; productName: string; lines: typeof lines }>();
+
+    for (const line of lines) {
+      const group = groups.get(line.item.productId) ?? {
+        productId: line.item.productId,
+        productName: line.item.productName,
+        lines: [] as typeof lines,
+      };
+
+      group.lines.push(line);
+      groups.set(line.item.productId, group);
+    }
+
+    return [...groups.values()];
+  }, [lines]);
+
   // One card per product: its variants stay together inside the card.
   const cardGroups = useMemo(() => {
     const groups = new Map<string, PosCatalogItemView[]>();
@@ -305,34 +324,56 @@ export function PosTerminal({
         {lines.length === 0 ? (
           <p className="mt-4 text-sm text-slate-500">{labels.noItems}</p>
         ) : (
-          <ul className="mt-4 divide-y divide-slate-100">
-            {lines.map((line) => (
-              <li key={line.item.variantId} className="flex items-center justify-between gap-2 py-3">
-                <div className="min-w-0">
-                  <p className="truncate text-sm text-slate-900">{line.item.sku}</p>
-                  <p className="text-xs text-slate-500">
-                    {formatMoney(line.item.unitPrice, line.item.currency)} {labels.each}
-                  </p>
-                </div>
-                <div className="flex shrink-0 items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => changeQuantity(line.item.variantId, -1)}
-                    className="h-7 w-7 rounded-lg border border-slate-300 text-sm font-semibold text-slate-700"
-                  >
-                    −
-                  </button>
-                  <span className="w-6 text-center text-sm text-slate-800">{line.quantity}</span>
-                  <button
-                    type="button"
-                    onClick={() => changeQuantity(line.item.variantId, 1)}
-                    className="h-7 w-7 rounded-lg border border-slate-300 text-sm font-semibold text-slate-700"
-                  >
-                    +
-                  </button>
-                </div>
-              </li>
-            ))}
+          <ul className="mt-4 space-y-3">
+            {saleGroups.map((group) => {
+              const groupTotal = group.lines.reduce(
+                (sum, line) => sum + Number(line.item.unitPrice) * line.quantity,
+                0,
+              );
+
+              return (
+                <li key={group.productId} className="overflow-hidden rounded-xl border border-slate-200">
+                  <div className="flex items-center justify-between gap-2 border-b border-slate-100 bg-slate-50 px-3 py-2">
+                    <p className="min-w-0 truncate text-sm font-semibold text-slate-900">{group.productName}</p>
+                    <span className="shrink-0 text-xs font-medium text-slate-500">
+                      {formatMoney(String(groupTotal), group.lines[0].item.currency)}
+                    </span>
+                  </div>
+                  <ul className="divide-y divide-slate-50">
+                    {group.lines.map((line) => (
+                      <li key={line.item.variantId} className="flex items-center justify-between gap-2 px-3 py-2">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-bold text-slate-800">
+                            {[line.item.size, line.item.color].filter(Boolean).join(" · ") || line.item.sku}
+                          </p>
+                          <p className="truncate font-mono text-[11px] text-slate-400">{line.item.sku}</p>
+                          <p className="text-xs text-slate-500">
+                            {formatMoney(line.item.unitPrice, line.item.currency)} {labels.each}
+                          </p>
+                        </div>
+                        <div className="flex shrink-0 items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => changeQuantity(line.item.variantId, -1)}
+                            className="h-7 w-7 rounded-lg border border-slate-300 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+                          >
+                            −
+                          </button>
+                          <span className="w-6 text-center text-sm font-semibold text-slate-800">{line.quantity}</span>
+                          <button
+                            type="button"
+                            onClick={() => changeQuantity(line.item.variantId, 1)}
+                            className="h-7 w-7 rounded-lg border border-slate-300 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+                          >
+                            +
+                          </button>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </li>
+              );
+            })}
           </ul>
         )}
 
