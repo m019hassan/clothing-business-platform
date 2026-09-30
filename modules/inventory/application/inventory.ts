@@ -2,7 +2,7 @@ import "server-only";
 
 import { GLOBAL_BRANCH_SCOPE, type BranchScope } from "@/modules/branches/application/scope";
 
-import { Prisma } from "@prisma/client";
+import { Prisma, ProductStatus } from "@prisma/client";
 
 import type {
   InventoryPageView,
@@ -63,7 +63,13 @@ function mapRow(row: InventoryRecord): InventoryRowView {
  */
 /** Branch scoping: an unscoped account sees every warehouse. */
 function scopeWhere(scope: BranchScope): Prisma.InventoryItemWhereInput {
-  return scope.warehouseIds === null ? {} : { warehouseId: { in: scope.warehouseIds } };
+  // An archived product is off the catalogue and cannot be sold, so its stock rows are
+  // not part of the working inventory view; its ledger movements remain in history.
+  const base: Prisma.InventoryItemWhereInput = {
+    variant: { product: { status: { not: ProductStatus.ARCHIVED } } },
+  };
+
+  return scope.warehouseIds === null ? base : { ...base, warehouseId: { in: scope.warehouseIds } };
 }
 
 export async function getInventorySummary(scope: BranchScope = GLOBAL_BRANCH_SCOPE): Promise<InventorySummaryView> {
