@@ -1,39 +1,83 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
 
 import type { TransferTarget } from "@/modules/inventory/application/transfers";
 import { apiRequest } from "@/src/lib/api";
 
 type Labels = {
   transfer: string;
+  transferTitle: string;
+  availableHere: string;
+  item: string;
+  from: string;
   toBranch: string;
   quantity: string;
+  all: string;
   confirmTransfer: string;
   cancel: string;
+  noTargets: string;
 };
 
-/** A small dialog that moves units from one warehouse to another branch. */
+/**
+ * The move dialog: a centred panel over the page instead of a form squeezed into the
+ * table. It names the item, shows what the source holds, offers only branches that can
+ * receive (the source branch is left out) and a button that fills the whole quantity.
+ */
 export function StockTransferForm({
   variantId,
   fromWarehouseId,
+  fromWarehouseName,
+  fromBranchId,
+  productName,
+  attributes,
+  available,
   sku,
   targets,
   labels,
 }: {
   variantId: string;
   fromWarehouseId: string;
+  fromWarehouseName: string;
+  fromBranchId: string | null;
+  productName: string;
+  attributes: string;
+  available: number;
   sku: string;
   targets: TransferTarget[];
   labels: Labels;
 }) {
   const router = useRouter();
+  const options = targets.filter((target) => target.branchId !== fromBranchId);
   const [open, setOpen] = useState(false);
-  const [toBranchId, setToBranchId] = useState(targets[0]?.branchId ?? "");
+  const [toBranchId, setToBranchId] = useState(options[0]?.branchId ?? "");
   const [quantity, setQuantity] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!open) {
+      return undefined;
+    }
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setOpen(false);
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [open]);
+
+  const openDialog = () => {
+    setToBranchId(options[0]?.branchId ?? "");
+    setQuantity("");
+    setError(null);
+    setOpen(true);
+  };
 
   const submit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -46,7 +90,6 @@ export function StockTransferForm({
         body: JSON.stringify({ variantId, fromWarehouseId, toBranchId, quantity: Number(quantity) }),
       });
       setOpen(false);
-      setQuantity("");
       router.refresh();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : String(cause));
@@ -54,64 +97,114 @@ export function StockTransferForm({
     }
   };
 
-  if (!open) {
-    return (
+  return (
+    <>
       <button
         type="button"
-        onClick={() => setOpen(true)}
+        onClick={openDialog}
         className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-50"
       >
         {labels.transfer}
       </button>
-    );
-  }
 
-  return (
-    <form onSubmit={submit} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-3">
-      <p className="truncate font-mono text-[11px] text-slate-400">{sku}</p>
-      <label className="block text-xs">
-        <span className="mb-1 block font-medium text-slate-600">{labels.toBranch}</span>
-        <select
-          value={toBranchId}
-          onChange={(event) => setToBranchId(event.target.value)}
-          required
-          className="w-full rounded-lg border border-slate-300 px-2 py-1.5 text-sm"
-        >
-          {targets.map((target) => (
-            <option key={target.branchId} value={target.branchId}>
-              {target.branchName} ({target.branchCode})
-            </option>
-          ))}
-        </select>
-      </label>
-      <label className="block text-xs">
-        <span className="mb-1 block font-medium text-slate-600">{labels.quantity}</span>
-        <input
-          value={quantity}
-          onChange={(event) => setQuantity(event.target.value)}
-          inputMode="numeric"
-          required
-          min={1}
-          className="w-full rounded-lg border border-slate-300 px-2 py-1.5 text-sm"
-        />
-      </label>
-      <div className="flex flex-wrap items-center gap-2">
-        <button
-          type="submit"
-          disabled={busy}
-          className="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-60"
-        >
-          {labels.confirmTransfer}
-        </button>
-        <button
-          type="button"
+      {open ? (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={labels.transferTitle}
           onClick={() => setOpen(false)}
-          className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-600"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4"
         >
-          {labels.cancel}
-        </button>
-      </div>
-      {error ? <p className="text-xs text-rose-600">{error}</p> : null}
-    </form>
+          <form
+            onSubmit={submit}
+            onClick={(event) => event.stopPropagation()}
+            className="w-full max-w-md space-y-4 rounded-2xl bg-white p-5 shadow-2xl"
+          >
+            <div>
+              <h3 className="text-base font-semibold text-slate-900">{labels.transferTitle}</h3>
+              <p className="mt-1 text-sm text-slate-600">
+                {productName}
+                {attributes ? <span className="text-slate-500"> · {attributes}</span> : null}
+              </p>
+              <p className="font-mono text-[11px] text-slate-400">{sku}</p>
+            </div>
+
+            <dl className="grid grid-cols-2 gap-3 rounded-xl bg-slate-50 p-3 text-sm">
+              <div>
+                <dt className="text-xs text-slate-500">{labels.from}</dt>
+                <dd className="font-medium text-slate-800">{fromWarehouseName}</dd>
+              </div>
+              <div>
+                <dt className="text-xs text-slate-500">{labels.availableHere}</dt>
+                <dd className="font-bold text-slate-900">{available}</dd>
+              </div>
+            </dl>
+
+            {options.length === 0 ? (
+              <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">{labels.noTargets}</p>
+            ) : (
+              <>
+                <label className="block text-sm">
+                  <span className="mb-1 block font-medium text-slate-700">{labels.toBranch}</span>
+                  <select
+                    value={toBranchId}
+                    onChange={(event) => setToBranchId(event.target.value)}
+                    required
+                    className="w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-slate-500 focus:outline-none"
+                  >
+                    {options.map((target) => (
+                      <option key={target.branchId} value={target.branchId}>
+                        {target.branchName} ({target.branchCode})
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="block text-sm">
+                  <span className="mb-1 block font-medium text-slate-700">{labels.quantity}</span>
+                  <div className="flex items-center gap-2">
+                    <input
+                      value={quantity}
+                      onChange={(event) => setQuantity(event.target.value)}
+                      inputMode="numeric"
+                      required
+                      min={1}
+                      max={available}
+                      className="w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-slate-500 focus:outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setQuantity(String(available))}
+                      className="shrink-0 rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+                    >
+                      {labels.all}
+                    </button>
+                  </div>
+                </label>
+              </>
+            )}
+
+            {error ? <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p> : null}
+
+            <div className="flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
+              >
+                {labels.cancel}
+              </button>
+              <button
+                type="submit"
+                disabled={busy || options.length === 0}
+                className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {labels.confirmTransfer}
+              </button>
+            </div>
+          </form>
+        </div>
+      ) : null}
+    </>
   );
 }

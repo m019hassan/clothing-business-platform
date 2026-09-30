@@ -12,11 +12,10 @@ import {
   scopeDescription,
   type BranchScope,
 } from "@/modules/branches/application/scope";
-import { listStockMovements } from "@/modules/inventory/application/movements";
 import { StockAdjustForm } from "@/modules/inventory/components/stock-adjust-form";
 import { StockTransferForm } from "@/modules/inventory/components/stock-transfer-form";
 import { listTransferTargets } from "@/modules/inventory/application/transfers";
-import type { InventoryPageView, StockMovementView } from "@/modules/inventory/types";
+import type { InventoryPageView } from "@/modules/inventory/types";
 import { formatDate, formatVariantAttributes } from "@/src/lib/format";
 import { parsePaginationParams } from "@/src/lib/validation";
 import { listVariantsWithoutBalances } from "@/modules/inventory/application/inventory";
@@ -83,17 +82,6 @@ export default async function InventoryPage({ searchParams }: InventoryPageProps
         <p className="mt-1 text-sm text-rose-700">{t.common.refreshHint}</p>
       </section>
     );
-  }
-
-  let movements: StockMovementView[] = [];
-
-  if (canViewInventory) {
-    try {
-      const ledger = await listStockMovements(account, { limit: 20, offset: 0 });
-      movements = ledger.movements;
-    } catch {
-      movements = [];
-    }
   }
 
   const variantsWithoutBalances = canAdjustInventory ? await listVariantsWithoutBalances() : [];
@@ -227,14 +215,25 @@ export default async function InventoryPage({ searchParams }: InventoryPageProps
                           <StockTransferForm
                             variantId={row.variantId}
                             fromWarehouseId={row.warehouseId}
+                            fromWarehouseName={row.warehouseName}
+                            fromBranchId={row.branchId}
+                            productName={row.productName}
+                            attributes={formatVariantAttributes(row.size, row.color, "")}
+                            available={row.availableQuantity}
                             sku={row.sku}
                             targets={transferTargets}
                             labels={{
                               transfer: t.inventory.transfer,
+                              transferTitle: t.inventory.transferTitle,
+                              availableHere: t.inventory.availableHere,
+                              item: t.inventory.variant,
+                              from: t.inventory.warehouse,
                               toBranch: t.inventory.toBranch,
                               quantity: t.inventory.transferQuantity,
+                              all: t.inventory.all,
                               confirmTransfer: t.inventory.confirmTransfer,
                               cancel: t.inventory.cancel,
+                              noTargets: t.inventory.noTransferTargets,
                             }}
                           />
                         </div>
@@ -285,14 +284,25 @@ export default async function InventoryPage({ searchParams }: InventoryPageProps
                     <StockTransferForm
                       variantId={row.variantId}
                       fromWarehouseId={row.warehouseId}
+                      fromWarehouseName={row.warehouseName}
+                      fromBranchId={row.branchId}
+                      productName={row.productName}
+                      attributes={formatVariantAttributes(row.size, row.color, "")}
+                      available={row.availableQuantity}
                       sku={row.sku}
                       targets={transferTargets}
                       labels={{
                         transfer: t.inventory.transfer,
+                        transferTitle: t.inventory.transferTitle,
+                        availableHere: t.inventory.availableHere,
+                        item: t.inventory.variant,
+                        from: t.inventory.warehouse,
                         toBranch: t.inventory.toBranch,
                         quantity: t.inventory.transferQuantity,
+                        all: t.inventory.all,
                         confirmTransfer: t.inventory.confirmTransfer,
                         cancel: t.inventory.cancel,
+                        noTargets: t.inventory.noTransferTargets,
                       }}
                     />
                     <StockAdjustForm labels={{ ...t.inventory, saving: t.catalog.form.saving }} variantId={row.variantId} warehouseId={row.warehouseId} sku={row.sku} />
@@ -334,58 +344,17 @@ export default async function InventoryPage({ searchParams }: InventoryPageProps
         </>
       )}
 
-      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="border-b border-slate-200 px-6 py-4">
+      <section className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-6 py-4 shadow-sm">
+        <div>
           <h3 className="text-base font-semibold text-slate-900">{t.inventory.movementsTitle}</h3>
-          <p className="text-sm text-slate-500">
-            {t.inventory.ledgerNote}
-          </p>
+          <p className="text-sm text-slate-500">{t.inventory.ledgerNote}</p>
         </div>
-
-        {movements.length === 0 ? (
-          <p className="px-6 py-8 text-sm text-slate-500">{t.inventory.noMovements}</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-slate-200 text-sm">
-              <thead className="bg-slate-50 text-start text-xs font-semibold uppercase tracking-wide text-slate-500">
-                <tr>
-                  <th scope="col" className="px-6 py-3">{t.inventory.movementType}</th>
-                  <th scope="col" className="px-6 py-3">{t.inventory.variant}</th>
-                  <th scope="col" className="px-6 py-3 text-end">{t.inventory.onHandChange}</th>
-                  <th scope="col" className="px-6 py-3 text-end">{t.inventory.onHandAfter}</th>
-                  <th scope="col" className="px-6 py-3 text-end">{t.inventory.reservedAfter}</th>
-                  <th scope="col" className="px-6 py-3">{t.inventory.reason}</th>
-                  <th scope="col" className="px-6 py-3">{t.inventory.when}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {movements.map((movement) => (
-                  <tr key={movement.id}>
-                    <td className="whitespace-nowrap px-6 py-3">
-                      <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-slate-600">
-                        {(t.movementTypes as Record<string, string>)[movement.type] ?? movement.type}
-                      </span>
-                    </td>
-                    <td className="px-6 py-3">
-                      <p className="font-medium text-slate-900">{movement.sku}</p>
-                      <p className="text-xs text-slate-500">{movement.warehouseCode}</p>
-                    </td>
-                    <td className="whitespace-nowrap px-6 py-3 text-end text-slate-700">
-                      {movement.quantityChange > 0 ? `+${movement.quantityChange}` : movement.quantityChange}
-                    </td>
-                    <td className="whitespace-nowrap px-6 py-3 text-end text-slate-700">{movement.quantityOnHandAfter}</td>
-                    <td className="whitespace-nowrap px-6 py-3 text-end text-slate-700">{movement.quantityReservedAfter}</td>
-                    <td className="px-6 py-3 text-slate-600">
-                      {movement.reason ?? "—"}
-                      {movement.orderId ? <span className="ms-1 text-xs text-slate-400">{t.inventory.orderTag}</span> : null}
-                    </td>
-                    <td className="whitespace-nowrap px-6 py-3 text-slate-500">{formatDate(movement.createdAt)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+        <Link
+          href="/inventory/movements"
+          className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+        >
+          {t.inventory.viewMovements}
+        </Link>
       </section>
     </div>
   );

@@ -10,6 +10,7 @@ export type InventoryRowView = {
   productId: string;
   productName: string;
   warehouseId: string;
+  branchId: string | null;
   warehouseName: string;
   warehouseCode: string;
   quantityOnHand: number;
