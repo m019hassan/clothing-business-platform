@@ -334,6 +334,8 @@ model SizeOption {
 model ColorOption {
   id        String   @id @default(uuid())
   name      String   @unique
+  /// The English name shown when the interface language is English.
+  nameEn    String?
   hex       String
   createdAt DateTime @default(now())
 

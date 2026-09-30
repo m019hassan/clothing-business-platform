@@ -10,7 +10,7 @@ import { AuthorizationError } from "@/src/lib/errors";
 import { getInterfaceLanguage } from "@/src/lib/i18n/server";
 
 export default async function PosPage() {
-  const { t } = await getInterfaceLanguage();
+  const { t, locale } = await getInterfaceLanguage();
   const account = await getCurrentAccount();
 
   if (!account) {
@@ -80,6 +80,7 @@ export default async function PosPage() {
       <PosTerminal
         catalog={catalog}
         labels={{ ...t.pos, each: t.cart.each, openInvoice: t.posInvoice.openInvoice }}
+        preferEnglish={locale === "en"}
         errors={t.errors}
       />
     </div>

@@ -49,12 +49,23 @@ export default async function ProductColorsPage() {
                       style={{ backgroundColor: color.hex }}
                     />
                     {color.name}
+                    {color.nameEn ? (
+                      <span className="text-xs font-normal text-slate-400">{color.nameEn}</span>
+                    ) : null}
                   </span>
                 </td>
                 <td className="px-6 py-3 font-mono text-xs text-slate-500">{color.hex}</td>
                 <td className="px-6 py-3 text-slate-700">{color.usageCount}</td>
                 <td className="px-6 py-3">
-                  {canManage ? <ColorRowActions colorId={color.id} name={color.name} labels={t.colors} /> : null}
+                  {canManage ? (
+                    <ColorRowActions
+                      colorId={color.id}
+                      name={color.name}
+                      nameEn={color.nameEn}
+                      hex={color.hex}
+                      labels={t.colors}
+                    />
+                  ) : null}
                 </td>
               </tr>
             ))}
@@ -79,7 +90,15 @@ export default async function ProductColorsPage() {
                 {color.name}
                 <span className="text-xs font-normal text-slate-500">({color.usageCount})</span>
               </span>
-              {canManage ? <ColorRowActions colorId={color.id} name={color.name} labels={t.colors} /> : null}
+              {canManage ? (
+                <ColorRowActions
+                  colorId={color.id}
+                  name={color.name}
+                  nameEn={color.nameEn}
+                  hex={color.hex}
+                  labels={t.colors}
+                />
+              ) : null}
             </li>
           ))}
           {colors.length === 0 ? <li className="px-4 py-6 text-center text-slate-500">{t.colors.empty}</li> : null}

@@ -8,6 +8,8 @@ import { apiRequest } from "@/src/lib/api";
 type Labels = {
   name: string;
   namePlaceholder: string;
+  nameEn: string;
+  nameEnPlaceholder: string;
   code: string;
   add: string;
 };
@@ -15,6 +17,7 @@ type Labels = {
 export function ColorCreateForm({ labels }: { labels: Labels }) {
   const router = useRouter();
   const [name, setName] = useState("");
+  const [nameEn, setNameEn] = useState("");
   const [hex, setHex] = useState("#111827");
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -25,8 +28,9 @@ export function ColorCreateForm({ labels }: { labels: Labels }) {
     setSaving(true);
 
     try {
-      await apiRequest("/api/colors", { method: "POST", body: JSON.stringify({ name, hex }) });
+      await apiRequest("/api/colors", { method: "POST", body: JSON.stringify({ name, nameEn, hex }) });
       setName("");
+      setNameEn("");
       router.refresh();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : String(cause));
@@ -46,6 +50,16 @@ export function ColorCreateForm({ labels }: { labels: Labels }) {
             placeholder={labels.namePlaceholder}
             required
             minLength={2}
+            maxLength={40}
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 focus:border-slate-500 focus:outline-none"
+          />
+        </label>
+        <label className="min-w-[160px] flex-1 text-sm">
+          <span className="mb-1 block font-medium text-slate-700">{labels.nameEn}</span>
+          <input
+            value={nameEn}
+            onChange={(event) => setNameEn(event.target.value)}
+            placeholder={labels.nameEnPlaceholder}
             maxLength={40}
             className="w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 focus:border-slate-500 focus:outline-none"
           />

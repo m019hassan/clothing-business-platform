@@ -910,6 +910,12 @@ export const en = {
     remove: "Remove",
     removeConfirm: "Remove the colour \u201c{name}\u201d?",
     nav: "Colours",
+    nameEn: "English name",
+    nameEnPlaceholder: "e.g. Navy",
+    edit: "Edit",
+    save: "Save",
+    saving: "Saving\u2026",
+    cancel: "Cancel",
   },
   productImages: {
     view: "View the photo",

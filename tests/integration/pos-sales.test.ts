@@ -250,6 +250,17 @@ describe("getPosCatalog", () => {
     expect(otherVariant?.imageId).toBe(image.id);
   });
 
+  it("matches legacy colour spellings and English names to the library", async () => {
+    await prisma.productVariant.updateMany({ where: { id: { in: [variantA, variantB] } }, data: { color: "Blue" } });
+
+    const catalog = await getPosCatalog(distributor);
+    const item = catalog.items.find((entry) => entry.variantId === variantA);
+
+    // "Blue" resolves to the seeded colour أزرق, and the English name travels too
+    expect(item?.colorHex).toBe("#2563EB");
+    expect(item?.colorNameEn).toBe("Blue");
+  });
+
   it("refuses non-distributor accounts", async () => {
     await expect(getPosCatalog(customer)).rejects.toMatchObject({ statusCode: 403 });
   });

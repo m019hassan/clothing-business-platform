@@ -15,10 +15,12 @@ type CartLine = { item: PosCatalogItemView; quantity: number };
 export function PosTerminal({
   catalog,
   labels,
+  preferEnglish = false,
   errors,
 }: {
   catalog: PosCatalogView;
   labels: PosLabels;
+  preferEnglish?: boolean;
   errors?: ApiErrorLabels;
 }) {
   const [query, setQuery] = useState("");
@@ -243,6 +245,7 @@ export function PosTerminal({
               <PosProductCard
                 key={group[0].productId}
                 items={group}
+                preferEnglish={preferEnglish}
                 labels={{
                   addToSale: labels.addToSale,
                   availableInRow: labels.availableInRow,

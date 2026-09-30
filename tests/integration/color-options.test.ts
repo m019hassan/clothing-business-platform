@@ -77,10 +77,11 @@ afterAll(async () => {
 
 describe("colour library", () => {
   it("creates a colour and lists it with the library", async () => {
-    const color = await createColorOption(staff, { name: "Vitest Maroon", hex: "#7f1d1d" });
+    const color = await createColorOption(staff, { name: "Vitest Maroon", hex: "#7f1d1d", nameEn: "Maroon" });
     created.colorIds.push(color.id);
 
     expect(color.name).toBe("Vitest Maroon");
+    expect(color.nameEn).toBe("Maroon");
     expect(color.hex).toBe("#7F1D1D");
 
     const listed = await listColorOptions();
@@ -142,5 +143,24 @@ describe("colour library", () => {
 
     const listed = await listColorOptions();
     expect(listed.some((entry) => entry.id === color.id)).toBe(false);
+  });
+});
+
+describe("colour edits", () => {
+  it("updates the names and the code of a colour", async () => {
+    const color = await createColorOption(staff, { name: "Vitest Sand", hex: "#c2b280" });
+    created.colorIds.push(color.id);
+
+    const updated = await import("@/modules/catalog/application/colors").then((module) =>
+      module.updateColorOption(staff, color.id, { nameEn: "Sand", hex: "#C2B280" }),
+    );
+
+    expect(updated.nameEn).toBe("Sand");
+    expect(updated.hex).toBe("#C2B280");
+
+    const audit = await prisma.auditLog.findFirst({
+      where: { entityId: color.id, action: "COLOR_UPDATED" },
+    });
+    expect(audit).not.toBeNull();
   });
 });

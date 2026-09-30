@@ -34,22 +34,24 @@ function orderSizes(sizes: string[]): string[] {
 export function PosProductCard({
   items,
   labels,
+  preferEnglish = false,
   onAdd,
 }: {
   items: PosCatalogItemView[];
   labels: Labels;
+  preferEnglish?: boolean;
   onAdd: (item: PosCatalogItemView) => void;
 }) {
   const colors = useMemo(() => {
-    const seen = new Map<string, string | null>();
+    const seen = new Map<string, { hex: string | null; nameEn: string | null }>();
 
     for (const item of items) {
       if (item.color && !seen.has(item.color)) {
-        seen.set(item.color, item.colorHex);
+        seen.set(item.color, { hex: item.colorHex, nameEn: item.colorNameEn });
       }
     }
 
-    return [...seen.entries()].map(([name, hex]) => ({ name, hex }));
+    return [...seen.entries()].map(([name, entry]) => ({ name, ...entry }));
   }, [items]);
 
   const allSizes = useMemo(
@@ -133,7 +135,13 @@ export function PosProductCard({
                     }}
                     disabled={unavailable && !isSelected}
                     aria-pressed={isSelected}
-                    title={unavailable ? `${entry.name} · ${labels.availableInRow} 0` : entry.name}
+                    title={
+                      unavailable
+                        ? `${preferEnglish ? (entry.nameEn ?? entry.name) : entry.name} · ${labels.availableInRow} 0`
+                        : preferEnglish
+                          ? (entry.nameEn ?? entry.name)
+                          : entry.name
+                    }
                     className={[
                       "flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs font-medium transition-colors",
                       isSelected
@@ -150,7 +158,7 @@ export function PosProductCard({
                       ].join(" ")}
                       style={{ backgroundColor: entry.hex ?? "transparent" }}
                     />
-                    {entry.name}
+                    {preferEnglish ? (entry.nameEn ?? entry.name) : entry.name}
                   </button>
                 );
               })}

@@ -9,6 +9,8 @@ export type PosCatalogItemView = {
   imageId: string | null;
   /** The library colour behind the name, for the swatch; null for legacy names. */
   colorHex: string | null;
+  /** The English name of the matched library colour, when one exists. */
+  colorNameEn: string | null;
   unitPrice: string;
   currency: string;
   availableQuantity: number;

@@ -906,6 +906,12 @@ export const ar: Dictionary = {
     remove: "حذف",
     removeConfirm: "حذف اللون «{name}»؟",
     nav: "الألوان",
+    nameEn: "الاسم بالإنجليزية",
+    nameEnPlaceholder: "مثال: Navy",
+    edit: "تعديل",
+    save: "حفظ",
+    saving: "جارٍ الحفظ…",
+    cancel: "تراجع",
   },
   productImages: {
     view: "عرض الصورة",
