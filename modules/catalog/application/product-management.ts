@@ -456,7 +456,7 @@ export async function createProduct(
             variantId: createdVariant.id,
             warehouseId: stockingWarehouseId,
             quantity: variant.quantity,
-            reason: "Opening stock",
+            reason: "رصيد افتتاحي",
             actorAccountId: account.id,
           });
         }
@@ -594,7 +594,7 @@ export async function createVariant(
             variantId: created.id,
             warehouseId: stockingWarehouseId,
             quantity: openingQuantity,
-            reason: "Opening stock",
+            reason: "رصيد افتتاحي",
             actorAccountId: account.id,
           });
         }

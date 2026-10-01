@@ -9,6 +9,7 @@ vi.mock("@/modules/auth/application/authorization", () => ({
 import { Prisma } from "@prisma/client";
 
 import type { SafeAccount } from "@/modules/auth/infrastructure/session";
+import { listStockMovements } from "@/modules/inventory/application/movements";
 import { listTransferTargets, transferStock } from "@/modules/inventory/application/transfers";
 import { prisma } from "@/src/lib/db";
 
@@ -158,6 +159,13 @@ describe("transferStock", () => {
     expect(movements).toHaveLength(2);
     expect(movements.find((movement) => movement.warehouseId === fromWarehouseId)?.quantityChange).toBe(-200);
     expect(movements.find((movement) => movement.warehouseId === destinationWarehouse.id)?.quantityChange).toBe(200);
+
+    // the ledger view names the employee behind the move
+    const ledger = await listStockMovements(staff, { limit: 10, offset: 0 });
+    const rows = ledger.movements.filter((movement) => movement.type === "TRANSFER");
+    expect(rows.length).toBeGreaterThanOrEqual(2);
+    expect(rows[0].actorName).toBe("Vitest Transfer");
+    expect(rows[0].reason).toContain("نقل");
 
     const audit = await prisma.auditLog.findFirst({ where: { entityId: variantId, action: "STOCK_TRANSFERRED" } });
     expect(audit).not.toBeNull();

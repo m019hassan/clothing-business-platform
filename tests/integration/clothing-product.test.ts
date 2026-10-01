@@ -126,7 +126,7 @@ describe("adding a clothing product with its sizes, colours and stock", () => {
     });
     expect(movements).toHaveLength(4);
     for (const movement of movements) {
-      expect(movement.reason).toBe("Opening stock");
+      expect(movement.reason).toBe("رصيد افتتاحي");
       expect(movement.quantityOnHandAfter).toBe(movement.quantityChange);
       expect(movement.warehouseId).toBe(warehouseId);
     }

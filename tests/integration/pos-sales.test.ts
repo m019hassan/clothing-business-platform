@@ -302,7 +302,7 @@ describe("createPosSale", () => {
     });
     expect(movements).toHaveLength(1);
     expect(movements[0].quantityChange).toBe(-2);
-    expect(movements[0].reason).toContain("POS sale");
+    expect(movements[0].reason).toContain("بيع كاشير");
   });
 
   it("reuses the branch walk-in buyer for the next sale", async () => {

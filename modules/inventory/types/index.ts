@@ -51,6 +51,8 @@ export type StockMovementView = {
   reason: string | null;
   orderId: string | null;
   actorAccountId: string | null;
+  /** The employee who moved the stock, as "first last", an email or a phone. */
+  actorName: string | null;
   createdAt: string;
 };
 

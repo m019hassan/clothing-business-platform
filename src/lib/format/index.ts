@@ -20,6 +20,15 @@ export function formatDate(value: string): string {
   return `${day} ${month} ${date.getUTCFullYear()}`;
 }
 
+/** The same deterministic date plus the wall-clock time. */
+export function formatDateTime(value: string): string {
+  const date = new Date(value);
+  const hours = date.getHours().toString().padStart(2, "0");
+  const minutes = date.getMinutes().toString().padStart(2, "0");
+
+  return `${formatDate(value)} · ${hours}:${minutes}`;
+}
+
 export function formatVariantAttributes(
   size: string | null,
   color: string | null,

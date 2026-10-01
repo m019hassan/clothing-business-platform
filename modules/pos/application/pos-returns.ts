@@ -261,7 +261,7 @@ export async function returnPosSale(
 
         await restockReturnedLine(transaction, item.variantId, warehouseIds[0], line.quantity, {
           actorAccountId: account.id,
-          reason: `POS return on ${order.orderNumber}`,
+          reason: `إرجاع على ${order.orderNumber}`,
         });
       }
 
@@ -271,7 +271,7 @@ export async function returnPosSale(
           paymentId: order.paymentId,
           amount: refunded,
           currency: order.currency,
-          reason: input.reason ?? `POS return on ${order.orderNumber}`,
+          reason: input.reason ?? `إرجاع على ${order.orderNumber}`,
           refundedByAccountId: account.id,
         },
       });
@@ -339,7 +339,7 @@ export async function voidPosSale(account: AuthenticatedAccount, orderId: string
     throw new ConflictError("The sale is already fully returned.");
   }
 
-  const result = await returnPosSale(account, orderId, { lines, reason: "Pos sale voided" });
+  const result = await returnPosSale(account, orderId, { lines, reason: "إلغاء بيع كامل" });
 
   await prisma.auditLog.create({
     data: {

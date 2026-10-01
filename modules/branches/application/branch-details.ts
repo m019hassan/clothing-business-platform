@@ -49,6 +49,7 @@ export type BranchDetailsView = {
     sku: string;
     warehouseCode: string;
     quantityChange: number;
+    actorName: string | null;
     createdAt: string;
   }[];
   staff: { employees: number; distributors: number; customers: number };
@@ -171,6 +172,13 @@ export async function getBranchDetails(
                 createdAt: true,
                 variant: { select: { sku: true } },
                 warehouse: { select: { code: true } },
+                actor: {
+                  select: {
+                    email: true,
+                    phone: true,
+                    employeeProfile: { select: { firstName: true, lastName: true } },
+                  },
+                },
               },
             })
           : Promise.resolve([]),
@@ -243,14 +251,21 @@ export async function getBranchDetails(
         total: order.totalAmount.toFixed(2),
         currency: order.currency,
       })),
-      recentMovements: recentMovements.map((movement) => ({
-        id: movement.id,
-        type: movement.type,
-        sku: movement.variant.sku,
-        warehouseCode: movement.warehouse.code,
-        quantityChange: movement.quantityChange,
-        createdAt: movement.createdAt.toISOString(),
-      })),
+      recentMovements: recentMovements.map((movement) => {
+        const name = movement.actor?.employeeProfile
+          ? `${movement.actor.employeeProfile.firstName} ${movement.actor.employeeProfile.lastName ?? ""}`.trim()
+          : "";
+
+        return {
+          id: movement.id,
+          type: movement.type,
+          sku: movement.variant.sku,
+          warehouseCode: movement.warehouse.code,
+          quantityChange: movement.quantityChange,
+          actorName: name !== "" ? name : (movement.actor?.email ?? movement.actor?.phone ?? null),
+          createdAt: movement.createdAt.toISOString(),
+        };
+      }),
       staff: { employees, distributors, customers },
     };
   });

@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 
 import { getCurrentAccount } from "@/modules/auth/infrastructure/session";
 import { listStockMovements } from "@/modules/inventory/application/movements";
-import { formatDate } from "@/src/lib/format";
+import { formatDateTime } from "@/src/lib/format";
 import { getInterfaceLanguage } from "@/src/lib/i18n/server";
 import { parsePaginationParams } from "@/src/lib/validation";
 
@@ -86,7 +86,7 @@ export default async function StockMovementsPage({ searchParams }: MovementsPage
                       {movement.reason ?? "—"}
                       {movement.orderId ? <span className="ms-1 text-xs text-slate-400">{t.inventory.orderTag}</span> : null}
                     </td>
-                    <td className="whitespace-nowrap px-6 py-3 text-slate-500">{formatDate(movement.createdAt)}</td>
+                    <td className="whitespace-nowrap px-6 py-3 text-slate-500">{formatDateTime(movement.createdAt)}</td>
                   </tr>
                 ))}
               </tbody>

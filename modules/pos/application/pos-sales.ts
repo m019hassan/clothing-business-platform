@@ -348,7 +348,7 @@ export async function createPosSale(
             warehouseIds,
             context: {
               actorAccountId: account.id,
-              reason: `POS sale at ${branch.code}`,
+              reason: `بيع كاشير — ${branch.name}`,
             },
           });
         } catch (error) {

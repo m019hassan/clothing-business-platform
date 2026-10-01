@@ -244,9 +244,33 @@ const movementSelection = {
   createdAt: true,
   variant: { select: { sku: true } },
   warehouse: { select: { code: true } },
+  actor: {
+    select: {
+      email: true,
+      phone: true,
+      employeeProfile: { select: { firstName: true, lastName: true } },
+    },
+  },
 } satisfies Prisma.StockMovementSelect;
 
 type MovementRecord = Prisma.StockMovementGetPayload<{ select: typeof movementSelection }>;
+
+/** The person behind a movement, named as people know them. */
+function describeActor(
+  actor:
+    | { email: string | null; phone: string; employeeProfile: { firstName: string; lastName: string | null } | null }
+    | null,
+): string | null {
+  if (!actor) {
+    return null;
+  }
+
+  const name = actor.employeeProfile
+    ? `${actor.employeeProfile.firstName} ${actor.employeeProfile.lastName ?? ""}`.trim()
+    : "";
+
+  return name !== "" ? name : (actor.email ?? actor.phone);
+}
 
 export type StockMovementFilters = { variantId?: string };
 
@@ -309,6 +333,7 @@ export async function listStockMovements(
       reason: record.reason,
       orderId: record.orderId,
       actorAccountId: record.actorAccountId,
+      actorName: describeActor(record.actor),
       createdAt: record.createdAt.toISOString(),
     }));
 

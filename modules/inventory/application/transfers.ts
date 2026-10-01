@@ -206,7 +206,7 @@ export async function transferStock(
 
       const context = {
         actorAccountId: account.id,
-        reason: note ?? `Transfer to ${branch.name}`,
+        reason: note ?? `نقل إلى ${branch.name}`,
       };
 
       await recordMovement(transaction, {
@@ -226,7 +226,7 @@ export async function transferStock(
         quantityChange: quantity,
         quantityOnHandAfter: destinationAfter,
         quantityReservedAfter: destinationItem?.quantityReserved ?? 0,
-        context: { actorAccountId: account.id, reason: note ?? `Transfer from ${fromWarehouse.name}` },
+        context: { actorAccountId: account.id, reason: note ?? `نقل من ${fromWarehouse.name}` },
       });
 
       await transaction.auditLog.create({
