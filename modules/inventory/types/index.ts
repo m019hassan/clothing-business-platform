@@ -42,6 +42,9 @@ export type StockMovementView = {
   id: string;
   variantId: string;
   sku: string;
+  productName: string;
+  size: string | null;
+  color: string | null;
   warehouseId: string;
   warehouseCode: string;
   type: StockMovementType;

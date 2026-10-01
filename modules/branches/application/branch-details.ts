@@ -47,6 +47,9 @@ export type BranchDetailsView = {
     id: string;
     type: string;
     sku: string;
+    productName: string;
+    size: string | null;
+    color: string | null;
     warehouseCode: string;
     quantityChange: number;
     actorName: string | null;
@@ -170,7 +173,7 @@ export async function getBranchDetails(
                 type: true,
                 quantityChange: true,
                 createdAt: true,
-                variant: { select: { sku: true } },
+                variant: { select: { sku: true, size: true, color: true, product: { select: { name: true } } } },
                 warehouse: { select: { code: true } },
                 actor: {
                   select: {
@@ -260,6 +263,9 @@ export async function getBranchDetails(
           id: movement.id,
           type: movement.type,
           sku: movement.variant.sku,
+          productName: movement.variant.product.name,
+          size: movement.variant.size,
+          color: movement.variant.color,
           warehouseCode: movement.warehouse.code,
           quantityChange: movement.quantityChange,
           actorName: name !== "" ? name : (movement.actor?.email ?? movement.actor?.phone ?? null),

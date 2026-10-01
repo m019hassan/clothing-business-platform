@@ -74,8 +74,12 @@ export default async function StockMovementsPage({ searchParams }: MovementsPage
                       </span>
                     </td>
                     <td className="px-6 py-3">
-                      <p className="font-medium text-slate-900">{movement.sku}</p>
-                      <p className="text-xs text-slate-500">{movement.warehouseCode}</p>
+                      <p className="font-medium text-slate-900">{movement.productName}</p>
+                      <p className="text-sm font-bold text-slate-700">
+                        {[movement.size, movement.color].filter(Boolean).join(" · ") || "—"}
+                        <span className="ms-2 text-xs font-normal text-slate-400">{movement.warehouseCode}</span>
+                      </p>
+                      <p className="font-mono text-[11px] text-slate-400">{movement.sku}</p>
                     </td>
                     <td className="whitespace-nowrap px-6 py-3 text-end text-slate-700">
                       {movement.quantityChange > 0 ? `+${movement.quantityChange}` : movement.quantityChange}

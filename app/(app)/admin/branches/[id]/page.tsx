@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation";
 
 import { getCurrentAccount } from "@/modules/auth/infrastructure/session";
 import { getBranchDetails } from "@/modules/branches/application/branch-details";
-import { formatDate, formatMoney } from "@/src/lib/format";
+import { formatDate, formatDateTime, formatMoney } from "@/src/lib/format";
 import { getInterfaceLanguage } from "@/src/lib/i18n/server";
 import { NotFoundError } from "@/src/lib/errors";
 
@@ -183,10 +183,15 @@ export default async function BranchDetailsPage({ params }: { params: Promise<{ 
               {branch.recentMovements.map((movement) => (
                 <li key={movement.id} className="flex items-center justify-between gap-3 py-2.5">
                   <div className="min-w-0">
-                    <p className="truncate text-sm text-slate-900">{movement.sku}</p>
+                    <p className="truncate text-sm font-medium text-slate-900">{movement.productName}</p>
+                    <p className="truncate text-sm font-bold text-slate-700">
+                      {[movement.size, movement.color].filter(Boolean).join(" · ") || "—"}
+                    </p>
+                    <p className="truncate font-mono text-[11px] text-slate-400">{movement.sku}</p>
                     <p className="text-xs text-slate-500">
                       {(t.movementTypes as Record<string, string>)[movement.type] ?? movement.type} ·{" "}
-                      {movement.warehouseCode}
+                      {formatDateTime(movement.createdAt)}
+                      {movement.actorName ? ` · ${movement.actorName}` : ""}
                     </p>
                   </div>
                   <span

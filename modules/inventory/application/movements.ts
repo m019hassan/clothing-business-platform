@@ -242,7 +242,7 @@ const movementSelection = {
   orderId: true,
   actorAccountId: true,
   createdAt: true,
-  variant: { select: { sku: true } },
+  variant: { select: { sku: true, size: true, color: true, product: { select: { name: true } } } },
   warehouse: { select: { code: true } },
   actor: {
     select: {
@@ -324,6 +324,9 @@ export async function listStockMovements(
       id: record.id,
       variantId: record.variantId,
       sku: record.variant.sku,
+      productName: record.variant.product.name,
+      size: record.variant.size,
+      color: record.variant.color,
       warehouseId: record.warehouseId,
       warehouseCode: record.warehouse.code,
       type: record.type,
