@@ -46,6 +46,7 @@ const POS_SUB_ITEMS = [{ href: "/pos/history", key: "posHistory" }] as const;
 const ADMIN_SUB_ITEMS = [
   { href: "/admin", key: "adminAccounts", requiresUsers: true },
   { href: "/admin/branches", key: "adminBranches", requiresBranches: true },
+  { href: "/admin/warehouses", key: "adminWarehouses", requiresBranches: true },
   { href: "/audit", key: "audit", requiresAudit: true },
 ] as const;
 

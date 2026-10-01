@@ -137,7 +137,12 @@ export default async function AdminBranchesPage() {
 
             {canManage ? (
               <div className="mt-5">
-                <BranchForm mode="edit" branch={branch} warehouses={warehouses} labels={{ ...t.branches, saving: t.branches.saving }} />
+                <Link
+                  href={`/admin/branches/${branch.id}/edit`}
+                  className="inline-flex rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+                >
+                  {t.common.edit}
+                </Link>
               </div>
             ) : (
               <ul className="mt-4 text-sm text-slate-600">
