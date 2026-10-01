@@ -101,7 +101,7 @@ async function assertBranch(branchId: string | null | undefined): Promise<void> 
 
 /** Every warehouse with its branch and how much stock it holds. */
 export async function listWarehouses(): Promise<WarehouseView[]> {
-  await requirePermission(PERMISSIONS.BRANCHES_VIEW);
+  await requirePermission(PERMISSIONS.INVENTORY_VIEW);
 
   return withDatabaseError(async () => {
     const warehouses = await prisma.warehouse.findMany({
@@ -253,4 +253,52 @@ export async function updateWarehouse(
     available: (stock._sum.quantityOnHand ?? 0) - (stock._sum.quantityReserved ?? 0),
     trackedItems: stock._count._all,
   };
+}
+
+/**
+ * Removes a warehouse that holds no stock history. Anything with inventory rows or
+ * ledger movements is refused, because deleting it would erase where stock went;
+ * deactivating it is the answer there.
+ */
+export async function deleteWarehouse(account: AuthenticatedAccount, warehouseId: string): Promise<{ name: string }> {
+  await requirePermission(PERMISSIONS.BRANCHES_MANAGE);
+
+  if (!isUuid(warehouseId)) {
+    throw new NotFoundError("The warehouse was not found.");
+  }
+
+  const warehouse = await prisma.warehouse.findUnique({
+    where: { id: warehouseId },
+    select: { id: true, code: true, name: true },
+  });
+
+  if (!warehouse) {
+    throw new NotFoundError("The warehouse was not found.");
+  }
+
+  const [items, movements] = await Promise.all([
+    prisma.inventoryItem.count({ where: { warehouseId } }),
+    prisma.stockMovement.count({ where: { warehouseId } }),
+  ]);
+
+  if (items > 0 || movements > 0) {
+    throw new ConflictError(
+      `"${warehouse.name}" holds stock history (${items} row(s), ${movements} movement(s)), so it cannot be deleted. Deactivate it instead.`,
+    );
+  }
+
+  await prisma.$transaction([
+    prisma.warehouse.delete({ where: { id: warehouse.id } }),
+    prisma.auditLog.create({
+      data: {
+        accountId: account.id,
+        action: "WAREHOUSE_DELETED",
+        entity: "Warehouse",
+        entityId: warehouse.id,
+        newValue: `${warehouse.code} — ${warehouse.name}`,
+      },
+    }),
+  ]);
+
+  return { name: warehouse.name };
 }

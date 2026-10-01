@@ -37,7 +37,10 @@ const PRODUCT_SUB_ITEMS = [
 ] as const;
 
 /** Links shown indented under the inventory entry. */
-const INVENTORY_SUB_ITEMS = [{ href: "/inventory/movements", key: "inventoryMovements" }] as const;
+const INVENTORY_SUB_ITEMS = [
+  { href: "/inventory/movements", key: "inventoryMovements" },
+  { href: "/inventory/warehouses", key: "inventoryWarehouses" },
+] as const;
 
 /** Links shown indented under the point-of-sale entry. */
 const POS_SUB_ITEMS = [{ href: "/pos/history", key: "posHistory" }] as const;
@@ -46,7 +49,6 @@ const POS_SUB_ITEMS = [{ href: "/pos/history", key: "posHistory" }] as const;
 const ADMIN_SUB_ITEMS = [
   { href: "/admin", key: "adminAccounts", requiresUsers: true },
   { href: "/admin/branches", key: "adminBranches", requiresBranches: true },
-  { href: "/admin/warehouses", key: "adminWarehouses", requiresBranches: true },
   { href: "/audit", key: "audit", requiresAudit: true },
 ] as const;
 

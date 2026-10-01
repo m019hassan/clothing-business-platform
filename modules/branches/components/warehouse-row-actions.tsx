@@ -17,6 +17,8 @@ type Labels = {
   branch: string;
   noBranch: string;
   active: string;
+  remove: string;
+  removeConfirm: string;
 };
 
 export function WarehouseRowActions({
@@ -56,15 +58,43 @@ export function WarehouseRowActions({
     }
   };
 
+  const remove = async () => {
+    if (!window.confirm(labels.removeConfirm.replace("{name}", warehouse.name))) {
+      return;
+    }
+
+    setBusy(true);
+    setError(null);
+
+    try {
+      await apiRequest(`/api/warehouses/${warehouse.id}`, { method: "DELETE" });
+      router.refresh();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : String(cause));
+      setBusy(false);
+    }
+  };
+
   if (!editing) {
     return (
-      <button
-        type="button"
-        onClick={() => setEditing(true)}
-        className="rounded-lg border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-50"
-      >
-        {labels.edit}
-      </button>
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          onClick={() => setEditing(true)}
+          className="rounded-lg border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-50"
+        >
+          {labels.edit}
+        </button>
+        <button
+          type="button"
+          onClick={remove}
+          disabled={busy}
+          className="rounded-lg border border-rose-200 px-3 py-1 text-xs font-medium text-rose-700 transition-colors hover:bg-rose-50 disabled:opacity-50"
+        >
+          {labels.remove}
+        </button>
+        {error ? <span className="w-full text-xs text-rose-600">{error}</span> : null}
+      </div>
     );
   }
 

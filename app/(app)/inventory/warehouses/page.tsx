@@ -21,7 +21,7 @@ export default async function AdminWarehousesPage() {
 
   const permissions = await getCurrentPermissions();
 
-  if (!permissions.has(PERMISSIONS.BRANCHES_VIEW)) {
+  if (!permissions.has(PERMISSIONS.INVENTORY_VIEW)) {
     redirect("/dashboard");
   }
 
@@ -37,8 +37,8 @@ export default async function AdminWarehousesPage() {
   return (
     <div className="space-y-6">
       <header className="space-y-1">
-        <Link href="/admin/branches" className="text-sm text-blue-700 hover:underline">
-          ← {t.branches.title}
+        <Link href="/inventory" className="text-sm text-blue-700 hover:underline">
+          ← {t.inventory.title ?? t.nav.inventory}
         </Link>
         <h1 className="text-2xl font-semibold text-slate-900">{t.warehouses.title}</h1>
         <p className="text-sm text-slate-600">{t.warehouses.subtitle}</p>
@@ -115,6 +115,8 @@ export default async function AdminWarehousesPage() {
                         branch: t.warehouses.branch,
                         noBranch: t.warehouses.noBranch,
                         active: t.branchDetails.active,
+                        remove: t.warehouses.remove,
+                        removeConfirm: t.warehouses.removeConfirm,
                       }}
                     />
                   ) : null}
@@ -164,6 +166,8 @@ export default async function AdminWarehousesPage() {
                     branch: t.warehouses.branch,
                     noBranch: t.warehouses.noBranch,
                     active: t.branchDetails.active,
+                    remove: t.warehouses.remove,
+                    removeConfirm: t.warehouses.removeConfirm,
                   }}
                 />
               ) : null}

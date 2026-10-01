@@ -6,6 +6,7 @@ import { PERMISSIONS } from "@/modules/auth/application/permissions";
 import { getCurrentAccount } from "@/modules/auth/infrastructure/session";
 import { listBranches } from "@/modules/branches/application/branches";
 import { listBranchOverviews } from "@/modules/branches/application/branch-details";
+import { BranchDeleteButton } from "@/modules/branches/components/branch-delete-button";
 import { BranchForm } from "@/modules/branches/components/branch-form";
 import { prisma } from "@/src/lib/db";
 import { formatDate, formatMoney } from "@/src/lib/format";
@@ -136,13 +137,18 @@ export default async function AdminBranchesPage() {
             })()}
 
             {canManage ? (
-              <div className="mt-5">
+              <div className="mt-5 flex flex-wrap items-center gap-2">
                 <Link
                   href={`/admin/branches/${branch.id}/edit`}
                   className="inline-flex rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
                 >
                   {t.common.edit}
                 </Link>
+                <BranchDeleteButton
+                  branchId={branch.id}
+                  branchName={branch.name}
+                  labels={{ remove: t.branches.remove, removeConfirm: t.branches.removeConfirm }}
+                />
               </div>
             ) : (
               <ul className="mt-4 text-sm text-slate-600">

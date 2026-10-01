@@ -356,3 +356,58 @@ export async function updateBranch(
 
   return mapBranch(record);
 }
+
+/**
+ * Removes a branch that nothing points at. A branch with warehouses, staff,
+ * distributors, orders or customers is refused - those records would be left dangling -
+ * and deactivating it is the answer there.
+ */
+export async function deleteBranch(account: AuthenticatedAccount, branchId: string): Promise<{ name: string }> {
+  await requirePermission(PERMISSIONS.BRANCHES_MANAGE);
+
+  if (!isUuid(branchId)) {
+    throw new NotFoundError("Branch not found.");
+  }
+
+  const branch = await prisma.branch.findUnique({
+    where: { id: branchId },
+    select: {
+      id: true,
+      name: true,
+      _count: {
+        select: { warehouses: true, employees: true, distributors: true, orders: true, customers: true },
+      },
+    },
+  });
+
+  if (!branch) {
+    throw new NotFoundError("Branch not found.");
+  }
+
+  const blockers: string[] = [];
+
+  if (branch._count.warehouses > 0) blockers.push(`${branch._count.warehouses} warehouse(s)`);
+  if (branch._count.employees > 0) blockers.push(`${branch._count.employees} employee(s)`);
+  if (branch._count.distributors > 0) blockers.push(`${branch._count.distributors} distributor(s)`);
+  if (branch._count.orders > 0) blockers.push(`${branch._count.orders} order(s)`);
+  if (branch._count.customers > 0) blockers.push(`${branch._count.customers} customer(s)`);
+
+  if (blockers.length > 0) {
+    throw new ConflictError(`"${branch.name}" still has ${blockers.join(", ")}, so it cannot be deleted. Deactivate it instead.`);
+  }
+
+  await prisma.$transaction([
+    prisma.branch.delete({ where: { id: branch.id } }),
+    prisma.auditLog.create({
+      data: {
+        accountId: account.id,
+        action: "BRANCH_DELETED",
+        entity: "Branch",
+        entityId: branch.id,
+        newValue: branch.name,
+      },
+    }),
+  ]);
+
+  return { name: branch.name };
+}

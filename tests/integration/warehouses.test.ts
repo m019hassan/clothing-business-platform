@@ -7,7 +7,8 @@ vi.mock("@/modules/auth/application/authorization", () => ({
 }));
 
 import type { SafeAccount } from "@/modules/auth/infrastructure/session";
-import { createWarehouse, listWarehouses, updateWarehouse } from "@/modules/branches/application/warehouses";
+import { deleteBranch } from "@/modules/branches/application/branches";
+import { createWarehouse, deleteWarehouse, listWarehouses, updateWarehouse } from "@/modules/branches/application/warehouses";
 import { prisma } from "@/src/lib/db";
 
 type TestAccount = NonNullable<SafeAccount>;
@@ -110,5 +111,60 @@ describe("warehouse administration", () => {
 
     const audit = await prisma.auditLog.findFirst({ where: { entityId: warehouse.id, action: "WAREHOUSE_UPDATED" } });
     expect(audit).not.toBeNull();
+  });
+});
+
+describe("removing warehouses and branches", () => {
+  it("deletes an empty warehouse but refuses one with stock history", async () => {
+    const suffix = Date.now().toString(36).toUpperCase();
+    const clean = await createWarehouse(staff, { code: `wg-${suffix}`, name: "مستودع فاضي" });
+
+    const removed = await deleteWarehouse(staff, clean.id);
+    expect(removed.name).toBe("مستودع فاضي");
+
+    const audit = await prisma.auditLog.findFirst({ where: { action: "WAREHOUSE_DELETED" } });
+    expect(audit).not.toBeNull();
+
+    const used = await createWarehouse(staff, { code: `w h-${suffix}`.replace(" ", ""), name: "مستودع عليه حركة" });
+    created.warehouseIds.push(used.id);
+    const category =
+      (await prisma.category.findFirst({ where: { slug: "vitest" } })) ??
+      (await prisma.category.create({ data: { name: "Vitest", slug: "vitest" } }));
+    const product = await prisma.product.create({
+      data: {
+        name: `WH Guard ${suffix}`,
+        slug: `wh-guard-${suffix.toLowerCase()}`,
+        status: "ACTIVE",
+        basePrice: "10.00",
+        currency: "SAR",
+        categoryId: category.id,
+        variants: { create: [{ sku: `WHG-${suffix}`, status: "ACTIVE" }] },
+      },
+      include: { variants: true },
+    });
+    await prisma.inventoryItem.create({
+      data: { variantId: product.variants[0].id, warehouseId: used.id, quantityOnHand: 1, quantityReserved: 0 },
+    });
+
+    await expect(deleteWarehouse(staff, used.id)).rejects.toMatchObject({ statusCode: 409 });
+
+    // cleanup the guard product
+    await prisma.inventoryItem.deleteMany({ where: { variantId: product.variants[0].id } });
+    await prisma.productVariant.deleteMany({ where: { productId: product.id } });
+    await prisma.product.delete({ where: { id: product.id } });
+  });
+
+  it("deletes an empty branch and refuses one that still has warehouses", async () => {
+    const suffix = Date.now().toString(36).toUpperCase();
+    const empty = await prisma.branch.create({ data: { code: `BE-${suffix}`, name: `Empty ${suffix}` } });
+
+    const removed = await deleteBranch(staff, empty.id);
+    expect(removed.name).toContain("Empty");
+
+    // a branch holding a warehouse cannot go
+    const held = await createWarehouse(staff, { code: `wz-${suffix}`, name: "مستودع الفرع", branchId });
+    created.warehouseIds.push(held.id);
+
+    await expect(deleteBranch(staff, branchId)).rejects.toMatchObject({ statusCode: 409 });
   });
 });
