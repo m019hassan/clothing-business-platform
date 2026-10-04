@@ -19,3 +19,31 @@ describe("upload validation", () => {
     expect(() => assertUploadAllowed("application/pdf", MAX_UPLOAD_BYTES + 1)).toThrowError(/larger/);
   });
 });
+
+describe("upload keys", () => {
+  it("reads back nothing for keys that could escape the root", async () => {
+    const { readUpload } = await import("@/src/lib/storage");
+
+    expect(await readUpload("../../etc/passwd")).toBeNull();
+    expect(await readUpload("..%2F..%2Fetc%2Fpasswd")).toBeNull();
+    expect(await readUpload("not-a-uuid.png")).toBeNull();
+  });
+
+  it("keeps the filesystem driver when nothing asks for object storage", async () => {
+    const { mkdtemp, readFile } = await import("node:fs/promises");
+    const { tmpdir } = await import("node:os");
+    const { join } = await import("node:path");
+
+    process.env.UPLOAD_DIR = await mkdtemp(join(tmpdir(), "cbp-picker-"));
+    delete process.env.STORAGE_DRIVER;
+
+    const { saveUpload, readUpload } = await import("@/src/lib/storage");
+    const saved = await saveUpload({ data: Buffer.from("pick me"), contentType: "image/png", originalName: "p.png" });
+
+    expect(saved.key).toMatch(/^[0-9a-f-]{36}\.png$/);
+    expect((await readFile(join(process.env.UPLOAD_DIR, saved.key))).toString()).toBe("pick me");
+    expect((await readUpload(saved.key))?.toString()).toBe("pick me");
+
+    delete process.env.UPLOAD_DIR;
+  });
+});
