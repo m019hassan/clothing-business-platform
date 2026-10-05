@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import { apiErrorMessage, apiRequest, type ApiErrorLabels } from "@/src/lib/api";
 import type { CartView } from "@/modules/cart/types";
+import { Loader2Icon, XIcon } from "@/components/ui/icons";
 
 export type CartItemControlLabels = {
   decrease: string;
@@ -58,25 +59,29 @@ export function CartItemControls({
   return (
     <div className="flex flex-col items-start gap-2 sm:items-end">
       <div className="flex items-center gap-2">
-        <div className="inline-flex items-center rounded-lg border border-slate-300 bg-white">
+        <div className="inline-flex items-center rounded-xl border border-slate-200 bg-white shadow-xs">
           <button
             type="button"
             aria-label={labels.decrease}
             onClick={() => run("decrease")}
             disabled={pending !== null || quantity <= 1}
-            className="px-3 py-2 text-slate-700 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:text-slate-300"
+            className="flex h-8 w-8 items-center justify-center rounded-s-xl text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:text-slate-300"
           >
             −
           </button>
-          <span className="min-w-10 border-x border-slate-200 px-3 py-2 text-center text-sm font-medium text-slate-900">
-            {quantity}
+          <span className="min-w-8 px-2 text-center text-xs font-bold text-slate-900">
+            {pending === "increase" || pending === "decrease" ? (
+              <Loader2Icon className="mx-auto h-3 w-3 animate-spin text-slate-400" />
+            ) : (
+              quantity
+            )}
           </span>
           <button
             type="button"
             aria-label={labels.increase}
             onClick={() => run("increase")}
             disabled={pending !== null}
-            className="px-3 py-2 text-slate-700 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:text-slate-300"
+            className="flex h-8 w-8 items-center justify-center rounded-e-xl text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:text-slate-300"
           >
             +
           </button>
@@ -86,18 +91,23 @@ export function CartItemControls({
           type="button"
           onClick={() => run("remove")}
           disabled={pending !== null}
-          className="rounded-lg border border-rose-200 px-3 py-2 text-xs font-medium text-rose-700 transition-colors hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex items-center gap-1 rounded-xl border border-slate-200 px-2.5 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {pending === "remove" ? labels.removing : labels.remove}
+          {pending === "remove" ? (
+            <Loader2Icon className="h-3.5 w-3.5 animate-spin text-rose-500" />
+          ) : (
+            <XIcon className="h-3.5 w-3.5 text-slate-400" />
+          )}
+          <span>{pending === "remove" ? labels.removing : labels.remove}</span>
         </button>
       </div>
 
       {pending === "increase" || pending === "decrease" ? (
-        <p className="text-xs text-slate-400">{labels.updating}</p>
+        <p className="text-[11px] text-slate-400">{labels.updating}</p>
       ) : null}
 
       {error ? (
-        <p role="alert" className="max-w-xs text-xs text-rose-700">
+        <p role="alert" className="max-w-xs text-xs text-rose-600">
           {error}
         </p>
       ) : null}

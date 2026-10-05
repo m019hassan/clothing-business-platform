@@ -1,10 +1,9 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 
 import { getCurrentAccount } from "@/modules/auth/infrastructure/session";
 import { resolveBranchScope } from "@/modules/branches/application/scope";
 import { OrderStatusBadge } from "@/components/orders/order-status-badge";
-import Link from "next/link";
-
 import { OperationsOverview } from "@/components/dashboard/operations-overview";
 import { getDistributorDashboard } from "@/modules/pos/application/pos-dashboard";
 import { PosBranchInsights } from "@/modules/pos/components/pos-branch-insights";
@@ -14,24 +13,15 @@ import { getDashboardOperations, getDashboardSummary } from "@/modules/dashboard
 import type { DashboardSummary } from "@/modules/dashboard/types";
 import { formatDate, formatMoney } from "@/src/lib/format";
 import { getInterfaceLanguage } from "@/src/lib/i18n/server";
-
-function SummaryCard({
-  label,
-  value,
-  hint,
-}: {
-  label: string;
-  value: string;
-  hint?: string;
-}) {
-  return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
-      <p className="text-sm font-medium text-slate-500">{label}</p>
-      <p className="mt-2 text-3xl font-semibold tracking-tight text-slate-900">{value}</p>
-      {hint ? <p className="mt-1 text-xs text-slate-400">{hint}</p> : null}
-    </div>
-  );
-}
+import { StatCard } from "@/components/ui/stat-card";
+import {
+  AlertCircleIcon,
+  ArrowRightIcon,
+  FileTextIcon,
+  ShoppingBagIcon,
+  StoreIcon,
+  TrendingUpIcon,
+} from "@/components/ui/icons";
 
 export default async function DashboardPage() {
   const account = await getCurrentAccount();
@@ -64,18 +54,19 @@ export default async function DashboardPage() {
     if (posDashboard) {
       return (
         <div className="space-y-6">
-          <section className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <section className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">{t.pos.kicker}</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-blue-600">{t.pos.kicker}</p>
               <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-950">
                 {posDashboard.branchName} ({posDashboard.branchCode})
               </h2>
-              <p className="mt-1 text-sm text-slate-600">{t.dashboard.accountSubtitle}</p>
+              <p className="mt-1 text-sm text-slate-500">{t.dashboard.accountSubtitle}</p>
             </div>
             <Link
               href="/pos"
-              className="rounded-lg bg-slate-900 px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-slate-700"
+              className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition-all hover:bg-slate-800 hover:shadow"
             >
+              <StoreIcon className="h-4 w-4" />
               {t.pos.completeSale}
             </Link>
           </section>
@@ -100,14 +91,17 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">{t.dashboard.kicker}</p>
-        <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-950">{t.dashboard.welcome}</h2>
-        <p className="mt-2 text-sm text-slate-600">
-          {summary?.scope === "business"
-            ? t.dashboard.businessSubtitle
-            : t.dashboard.accountSubtitle}
-        </p>
+      {/* Welcome Hero Banner */}
+      <section className="relative overflow-hidden rounded-2xl border border-slate-200/80 bg-gradient-to-r from-white via-slate-50/50 to-white p-6 sm:p-8 shadow-sm">
+        <div className="max-w-3xl">
+          <p className="text-xs font-semibold uppercase tracking-wider text-blue-600">{t.dashboard.kicker}</p>
+          <h2 className="mt-1 text-2xl sm:text-3xl font-bold tracking-tight text-slate-950">{t.dashboard.welcome}</h2>
+          <p className="mt-2 text-sm text-slate-600">
+            {summary?.scope === "business"
+              ? t.dashboard.businessSubtitle
+              : t.dashboard.accountSubtitle}
+          </p>
+        </div>
       </section>
 
       {loadError ? (
@@ -119,53 +113,82 @@ export default async function DashboardPage() {
         </section>
       ) : (
         <>
+          {/* Stat Cards Grid */}
           <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <SummaryCard label={t.dashboard.orders} value={String(summary?.orderCount ?? 0)} />
-            <SummaryCard
+            <StatCard
+              label={t.dashboard.orders}
+              value={String(summary?.orderCount ?? 0)}
+              variant="blue"
+              icon={<FileTextIcon className="h-5 w-5" />}
+            />
+            <StatCard
               label={t.dashboard.pendingOrders}
               value={String(summary?.pendingOrderCount ?? 0)}
               hint={t.dashboard.pendingOrdersHint}
+              variant="amber"
+              icon={<TrendingUpIcon className="h-5 w-5" />}
             />
-            <SummaryCard label={t.dashboard.products} value={String(summary?.productCount ?? 0)} hint={t.dashboard.productsHint} />
-            <SummaryCard
+            <StatCard
+              label={t.dashboard.products}
+              value={String(summary?.productCount ?? 0)}
+              hint={t.dashboard.productsHint}
+              variant="indigo"
+              icon={<ShoppingBagIcon className="h-5 w-5" />}
+            />
+            <StatCard
               label={t.dashboard.lowStock}
               value={String(summary?.lowStockCount ?? 0)}
               hint={t.dashboard.lowStockHint}
+              variant="rose"
+              icon={<AlertCircleIcon className="h-5 w-5" />}
             />
           </section>
 
-          <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-            <div className="flex items-center justify-between gap-4 border-b border-slate-200 px-6 py-4">
+          {/* Recent Orders Section */}
+          <section className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
+            <div className="flex items-center justify-between gap-4 border-b border-slate-100 px-6 py-4">
               <div>
-                <h3 className="text-base font-semibold text-slate-900">{t.dashboard.recentOrders}</h3>
-                <p className="text-sm text-slate-500">{t.dashboard.recentOrdersHint}</p>
+                <h3 className="text-base font-bold text-slate-900">{t.dashboard.recentOrders}</h3>
+                <p className="text-xs text-slate-500">{t.dashboard.recentOrdersHint}</p>
               </div>
+              <Link
+                href="/orders"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-700"
+              >
+                <span>{t.common.view}</span>
+                <ArrowRightIcon className="h-3.5 w-3.5" />
+              </Link>
             </div>
 
             {summary && summary.recentOrders.length > 0 ? (
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-slate-200 text-sm">
-                  <thead className="bg-slate-50 text-start text-xs font-semibold uppercase tracking-wide text-slate-500">
+                <table className="min-w-full divide-y divide-slate-100 text-sm">
+                  <thead className="bg-slate-50/75 text-start text-xs font-semibold uppercase tracking-wider text-slate-500">
                     <tr>
-                      <th scope="col" className="px-6 py-3">{t.common.order}</th>
-                      <th scope="col" className="px-6 py-3">{t.common.status}</th>
-                      <th scope="col" className="px-6 py-3">{t.common.total}</th>
-                      <th scope="col" className="px-6 py-3">{t.common.date}</th>
+                      <th scope="col" className="px-6 py-3.5 text-start">{t.common.order}</th>
+                      <th scope="col" className="px-6 py-3.5 text-start">{t.common.status}</th>
+                      <th scope="col" className="px-6 py-3.5 text-start">{t.common.total}</th>
+                      <th scope="col" className="px-6 py-3.5 text-start">{t.common.date}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {summary.recentOrders.map((order) => (
-                      <tr key={order.id} className="transition-colors hover:bg-slate-50">
-                        <td className="whitespace-nowrap px-6 py-4 font-medium text-slate-900">
-                          {order.orderNumber}
+                      <tr key={order.id} className="transition-colors hover:bg-slate-50/80">
+                        <td className="whitespace-nowrap px-6 py-4">
+                          <Link
+                            href={`/orders/${order.id}`}
+                            className="font-semibold text-slate-900 hover:text-blue-600 transition-colors"
+                          >
+                            {order.orderNumber}
+                          </Link>
                         </td>
                         <td className="whitespace-nowrap px-6 py-4">
                           <OrderStatusBadge status={order.status} labels={t.orderStatus} />
                         </td>
-                        <td className="whitespace-nowrap px-6 py-4 text-slate-700">
+                        <td className="whitespace-nowrap px-6 py-4 font-medium text-slate-700">
                           {formatMoney(order.totalAmount, order.currency)}
                         </td>
-                        <td className="whitespace-nowrap px-6 py-4 text-slate-500">
+                        <td className="whitespace-nowrap px-6 py-4 text-xs text-slate-500">
                           {formatDate(order.createdAt)}
                         </td>
                       </tr>
@@ -174,9 +197,12 @@ export default async function DashboardPage() {
                 </table>
               </div>
             ) : (
-              <div className="px-6 py-12 text-center">
-                <p className="text-sm font-medium text-slate-700">{t.dashboard.noOrders}</p>
-                <p className="mt-1 text-sm text-slate-500">
+              <div className="px-6 py-14 text-center">
+                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
+                  <FileTextIcon className="h-6 w-6" />
+                </div>
+                <p className="mt-3 text-sm font-semibold text-slate-800">{t.dashboard.noOrders}</p>
+                <p className="mt-1 text-xs text-slate-500">
                   {t.dashboard.noOrdersHint}
                 </p>
               </div>

@@ -1,14 +1,22 @@
 "use client";
 
 import Link from "next/link";
-
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 
 import type { PosLabels } from "@/modules/pos/components/pos-labels";
 import type { PosCatalogItemView, PosCatalogView, PosReceiptView } from "@/modules/pos/types";
 import { PosProductCard } from "@/modules/pos/components/pos-product-card";
 import { apiErrorMessage, apiRequest, type ApiErrorLabels } from "@/src/lib/api";
 import { formatMoney } from "@/src/lib/format";
+import {
+  CheckCircle2Icon,
+  GridIcon,
+  ListIcon,
+  Loader2Icon,
+  SearchIcon,
+  ShoppingBagIcon,
+  StoreIcon,
+} from "@/components/ui/icons";
 
 type CartLine = { item: PosCatalogItemView; quantity: number };
 
@@ -29,9 +37,8 @@ export function PosTerminal({
   const [error, setError] = useState<string | null>(null);
   const [receipt, setReceipt] = useState<PosReceiptView | null>(null);
   const [view, setView] = useState<"list" | "cards">("list");
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
-  // The stored preference is read after mount so the server and the first client
-  // render agree; the rule guard is deliberate.
   useEffect(() => {
     const remembered = window.localStorage.getItem("pos-catalog-view");
     if (remembered === "cards" || remembered === "list") {
@@ -45,9 +52,6 @@ export function PosTerminal({
     window.localStorage.setItem("pos-catalog-view", next);
   };
 
-  // Availability shown anywhere in the catalogue is what is left after the units the
-  // running sale already holds, so a card that had one unit reads 0 and disables its
-  // add button the moment that unit joins the sale.
   const itemsWithRemaining = useMemo(() => {
     const inCart = new Map<string, number>();
 
@@ -77,8 +81,6 @@ export function PosTerminal({
     );
   }, [itemsWithRemaining, query]);
 
-  // The sale groups its lines by product: the name appears once and the size, colour
-  // and quantity of each variant sit underneath.
   const saleGroups = useMemo(() => {
     const groups = new Map<string, { productId: string; productName: string; lines: typeof lines }>();
 
@@ -96,7 +98,6 @@ export function PosTerminal({
     return [...groups.values()];
   }, [lines]);
 
-  // One card per product: its variants stay together inside the card.
   const cardGroups = useMemo(() => {
     const groups = new Map<string, PosCatalogItemView[]>();
 
@@ -110,9 +111,8 @@ export function PosTerminal({
   }, [filtered]);
 
   const total = lines.reduce((sum, line) => sum + Number(line.item.unitPrice) * line.quantity, 0);
+  const totalItemCount = lines.reduce((sum, line) => sum + line.quantity, 0);
 
-  // Messages name the product with its size and colour: the SKU means nothing at the
-  // counter.
   const describeItem = (item: PosCatalogItemView) => {
     const attributes = [item.size, item.color].filter(Boolean).join(" · ");
 
@@ -120,8 +120,6 @@ export function PosTerminal({
   };
 
   function addItem(item: PosCatalogItemView) {
-    // The views show the shelf quantity minus what the sale already holds, so the guard
-    // has to run against the untouched shelf numbers, not the displayed remainder.
     const shelfItem = catalog.items.find((entry) => entry.variantId === item.variantId) ?? item;
     const shelfQuantity = shelfItem.availableQuantity;
 
@@ -146,6 +144,8 @@ export function PosTerminal({
         line.item.variantId === item.variantId ? { ...line, quantity: line.quantity + 1 } : line,
       );
     });
+
+    searchInputRef.current?.focus();
   }
 
   function changeQuantity(variantId: string, delta: number) {
@@ -199,31 +199,44 @@ export function PosTerminal({
   if (receipt) {
     return (
       <div className="space-y-5">
-        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-6">
-          <h3 className="text-base font-semibold text-emerald-800">{labels.saleCompleted}</h3>
-          <p className="mt-1 text-sm text-emerald-700">
-            {receipt.orderNumber} · {formatMoney(receipt.totalAmount, receipt.currency)} · {receipt.itemCount} item
-            {receipt.itemCount === 1 ? "" : "s"} · branch {receipt.branchCode}
+        <div className="rounded-2xl border border-emerald-200 bg-emerald-50/70 p-6 shadow-sm">
+          <div className="flex items-center gap-2.5 text-emerald-800">
+            <CheckCircle2Icon className="h-6 w-6 text-emerald-600" />
+            <h3 className="text-lg font-bold">{labels.saleCompleted}</h3>
+          </div>
+          <p className="mt-2 text-sm text-emerald-700">
+            <span className="font-semibold">{receipt.orderNumber}</span> · {formatMoney(receipt.totalAmount, receipt.currency)} · {receipt.itemCount} {receipt.itemCount === 1 ? "item" : "items"} · {receipt.branchCode}
           </p>
-          <ul className="mt-4 space-y-1 text-sm text-emerald-800">
-            {receipt.lines.map((line) => (
-              <li key={line.variantId}>
-                {line.quantity} × {line.sku} @ {formatMoney(line.unitPrice, receipt.currency)} ={" "}
-                {formatMoney(line.lineTotal, receipt.currency)}
-              </li>
-            ))}
-          </ul>
+
+          <div className="mt-4 rounded-xl border border-emerald-200/60 bg-white/80 p-4">
+            <ul className="space-y-2 text-xs text-slate-700">
+              {receipt.lines.map((line) => (
+                <li key={line.variantId} className="flex justify-between border-b border-emerald-50 pb-1.5 last:border-0 last:pb-0">
+                  <span>
+                    <strong className="text-slate-900">{line.quantity}×</strong> {line.sku}
+                  </span>
+                  <span className="font-semibold text-slate-900">
+                    {formatMoney(line.lineTotal, receipt.currency)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
           <div className="mt-5 flex flex-wrap items-center gap-3">
             <Link
               href={`/pos/sales/${receipt.orderId}`}
-              className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-slate-700"
+              className="rounded-xl bg-slate-950 px-4 py-2 text-xs font-semibold text-white shadow-sm transition-all hover:bg-slate-800"
             >
               {labels.openInvoice}
             </Link>
             <button
               type="button"
-              onClick={() => setReceipt(null)}
-              className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+              onClick={() => {
+                setReceipt(null);
+                setTimeout(() => searchInputRef.current?.focus(), 100);
+              }}
+              className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50"
             >
               {labels.newSale}
             </button>
@@ -234,60 +247,71 @@ export function PosTerminal({
   }
 
   return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[2fr_1fr]">
-      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <label htmlFor="pos-search" className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
-          {labels.findProduct}
-        </label>
-        <input
-          id="pos-search"
-          type="search"
-          onKeyDown={(event) => {
-            if (event.key !== "Enter") {
-              return;
-            }
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(340px,1fr)]">
+      {/* Products Catalog Terminal View */}
+      <section className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm space-y-4">
+        <div>
+          <label htmlFor="pos-search" className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-500">
+            {labels.findProduct}
+          </label>
+          <div className="relative">
+            <span className="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3.5 text-slate-400">
+              <SearchIcon className="h-4 w-4" />
+            </span>
+            <input
+              ref={searchInputRef}
+              id="pos-search"
+              type="search"
+              autoFocus
+              onKeyDown={(event) => {
+                if (event.key !== "Enter") {
+                  return;
+                }
 
-            const needle = query.trim().toLowerCase();
-            const exact = catalog.items.find((item) => item.sku.toLowerCase() === needle);
+                const needle = query.trim().toLowerCase();
+                const exact = catalog.items.find((item) => item.sku.toLowerCase() === needle);
 
-            if (exact) {
-              event.preventDefault();
-              addItem(exact);
-              setQuery("");
-            }
-          }}
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder={labels.searchPlaceholder}
-          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none ring-blue-500 focus:ring-2"
-        />
+                if (exact) {
+                  event.preventDefault();
+                  addItem(exact);
+                  setQuery("");
+                }
+              }}
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder={labels.searchPlaceholder}
+              className="w-full rounded-xl border border-slate-300 bg-white py-2.5 ps-10 pe-4 text-sm text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-slate-900 focus:ring-2 focus:ring-slate-950/10"
+            />
+          </div>
+        </div>
 
-        <div className="mt-4 flex items-center justify-between gap-2 border-b border-slate-100 pb-2">
-          <span className="text-xs text-slate-500">
+        {/* View Toggle and Result Count */}
+        <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-3">
+          <span className="text-xs font-medium text-slate-500">
             {filtered.length} {labels.results}
           </span>
-          <div className="flex items-center gap-1 rounded-lg border border-slate-200 p-0.5">
+          <div className="flex items-center rounded-xl border border-slate-200 bg-slate-50 p-1">
             <button
               type="button"
               onClick={() => changeView("list")}
               aria-pressed={view === "list"}
-              className={[
-                "rounded-md px-2.5 py-1 text-xs font-semibold transition-colors",
-                view === "list" ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-100",
-              ].join(" ")}
+              className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold transition-all ${
+                view === "list" ? "bg-white text-slate-900 shadow-xs" : "text-slate-500 hover:text-slate-900"
+              }`}
             >
-              {labels.viewList}
+              <ListIcon className="h-3.5 w-3.5" />
+              <span>{labels.viewList}</span>
             </button>
             <button
               type="button"
               onClick={() => changeView("cards")}
               aria-pressed={view === "cards"}
-              className={[
-                "rounded-md px-2.5 py-1 text-xs font-semibold transition-colors",
-                view === "cards" ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-100",
-              ].join(" ")}
+              className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold transition-all ${
+                view === "cards" ? "bg-white text-slate-900 shadow-xs" : "text-slate-500 hover:text-slate-900"
+              }`}
             >
-              {labels.viewCards}
+              <GridIcon className="h-3.5 w-3.5" />
+              <span>{labels.viewCards}</span>
             </button>
           </div>
         </div>
@@ -309,56 +333,75 @@ export function PosTerminal({
               />
             ))}
             {cardGroups.length === 0 ? (
-              <li className="col-span-full py-6 text-center text-sm text-slate-500">{labels.noMatches}</li>
+              <li className="col-span-full py-12 text-center text-sm text-slate-500">{labels.noMatches}</li>
             ) : null}
           </ul>
         ) : (
-        <ul className="mt-4 divide-y divide-slate-100">
-          {filtered.slice(0, 25).map((item) => (
-            <li key={item.variantId} className="flex items-center justify-between gap-3 py-3">
-              <div className="min-w-0">
-                <p className="truncate text-sm font-medium text-slate-900">{item.productName}</p>
-                <p className="truncate text-base font-bold text-slate-800">
-                  {[item.size, item.color].filter(Boolean).join(" · ") || "—"}
-                  <span className="ms-2 text-xs font-normal text-slate-500">
-                    {labels.availableInRow} {item.availableQuantity}
+          <ul className="divide-y divide-slate-100">
+            {filtered.slice(0, 25).map((item) => (
+              <li key={item.variantId} className="flex items-center justify-between gap-3 py-3 transition-colors hover:bg-slate-50/60 rounded-xl px-2">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold text-slate-900">{item.productName}</p>
+                  <p className="truncate text-xs text-slate-700 font-medium">
+                    {[item.size, item.color].filter(Boolean).join(" · ") || "—"}
+                    <span className="ms-2 text-xs font-normal text-slate-500">
+                      {labels.availableInRow} {item.availableQuantity}
+                    </span>
+                  </p>
+                  <p className="truncate font-mono text-[11px] text-slate-400">{item.sku}</p>
+                </div>
+                <div className="flex shrink-0 items-center gap-3">
+                  <span className="text-sm font-bold text-slate-900">
+                    {formatMoney(item.unitPrice, item.currency)}
                   </span>
-                </p>
-                <p className="truncate font-mono text-xs text-slate-400">{item.sku}</p>
-              </div>
-              <div className="flex shrink-0 items-center gap-3">
-                <span className="text-sm font-semibold text-slate-800">
-                  {formatMoney(item.unitPrice, item.currency)}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => addItem(item)}
-                  disabled={item.availableQuantity <= 0}
-                  className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  {labels.addToSale}
-                </button>
-              </div>
-            </li>
-          ))}
-          {filtered.length === 0 ? <li className="py-6 text-sm text-slate-500">{labels.noMatches}</li> : null}
-        </ul>
+                  <button
+                    type="button"
+                    onClick={() => addItem(item)}
+                    disabled={item.availableQuantity <= 0}
+                    className="rounded-xl bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white shadow-xs transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400"
+                  >
+                    {labels.addToSale}
+                  </button>
+                </div>
+              </li>
+            ))}
+            {filtered.length === 0 ? <li className="py-12 text-center text-sm text-slate-500">{labels.noMatches}</li> : null}
+          </ul>
         )}
+
         {filtered.length > 25 ? (
-          <p className="mt-3 text-xs text-slate-400">{labels.firstMatches}</p>
+          <p className="text-xs text-slate-400 text-center pt-2">{labels.firstMatches}</p>
         ) : null}
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <h3 className="text-base font-semibold text-slate-900">{labels.currentSale}</h3>
-        <p className="mt-1 text-xs text-slate-500">
-          {labels.branchNote.replace("{code}", catalog.branchCode)}
-        </p>
+      {/* POS Cart / Register Panel */}
+      <section className="h-fit rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm lg:sticky lg:top-24 space-y-4">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <StoreIcon className="h-4 w-4 text-blue-600" />
+              <h3 className="text-base font-bold text-slate-900">{labels.currentSale}</h3>
+            </div>
+            <p className="text-[11px] text-slate-400 mt-0.5">
+              {labels.branchNote.replace("{code}", catalog.branchCode)}
+            </p>
+          </div>
+          {totalItemCount > 0 ? (
+            <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-bold text-slate-700">
+              {totalItemCount}
+            </span>
+          ) : null}
+        </div>
 
         {lines.length === 0 ? (
-          <p className="mt-4 text-sm text-slate-500">{labels.noItems}</p>
+          <div className="py-12 text-center">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
+              <ShoppingBagIcon className="h-6 w-6" />
+            </div>
+            <p className="mt-3 text-xs text-slate-500">{labels.noItems}</p>
+          </div>
         ) : (
-          <ul className="mt-4 space-y-3">
+          <ul className="space-y-2.5 max-h-[420px] overflow-y-auto pe-1">
             {saleGroups.map((group) => {
               const groupTotal = group.lines.reduce(
                 (sum, line) => sum + Number(line.item.unitPrice) * line.quantity,
@@ -366,10 +409,10 @@ export function PosTerminal({
               );
 
               return (
-                <li key={group.productId} className="overflow-hidden rounded-xl border border-slate-200">
-                  <div className="flex items-center justify-between gap-2 border-b border-slate-100 bg-slate-50 px-3 py-2">
-                    <p className="min-w-0 truncate text-sm font-semibold text-slate-900">{group.productName}</p>
-                    <span className="shrink-0 text-xs font-medium text-slate-500">
+                <li key={group.productId} className="overflow-hidden rounded-xl border border-slate-200/80">
+                  <div className="flex items-center justify-between gap-2 border-b border-slate-100 bg-slate-50 px-3 py-1.5">
+                    <p className="min-w-0 truncate text-xs font-bold text-slate-900">{group.productName}</p>
+                    <span className="shrink-0 text-xs font-semibold text-slate-700">
                       {formatMoney(String(groupTotal), group.lines[0].item.currency)}
                     </span>
                   </div>
@@ -377,43 +420,41 @@ export function PosTerminal({
                     {group.lines.map((line) => (
                       <li key={line.item.variantId} className="flex items-center justify-between gap-2 px-3 py-2">
                         <div className="min-w-0">
-                          <p className="flex flex-wrap items-center gap-1.5">
+                          <p className="flex flex-wrap items-center gap-1">
                             {line.item.size ? (
-                              <span className="rounded-md bg-slate-900 px-2 py-0.5 text-sm font-bold leading-5 text-white">
+                              <span className="rounded-md bg-slate-900 px-1.5 py-0.5 text-[11px] font-bold text-white">
                                 {line.item.size}
                               </span>
                             ) : null}
                             {line.item.color ? (
-                              <span className="flex items-center gap-1.5 rounded-full border border-slate-200 px-2 py-0.5 text-xs font-medium text-slate-600">
+                              <span className="flex items-center gap-1 rounded-full border border-slate-200 px-2 py-0.5 text-[11px] font-medium text-slate-600">
                                 <span
-                                  className="inline-block h-3 w-3 rounded-full border border-black/10"
+                                  className="inline-block h-2 w-2 rounded-full border border-black/10"
                                   style={{ backgroundColor: line.item.colorHex ?? "transparent" }}
                                 />
                                 {preferEnglish ? (line.item.colorNameEn ?? line.item.color) : line.item.color}
                               </span>
                             ) : null}
-                            {/* {!line.item.size && !line.item.color ? (
-                              <span className="truncate font-mono text-xs text-slate-400">{line.item.sku}</span>
-                            ) : null} */}
                           </p>
-                          {/* <p className="mt-0.5 truncate font-mono text-[11px] text-slate-400">{line.item.sku}</p> */}
-                          <p className="text-xs font-medium text-slate-600 mt-1">
+                          <p className="text-[11px] font-medium text-slate-500 mt-0.5">
                             {formatMoney(line.item.unitPrice, line.item.currency)} {labels.each}
                           </p>
                         </div>
-                        <div className="flex shrink-0 items-center gap-2">
+                        <div className="flex shrink-0 items-center rounded-lg border border-slate-200 bg-white">
                           <button
                             type="button"
                             onClick={() => changeQuantity(line.item.variantId, -1)}
-                            className="h-7 w-7 rounded-lg border border-slate-300 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+                            className="flex h-7 w-7 items-center justify-center text-xs font-bold text-slate-700 hover:bg-slate-100"
                           >
                             −
                           </button>
-                          <span className="w-6 text-center text-sm font-semibold text-slate-800">{line.quantity}</span>
+                          <span className="min-w-6 text-center text-xs font-bold text-slate-900">
+                            {line.quantity}
+                          </span>
                           <button
                             type="button"
                             onClick={() => changeQuantity(line.item.variantId, 1)}
-                            className="h-7 w-7 rounded-lg border border-slate-300 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+                            className="flex h-7 w-7 items-center justify-center text-xs font-bold text-slate-700 hover:bg-slate-100"
                           >
                             +
                           </button>
@@ -427,27 +468,36 @@ export function PosTerminal({
           </ul>
         )}
 
-        <p className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4 text-sm">
-          <span className="font-medium text-slate-600">{labels.total}</span>
-          <span className="text-lg font-semibold text-slate-900">
-            {formatMoney(String(total), catalog.items[0]?.currency ?? "SAR")}
-          </span>
-        </p>
+        <div className="border-t border-slate-100 pt-3">
+          <div className="flex items-center justify-between text-sm">
+            <span className="font-semibold text-slate-600">{labels.total}</span>
+            <span className="text-xl font-bold text-slate-950">
+              {formatMoney(String(total), catalog.items[0]?.currency ?? "SAR")}
+            </span>
+          </div>
 
-        <button
-          type="button"
-          onClick={completeSale}
-          disabled={pending || lines.length === 0}
-          className="mt-4 w-full rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {pending ? labels.recording : labels.completeSaleCash}
-        </button>
+          <button
+            type="button"
+            onClick={completeSale}
+            disabled={pending || lines.length === 0}
+            className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-slate-950 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {pending ? (
+              <>
+                <Loader2Icon className="h-4 w-4 animate-spin" />
+                <span>{labels.recording}</span>
+              </>
+            ) : (
+              labels.completeSaleCash
+            )}
+          </button>
 
-        {error ? (
-          <p role="alert" className="mt-3 rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">
-            {error}
-          </p>
-        ) : null}
+          {error ? (
+            <p role="alert" className="mt-3 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700">
+              {error}
+            </p>
+          ) : null}
+        </div>
       </section>
     </div>
   );
