@@ -46,3 +46,25 @@ html[lang="ar"] body {
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
+
+/* Cashier mode: the shell and the statistics step aside; each till panel scrolls
+   inside itself so the cashier never scrolls the page. */
+html[data-cashier="1"] aside,
+html[data-cashier="1"] header {
+  display: none !important;
+}
+
+html[data-cashier="1"] .pos-stats {
+  display: none !important;
+}
+
+html[data-cashier="1"] .pos-screen {
+  height: calc(100dvh - 1.5rem);
+}
+
+@media (min-width: 1024px) {
+  html[data-cashier="1"] .pos-screen > section {
+    max-height: 100%;
+    overflow-y: auto;
+  }
+}

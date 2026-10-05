@@ -5,6 +5,7 @@ import { getCurrentAccount } from "@/modules/auth/infrastructure/session";
 import { getDistributorDashboard } from "@/modules/pos/application/pos-dashboard";
 import { getPosCatalog } from "@/modules/pos/application/pos-sales";
 import { PosDashboardCards } from "@/modules/pos/components/pos-dashboard-cards";
+import { CashierModeToggle } from "@/modules/pos/components/cashier-mode-toggle";
 import { PosTerminal } from "@/modules/pos/components/pos-terminal";
 import { AuthorizationError } from "@/src/lib/errors";
 import { getInterfaceLanguage } from "@/src/lib/i18n/server";
@@ -66,16 +67,19 @@ export default async function PosPage() {
           >
             {t.posHistory.link}
           </Link>
+          <CashierModeToggle />
         </div>
         <p className="mt-1 text-sm text-slate-600">
           {t.pos.subtitle}
         </p>
       </section>
 
-      <PosDashboardCards
+      <div className="pos-stats">
+        <PosDashboardCards
         dashboard={dashboard}
         labels={{ ...t.pos, each: t.cart.each, openInvoice: t.posInvoice.openInvoice }}
-      />
+        />
+      </div>
 
       <PosTerminal
         catalog={catalog}

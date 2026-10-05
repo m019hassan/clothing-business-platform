@@ -5,6 +5,9 @@ export type PosCatalogItemView = {
   color: string | null;
   productId: string;
   productName: string;
+  /** The product's category, for the quick filter pills. */
+  categoryId: string | null;
+  categoryName: string | null;
   /** The product's first photo, for the card view. */
   imageId: string | null;
   /** The library colour behind the name, for the swatch; null for legacy names. */

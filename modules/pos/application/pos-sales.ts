@@ -225,6 +225,7 @@ export async function getPosCatalog(account: AuthenticatedAccount): Promise<PosC
                 name: true,
                 basePrice: true,
                 currency: true,
+                category: { select: { id: true, name: true } },
                 images: { orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }], take: 1, select: { id: true } },
               },
             },
@@ -288,6 +289,8 @@ export async function getPosCatalog(account: AuthenticatedAccount): Promise<PosC
       unitPrice: (item.variant.priceOverride ?? item.variant.product.basePrice).toString(),
       currency: item.variant.product.currency,
       availableQuantity: available,
+      categoryId: item.variant.product.category?.id ?? null,
+      categoryName: item.variant.product.category?.name ?? null,
     });
   }
 
