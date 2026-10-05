@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 
+import { PhotoSliderModal } from "@/components/products/photo-slider-modal";
+
 /**
  * A 50x50 thumbnail that opens the product's photos in a popup slider. The overlay
  * closes on the backdrop, the close button or Escape, and moves between photos with

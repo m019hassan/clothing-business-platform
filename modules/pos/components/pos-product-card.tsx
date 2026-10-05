@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+import { ProductPhotoGrid } from "@/components/products/product-photo-grid";
 import type { PosCatalogItemView } from "@/modules/pos/types";
 import { formatMoney } from "@/src/lib/format";
 import { stockLevel } from "@/src/lib/inventory/stock-level";
@@ -11,6 +12,10 @@ type Labels = {
   availableInRow: string;
   colorLabel: string;
   sizeLabel: string;
+  photoView: string;
+  photoClose: string;
+  photoPrevious: string;
+  photoNext: string;
 };
 
 /** Numeric sizes first, smallest to largest; anything else after them. */
@@ -92,12 +97,17 @@ export function PosProductCard({
 
   return (
     <li className="flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-      {items[0].imageId ? (
-        /* eslint-disable-next-line @next/next/no-img-element */
-        <img
-          src={`/api/products/images/${items[0].imageId}`}
+      {items[0].imageIds.length > 0 ? (
+        <ProductPhotoGrid
+          imageIds={items[0].imageIds}
           alt={items[0].productName}
-          className="h-28 w-full bg-slate-50 object-cover"
+          labels={{
+            view: labels.photoView,
+            close: labels.photoClose,
+            previous: labels.photoPrevious,
+            next: labels.photoNext,
+          }}
+          className="h-28"
         />
       ) : (
         <div className="flex h-28 w-full items-center justify-center bg-slate-50 text-2xl font-bold text-slate-300">

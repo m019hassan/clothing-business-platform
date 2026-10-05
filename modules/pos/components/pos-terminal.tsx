@@ -673,6 +673,10 @@ export function PosTerminal({
                     availableInRow: labels.availableInRow,
                     colorLabel: labels.colorLabel,
                     sizeLabel: labels.sizeLabel,
+                    photoView: labels.photoView,
+                    photoClose: labels.photoClose,
+                    photoPrevious: labels.photoPrevious,
+                    photoNext: labels.photoNext,
                   }}
                   onAdd={addItem}
                 />

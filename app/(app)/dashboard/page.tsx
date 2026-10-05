@@ -71,8 +71,24 @@ export default async function DashboardPage() {
             </Link>
           </section>
 
-          <PosDashboardCards dashboard={posDashboard} labels={{ ...t.pos, each: t.cart.each, openInvoice: t.posInvoice.openInvoice }} />
-          <PosBranchInsights dashboard={posDashboard} labels={{ ...t.pos, each: t.cart.each, openInvoice: t.posInvoice.openInvoice }} />
+          <PosDashboardCards dashboard={posDashboard} labels={{
+            ...t.pos,
+            each: t.cart.each,
+            openInvoice: t.posInvoice.openInvoice,
+            photoView: t.productImages.view,
+            photoClose: t.productImages.close,
+            photoPrevious: t.common.previous,
+            photoNext: t.common.next,
+          }} />
+          <PosBranchInsights dashboard={posDashboard} labels={{
+            ...t.pos,
+            each: t.cart.each,
+            openInvoice: t.posInvoice.openInvoice,
+            photoView: t.productImages.view,
+            photoClose: t.productImages.close,
+            photoPrevious: t.common.previous,
+            photoNext: t.common.next,
+          }} />
         </div>
       );
     }

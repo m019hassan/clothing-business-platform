@@ -20,6 +20,10 @@ export type PosLabels = {
   viewCards: string;
   colorLabel: string;
   sizeLabel: string;
+  photoView: string;
+  photoClose: string;
+  photoPrevious: string;
+  photoNext: string;
   saleCompleted: string;
   onlyAvailable: string;
   addToSale: string;

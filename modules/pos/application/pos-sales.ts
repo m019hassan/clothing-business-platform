@@ -226,7 +226,7 @@ export async function getPosCatalog(account: AuthenticatedAccount): Promise<PosC
                 basePrice: true,
                 currency: true,
                 category: { select: { id: true, name: true } },
-                images: { orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }], take: 1, select: { id: true } },
+                images: { orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }], select: { id: true } },
               },
             },
           },
@@ -280,6 +280,7 @@ export async function getPosCatalog(account: AuthenticatedAccount): Promise<PosC
       productId: item.variant.product.id,
       productName: item.variant.product.name,
       imageId: item.variant.product.images[0]?.id ?? null,
+      imageIds: item.variant.product.images.map((image) => image.id),
       colorHex: item.variant.color
         ? (libraryByColor.get(normalizeColorKey(item.variant.color))?.hex ?? null)
         : null,

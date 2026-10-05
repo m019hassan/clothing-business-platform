@@ -10,6 +10,8 @@ export type PosCatalogItemView = {
   categoryName: string | null;
   /** The product's first photo, for the card view. */
   imageId: string | null;
+  /** Every photo of the product, in display order, for the card grid and its slider. */
+  imageIds: string[];
   /** The library colour behind the name, for the swatch; null for legacy names. */
   colorHex: string | null;
   /** The English name of the matched library colour, when one exists. */

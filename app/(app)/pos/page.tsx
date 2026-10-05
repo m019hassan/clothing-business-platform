@@ -77,13 +77,29 @@ export default async function PosPage() {
       <div className="pos-stats">
         <PosDashboardCards
         dashboard={dashboard}
-        labels={{ ...t.pos, each: t.cart.each, openInvoice: t.posInvoice.openInvoice }}
+        labels={{
+          ...t.pos,
+          each: t.cart.each,
+          openInvoice: t.posInvoice.openInvoice,
+          photoView: t.productImages.view,
+          photoClose: t.productImages.close,
+          photoPrevious: t.common.previous,
+          photoNext: t.common.next,
+        }}
         />
       </div>
 
       <PosTerminal
         catalog={catalog}
-        labels={{ ...t.pos, each: t.cart.each, openInvoice: t.posInvoice.openInvoice }}
+        labels={{
+          ...t.pos,
+          each: t.cart.each,
+          openInvoice: t.posInvoice.openInvoice,
+          photoView: t.productImages.view,
+          photoClose: t.productImages.close,
+          photoPrevious: t.common.previous,
+          photoNext: t.common.next,
+        }}
         preferEnglish={locale === "en"}
         errors={t.errors}
       />
