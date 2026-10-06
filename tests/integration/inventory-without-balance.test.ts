@@ -98,14 +98,14 @@ afterAll(async () => {
 
 describe("variants without a balance row", () => {
   it("lists an active variant that has no inventory row and drops it once stocked", async () => {
-    const before = await listVariantsWithoutBalances(50);
+    const before = await listVariantsWithoutBalances(200);
     expect(before.some((variant) => variant.variantId === variantId)).toBe(true);
     expect(before.find((variant) => variant.variantId === variantId)?.productName).toContain("Vitest No Balance");
 
     // The documented flow: the first adjustment creates the row.
     await adjustStock(staff, { variantId, warehouseId, quantityChange: 12, reason: "first stock" });
 
-    const after = await listVariantsWithoutBalances(50);
+    const after = await listVariantsWithoutBalances(200);
     expect(after.some((variant) => variant.variantId === variantId)).toBe(false);
 
     const item = await prisma.inventoryItem.findFirstOrThrow({ where: { variantId } });

@@ -241,6 +241,7 @@ describe("getPosCatalog", () => {
     const item = catalog.items.find((entry) => entry.variantId === variantA);
 
     expect(item?.imageId).toBe(image.id);
+    expect(item?.imageIds).toEqual([image.id]);
     // the library maps the colour "أحمر" to #DC2626
     expect(item?.colorHex).toBe("#DC2626");
     expect(catalog.items.find((entry) => entry.variantId === variantB)?.colorHex).toBeNull();

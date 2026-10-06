@@ -31,6 +31,8 @@ export function ProductPhotoGrid({
 
   const visible = imageIds.slice(0, MAX_TILES);
   const hidden = Math.max(imageIds.length - MAX_TILES, 0);
+  // Three photos read best as two tiles above one wide tile; two sit side by side.
+  const spansLast = imageIds.length === 3;
 
   const openAt = (position: number) => {
     setIndex(position);
@@ -39,7 +41,13 @@ export function ProductPhotoGrid({
 
   return (
     <>
-      <div className={["grid grid-cols-2 gap-0.5 overflow-hidden bg-slate-100", className].join(" ")}>
+      <div
+        className={[
+          "grid grid-cols-2 gap-0.5 overflow-hidden bg-slate-100",
+          imageIds.length === 2 ? "grid-rows-1" : "grid-rows-2",
+          className,
+        ].join(" ")}
+      >
         {imageIds.length === 1 ? (
           <button
             type="button"
@@ -60,8 +68,11 @@ export function ProductPhotoGrid({
                 key={imageId}
                 type="button"
                 onClick={() => openAt(position)}
-                aria-label={showMore ? labels.view : labels.view}
-                className="relative h-full w-full overflow-hidden"
+                aria-label={labels.view}
+                className={[
+                  "relative h-full w-full overflow-hidden",
+                  spansLast && isLastTile ? "col-span-2" : "",
+                ].join(" ")}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={`/api/products/images/${imageId}`} alt={alt} className="h-full w-full object-cover" />

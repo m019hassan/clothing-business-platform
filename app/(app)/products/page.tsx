@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { ImageViewer } from "@/components/products/image-viewer";
+import { ProductPhotoGrid } from "@/components/products/product-photo-grid";
 import { ProductStatusBadge } from "@/components/products/product-status-badge";
 import { StockBadge } from "@/components/products/stock-badge";
 import { getCurrentPermissions } from "@/modules/auth/application/authorization";
@@ -438,7 +439,19 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
               >
                 {/* Image / Thumbnail Container */}
                 <div className="relative aspect-4/3 w-full overflow-hidden bg-slate-100">
-                  {product.imageId ? (
+                  {product.imageIds.length > 1 ? (
+                    <ProductPhotoGrid
+                      imageIds={product.imageIds}
+                      alt={product.name}
+                      labels={{
+                        view: t.productImages.view,
+                        close: t.productImages.close,
+                        previous: t.common.previous,
+                        next: t.common.next,
+                      }}
+                      className="h-full w-full"
+                    />
+                  ) : product.imageId ? (
                     <div className="h-full w-full">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img

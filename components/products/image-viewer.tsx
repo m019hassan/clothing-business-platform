@@ -94,54 +94,17 @@ export function ImageViewer({
       </button>
 
       {open ? (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-label={viewLabel}
-          onClick={() => setOpen(false)}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 p-4"
-        >
-          <div className="relative max-h-[90vh] max-w-[90vw]" onClick={(event) => event.stopPropagation()}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={source}
-              alt={alt}
-              className="max-h-[85vh] max-w-[85vw] rounded-2xl bg-white object-contain shadow-2xl"
-            />
-
-            <button
-              type="button"
-              onClick={() => setOpen(false)}
-              className="absolute -top-3 -end-3 rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-800 shadow-lg transition-colors hover:bg-slate-100"
-            >
-              {closeLabel}
-            </button>
-
-            {hasMany ? (
-              <>
-                <button
-                  type="button"
-                  onClick={() => setIndex((current) => (current - 1 + total) % total)}
-                  aria-label={previousLabel}
-                  className="absolute start-2 top-1/2 -translate-y-1/2 rounded-full bg-white/90 px-3 py-2 text-sm font-bold text-slate-800 shadow-lg transition-colors hover:bg-white"
-                >
-                  ‹
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIndex((current) => (current + 1) % total)}
-                  aria-label={nextLabel}
-                  className="absolute end-2 top-1/2 -translate-y-1/2 rounded-full bg-white/90 px-3 py-2 text-sm font-bold text-slate-800 shadow-lg transition-colors hover:bg-white"
-                >
-                  ›
-                </button>
-                <p className="absolute bottom-3 start-1/2 -translate-x-1/2 rounded-full bg-slate-900/70 px-3 py-1 text-xs font-medium text-white">
-                  {index + 1} / {total}
-                </p>
-              </>
-            ) : null}
-          </div>
-        </div>
+        <PhotoSliderModal
+          imageIds={imageIds}
+          index={index}
+          alt={alt}
+          viewLabel={viewLabel}
+          closeLabel={closeLabel}
+          previousLabel={previousLabel}
+          nextLabel={nextLabel}
+          onIndexChange={setIndex}
+          onClose={() => setOpen(false)}
+        />
       ) : null}
     </>
   );
