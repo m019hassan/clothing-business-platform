@@ -1,10 +1,16 @@
+// Enhanced photo slider modal with richer UI and touch support
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
+import { ChevronLeftIcon, ChevronRightIcon, XIcon } from "@/components/ui/icons";
 
 /**
- * The full-screen photo slider both the thumbnail and the grid open. It keeps its own
- * overlay, arrows, counter and Escape handling.
+ * Full‑screen photo slider opened from the thumbnail. Includes:
+ * • Keyboard navigation (Escape, ArrowLeft/Right)
+ * • Touch/swipe support for mobile
+ * • Styled navigation arrows using our icon library
+ * • Hover zoom effect on the image
+ * • Background blur and focus trap‑like click handling
  */
 export function PhotoSliderModal({
   imageIds,
@@ -31,29 +37,44 @@ export function PhotoSliderModal({
   const hasMany = total > 1;
   const source = `/api/products/images/${imageIds[Math.min(Math.max(index, 0), total - 1)]}`;
 
+  // Touch handling state
+  const touchStartX = useRef<number | null>(null);
+  const touchThreshold = 50; // minimal px swipe to trigger change
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null) return;
+    const diff = e.changedTouches[0].clientX - touchStartX.current;
+    if (Math.abs(diff) > touchThreshold) {
+      if (diff > 0) {
+        // swipe right → previous
+        onIndexChange((index - 1 + total) % total);
+      } else {
+        // swipe left → next
+        onIndexChange((index + 1) % total);
+      }
+    }
+    touchStartX.current = null;
+  };
+
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         onClose();
-      }
-
-      if (event.key === "ArrowLeft") {
+      } else if (event.key === "ArrowLeft") {
         onIndexChange((index - 1 + total) % total);
-      }
-
-      if (event.key === "ArrowRight") {
+      } else if (event.key === "ArrowRight") {
         onIndexChange((index + 1) % total);
       }
     };
-
     window.addEventListener("keydown", onKeyDown);
-
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [index, total, onClose, onIndexChange]);
 
-  if (total === 0) {
-    return null;
-  }
+  if (total === 0) return null;
 
   return (
     <div
@@ -61,43 +82,55 @@ export function PhotoSliderModal({
       aria-modal="true"
       aria-label={viewLabel ?? alt}
       onClick={onClose}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 backdrop-blur-sm p-4"
     >
-      <div className="relative max-h-[90vh] max-w-[90vw]" onClick={(event) => event.stopPropagation()}>
+      <div
+        className="relative max-h-[90vh] max-w-[90vw]"
+        onClick={(e) => e.stopPropagation()}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
+        {/* Image with subtle hover zoom */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={source} alt={alt} className="max-h-[85vh] max-w-[85vw] rounded-2xl bg-white object-contain shadow-2xl" />
+        <img
+          src={source}
+          alt={alt}
+          className="max-h-[85vh] max-w-[85vw] rounded-2xl bg-white object-contain shadow-2xl transition-transform duration-300 ease-out hover:scale-105"
+        />
 
+        {/* Close button – use XIcon for consistency */}
         <button
           type="button"
           onClick={onClose}
-          className="absolute -top-3 -end-3 rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-800 shadow-lg transition-colors hover:bg-slate-100"
+          aria-label={closeLabel}
+          className="absolute -top-3 -end-3 rounded-full bg-white p-1.5 shadow-lg hover:bg-slate-100"
         >
-          {closeLabel}
+          <XIcon className="h-5 w-5 text-slate-800" />
         </button>
 
-        {hasMany ? (
+        {hasMany && (
           <>
             <button
               type="button"
               onClick={() => onIndexChange((index - 1 + total) % total)}
               aria-label={previousLabel}
-              className="absolute start-2 top-1/2 -translate-y-1/2 rounded-full bg-white/90 px-3 py-2 text-sm font-bold text-slate-800 shadow-lg transition-colors hover:bg-white"
+              className="absolute start-2 top-1/2 -translate-y-1/2 rounded-full bg-white/90 p-2 shadow-lg hover:bg-white"
             >
-              ‹
+              <ChevronLeftIcon className="h-6 w-6 text-slate-800" />
             </button>
             <button
               type="button"
               onClick={() => onIndexChange((index + 1) % total)}
               aria-label={nextLabel}
-              className="absolute end-2 top-1/2 -translate-y-1/2 rounded-full bg-white/90 px-3 py-2 text-sm font-bold text-slate-800 shadow-lg transition-colors hover:bg-white"
+              className="absolute end-2 top-1/2 -translate-y-1/2 rounded-full bg-white/90 p-2 shadow-lg hover:bg-white"
             >
-              ›
+              <ChevronRightIcon className="h-6 w-6 text-slate-800" />
             </button>
             <p className="absolute bottom-3 start-1/2 -translate-x-1/2 rounded-full bg-slate-900/70 px-3 py-1 text-xs font-medium text-white">
               {index + 1} / {total}
             </p>
           </>
-        ) : null}
+        )}
       </div>
     </div>
   );

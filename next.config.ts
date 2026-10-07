@@ -41,6 +41,12 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  /**
+   * Development serves its client runtime (HMR, server actions) only to the origin it
+   * was opened from; without this list a tunnel or LAN address loads the page but every
+   * interactive control stays dead.
+   */
+  allowedDevOrigins: ["*.trycloudflare.com", "*.local", "localhost:3000"],
   async headers() {
     return [{ source: "/(.*)", headers: securityHeaders }];
   },
