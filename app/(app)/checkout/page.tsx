@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { CheckoutButton } from "@/components/cart/checkout-button";
+import { CheckoutFlow } from "@/components/cart/checkout-flow";
 import { getCurrentAccount } from "@/modules/auth/infrastructure/session";
 import { getCart } from "@/modules/cart/application/cart-service";
 import type { CartView } from "@/modules/cart/types";
@@ -12,8 +12,6 @@ import { formatMoney } from "@/src/lib/format";
 import { getInterfaceLanguage } from "@/src/lib/i18n/server";
 import {
   ChevronRightIcon,
-  CreditCardIcon,
-  ShieldCheckIcon,
   ShoppingBagIcon,
   ShoppingCartIcon,
 } from "@/components/ui/icons";
@@ -154,43 +152,15 @@ export default async function CheckoutPage() {
           </ul>
         </section>
 
-        {/* Payment Confirmation Card */}
-        <section className="h-fit space-y-5 rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm lg:sticky lg:top-24">
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 text-blue-700">
-              <CreditCardIcon className="h-4 w-4" />
-            </div>
-            <h3 className="text-base font-bold text-slate-900">{t.common.payment}</h3>
-          </div>
-
-          <dl className="space-y-3 text-sm">
-            <div className="flex items-center justify-between text-slate-600">
-              <dt>{t.common.subtotal}</dt>
-              <dd className="font-semibold text-slate-900">
-                {formatMoney(cart.total, cart.items[0]?.currency ?? "")}
-              </dd>
-            </div>
-            <div className="flex items-center justify-between border-t border-slate-100 pt-3">
-              <dt className="text-base font-bold text-slate-900">{t.common.total}</dt>
-              <dd className="text-xl font-bold text-slate-950">
-                {formatMoney(cart.total, cart.items[0]?.currency ?? "")}
-              </dd>
-            </div>
-          </dl>
-
-          <div className="pt-2">
-            <CheckoutButton
-              addresses={addresses}
-              labels={{ ...t.checkout, continueShopping: t.cart.continueShopping }}
-              errors={t.errors}
-            />
-          </div>
-
-          <div className="flex items-start gap-2.5 rounded-xl bg-slate-50 p-3 text-[11px] text-slate-500">
-            <ShieldCheckIcon className="h-4 w-4 shrink-0 text-emerald-600 mt-0.5" />
-            <span>{t.checkout.draftNote}</span>
-          </div>
-        </section>
+        {/* One-page checkout: progress, address with map autocomplete, payment, review */}
+        <CheckoutFlow
+          addresses={addresses}
+          total={String(cart.total)}
+          currency={cart.items[0]?.currency ?? ""}
+          labels={{ ...t.checkout, continueShopping: t.cart.continueShopping }}
+          flow={t.checkoutFlow}
+          errors={t.errors}
+        />
       </div>
     </div>
   );
