@@ -39,6 +39,7 @@ export function PhotoSliderModal({
   const source = `/api/products/images/${imageIds[Math.min(Math.max(index, 0), total - 1)]}`;
 
   // Touch handling state
+  const stripRef = useRef<HTMLDivElement | null>(null);
   const touchStartX = useRef<number | null>(null);
   const touchThreshold = 50; // minimal px swipe to trigger change
 
@@ -75,6 +76,19 @@ export function PhotoSliderModal({
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [index, total, onClose, onIndexChange]);
 
+  // Keep the active thumbnail in the middle of the strip without scrolling the page.
+  useEffect(() => {
+    const strip = stripRef.current;
+    const active = strip?.querySelector<HTMLElement>(`[data-thumb="${index}"]`);
+
+    if (strip && active) {
+      strip.scrollTo({
+        left: active.offsetLeft - strip.clientWidth / 2 + active.clientWidth / 2,
+        behavior: "smooth",
+      });
+    }
+  }, [index, imageIds.length]);
+
   if (total === 0) return null;
 
   // The portal keeps the overlay at the document root: the product card animates with a
@@ -93,17 +107,20 @@ export function PhotoSliderModal({
       className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 backdrop-blur-sm p-4"
     >
       <div
-        className="relative max-h-[90vh] max-w-[90vw]"
+        className="flex max-h-[92vh] max-w-[92vw] flex-col items-center gap-3"
         onClick={(e) => e.stopPropagation()}
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
       >
+        <div
+          className="relative max-h-[80vh] max-w-[90vw]"
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+        >
         {/* Image with subtle hover zoom */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={source}
           alt={alt}
-          className="max-h-[85vh] max-w-[85vw] rounded-2xl bg-white object-contain shadow-2xl transition-transform duration-300 ease-out hover:scale-105"
+          className="max-h-[78vh] max-w-[90vw] rounded-2xl bg-white object-contain shadow-2xl transition-transform duration-300 ease-out hover:scale-105"
         />
 
         {/* Close button – use XIcon for consistency */}
@@ -139,6 +156,42 @@ export function PhotoSliderModal({
             </p>
           </>
         )}
+        </div>
+
+        {/* Responsive thumbnail rail: swipeable on a phone, click to jump anywhere. */}
+        {hasMany ? (
+          <div
+            ref={stripRef}
+            className="flex max-w-[90vw] gap-2 overflow-x-auto rounded-xl bg-slate-900/60 p-2"
+            role="tablist"
+            aria-label={viewLabel ?? alt}
+          >
+            {imageIds.map((imageId, position) => (
+              <button
+                key={imageId}
+                type="button"
+                data-thumb={position}
+                role="tab"
+                aria-selected={position === index}
+                onClick={() => onIndexChange(position)}
+                className={[
+                  "h-12 w-12 shrink-0 overflow-hidden rounded-lg border-2 transition",
+                  position === index
+                    ? "border-white opacity-100"
+                    : "border-transparent opacity-60 hover:opacity-100",
+                ].join(" ")}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={`/api/products/images/${imageId}`}
+                  alt=""
+                  className="h-full w-full object-cover"
+                  loading="lazy"
+                />
+              </button>
+            ))}
+          </div>
+        ) : null}
       </div>
     </div>,
     document.body,
