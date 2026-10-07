@@ -112,11 +112,11 @@ export default async function AdminBranchesPage() {
                 <div className="mt-4 grid grid-cols-2 gap-2 text-center sm:grid-cols-4">
                   <div className="rounded-xl bg-slate-50 px-3 py-2">
                     <p className="text-[11px] text-slate-500">{t.branchDetails.salesToday}</p>
-                    <p className="text-sm font-semibold text-slate-900">{formatMoney(overview.salesToday, "SAR")}</p>
+                    <p className="text-sm font-semibold text-slate-900">{formatMoney(overview.salesToday, "EGP")}</p>
                   </div>
                   <div className="rounded-xl bg-slate-50 px-3 py-2">
                     <p className="text-[11px] text-slate-500">{t.branchDetails.salesMonth}</p>
-                    <p className="text-sm font-semibold text-slate-900">{formatMoney(overview.salesMonth, "SAR")}</p>
+                    <p className="text-sm font-semibold text-slate-900">{formatMoney(overview.salesMonth, "EGP")}</p>
                   </div>
                   <div className="rounded-xl bg-slate-50 px-3 py-2">
                     <p className="text-[11px] text-slate-500">{t.branchDetails.stockAvailable}</p>

@@ -47,7 +47,7 @@ model Account {
   phoneVerified Boolean @default(false)
 
   preferredLanguage   String    @default("ar") @db.VarChar(10)
-  timezone            String    @default("Asia/Riyadh") @db.VarChar(50)
+  timezone            String    @default("Africa/Cairo") @db.VarChar(50)
   lastLoginAt         DateTime?
   failedLoginAttempts Int       @default(0)
   lockedUntil         DateTime?
@@ -371,7 +371,7 @@ model Product {
 
   status    ProductStatus @default(DRAFT)
   basePrice Decimal       @db.Decimal(12, 2)
-  currency  String        @default("SAR") @db.VarChar(10)
+  currency  String        @default("EGP") @db.VarChar(10)
 
   categoryId String @db.Uuid
 
@@ -545,7 +545,7 @@ model Address {
   city       String  @db.VarChar(100)
   region     String? @db.VarChar(100)
   postalCode String? @db.VarChar(20)
-  country    String  @default("SA") @db.VarChar(2)
+  country    String  @default("EG") @db.VarChar(2)
 
   isDefault Boolean @default(false)
 

@@ -206,7 +206,7 @@ export function PosTerminal({
 
   const total = lines.reduce((sum, line) => sum + Number(line.item.unitPrice) * line.quantity, 0);
   const totalItemCount = lines.reduce((sum, line) => sum + line.quantity, 0);
-  const currency = catalog.items[0]?.currency ?? "SAR";
+  const currency = catalog.items[0]?.currency ?? "EGP";
 
   const parsedCashGiven = Number(cashGiven) || 0;
   const changeDue = Math.max(parsedCashGiven - total, 0);

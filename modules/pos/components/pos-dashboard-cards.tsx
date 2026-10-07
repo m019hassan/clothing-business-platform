@@ -13,7 +13,7 @@ function Card({ label, value, hint }: { label: string; value: string; hint?: str
 }
 
 export function PosDashboardCards({ dashboard, labels }: { dashboard: PosDashboardView; labels: PosLabels }) {
-  const currency = "SAR";
+  const currency = "EGP";
 
   return (
     <div className="space-y-6">

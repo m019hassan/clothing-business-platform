@@ -1,11 +1,18 @@
+// Deterministic currency labels: a symbol where one is commonly used, the code otherwise.
+const CURRENCY_LABELS: Record<string, string> = {
+  EGP: "ج.م",
+  SAR: "ر.س",
+  USD: "$",
+};
+
 export function formatMoney(value: string, currency: string): string {
   const amount = Number(value);
 
   if (!Number.isFinite(amount)) {
-    return `${value} ${currency}`;
+    return `${value} ${CURRENCY_LABELS[currency] ?? currency}`;
   }
 
-  return `${amount.toFixed(2)} ${currency}`;
+  return `${amount.toFixed(2)} ${CURRENCY_LABELS[currency] ?? currency}`;
 }
 
 // Deterministic month names: toLocaleDateString output varies with the

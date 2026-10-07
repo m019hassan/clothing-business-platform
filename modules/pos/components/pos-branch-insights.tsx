@@ -7,7 +7,7 @@ import { formatMoney } from "@/src/lib/format";
  * the till stays focused on selling.
  */
 export function PosBranchInsights({ dashboard, labels }: { dashboard: PosDashboardView; labels: PosLabels }) {
-  const currency = "SAR";
+  const currency = "EGP";
 
   return (
     <>

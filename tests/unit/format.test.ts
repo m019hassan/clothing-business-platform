@@ -4,12 +4,14 @@ import { formatDate, formatMoney, formatVariantAttributes, variantLabel } from "
 
 describe("formatMoney", () => {
   it("renders two decimals with the currency", () => {
-    expect(formatMoney("450", "SAR")).toBe("450.00 SAR");
-    expect(formatMoney("12.5", "SAR")).toBe("12.50 SAR");
+    expect(formatMoney("450", "SAR")).toBe("450.00 ر.س");
+    expect(formatMoney("12.5", "SAR")).toBe("12.50 ر.س");
   });
 
   it("returns the raw value when it is not numeric", () => {
-    expect(formatMoney("n/a", "SAR")).toBe("n/a SAR");
+    expect(formatMoney("n/a", "SAR")).toBe("n/a ر.س");
+    expect(formatMoney("100", "EGP")).toBe("100.00 ج.م");
+    expect(formatMoney("7", "XYZ")).toBe("7.00 XYZ");
   });
 });
 

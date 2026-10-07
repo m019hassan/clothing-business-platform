@@ -121,22 +121,22 @@ export default async function ReportsPage({
               <MetricCard
                 label={t.reports.ordersPlaced}
                 value={String(sales.placedCount)}
-                hint={t.reports.valueHint.replace("{value}", formatMoney(sales.placedTotal, "SAR"))}
+                hint={t.reports.valueHint.replace("{value}", formatMoney(sales.placedTotal, "EGP"))}
               />
               <MetricCard
                 label={t.reports.realisedSales}
-                value={formatMoney(sales.confirmedTotal, "SAR")}
+                value={formatMoney(sales.confirmedTotal, "EGP")}
                 hint={t.reports.confirmedHint.replace("{count}", String(sales.confirmedCount))}
               />
               <MetricCard
                 label={t.reports.averageOrderValue}
-                value={formatMoney(sales.averageOrderValue, "SAR")}
+                value={formatMoney(sales.averageOrderValue, "EGP")}
                 hint={t.reports.averageHint}
               />
               <MetricCard
                 label={t.reports.cancelled}
                 value={String(sales.cancelledCount)}
-                hint={t.reports.valueHint.replace("{value}", formatMoney(sales.cancelledTotal, "SAR"))}
+                hint={t.reports.valueHint.replace("{value}", formatMoney(sales.cancelledTotal, "EGP"))}
               />
             </div>
           </section>
@@ -166,7 +166,7 @@ export default async function ReportsPage({
                         </td>
                         <td className="whitespace-nowrap px-6 py-3 text-end text-slate-700">{row.count}</td>
                         <td className="whitespace-nowrap px-6 py-3 text-end text-slate-700">
-                          {formatMoney(row.total, "SAR")}
+                          {formatMoney(row.total, "EGP")}
                         </td>
                         <td className="px-6 py-3">
                           <span
@@ -301,7 +301,7 @@ export default async function ReportsPage({
                     </td>
                     <td className="whitespace-nowrap px-6 py-3 text-end text-slate-700">{row.count}</td>
                     <td className="whitespace-nowrap px-6 py-3 text-end text-slate-700">
-                      {formatMoney(row.amount, "SAR")}
+                      {formatMoney(row.amount, "EGP")}
                     </td>
                   </tr>
                 ))}

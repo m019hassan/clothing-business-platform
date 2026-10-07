@@ -27,7 +27,7 @@ export default async function PosInvoicePage({ params }: { params: Promise<{ id:
     throw error;
   }
 
-  const dateFormat = new Intl.DateTimeFormat(locale === "ar" ? "ar-SA" : "en-GB", {
+  const dateFormat = new Intl.DateTimeFormat(locale === "ar" ? "ar-EG" : "en-GB", {
     dateStyle: "full",
     timeStyle: "short",
   });

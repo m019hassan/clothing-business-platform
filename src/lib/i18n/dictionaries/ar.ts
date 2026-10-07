@@ -415,7 +415,7 @@ export const ar: Dictionary = {
       inventory: "تنبيهات المخزون",
       language: "اللغة",
       timezone: "المنطقة الزمنية",
-      timezonePlaceholder: "Asia/Riyadh",
+      timezonePlaceholder: "Africa/Cairo",
       marketing: "الموافقة التسويقية",
       marketingNote: "الموافقة التسويقية تخص حسابات العملاء فقط.",
     },

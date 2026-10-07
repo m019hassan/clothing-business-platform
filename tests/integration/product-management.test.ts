@@ -101,7 +101,7 @@ describe("createProduct", () => {
     expect(product.slug).toBe(product.slug);
     expect(product.slug).toContain(`vitest-shirt-`);
     expect(product.basePrice).toBe("120");
-    expect(product.currency).toBe("SAR");
+    expect(product.currency).toBe("EGP");
     expect(product.status).toBe("ACTIVE");
     expect(product.categoryName).toBe("Vitest");
     expect(product.variants).toHaveLength(2);

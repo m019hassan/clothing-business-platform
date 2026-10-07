@@ -153,7 +153,7 @@ export function AddressManager({ addresses, labels }: { addresses: AddressView[]
           </div>
           <div>
             <label htmlFor="country" className={labelClass}>{labels.country}</label>
-            <input id="country" name="country" defaultValue="SA" maxLength={2} className={inputClass} />
+            <input id="country" name="country" defaultValue="EG" maxLength={2} className={inputClass} />
           </div>
         </div>
 

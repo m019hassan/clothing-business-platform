@@ -73,7 +73,7 @@ export async function getDistributorDashboard(
   account: AuthenticatedAccount,
 ): Promise<PosDashboardView> {
   const profile = requireDistributor(account);
-  const timeZone = account.timezone || "Asia/Riyadh";
+  const timeZone = account.timezone || "Africa/Cairo";
 
   return withDatabaseError(async () => {
     const branch = await prisma.branch.findUniqueOrThrow({

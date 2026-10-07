@@ -68,14 +68,14 @@ export default async function BranchDetailsPage({ params }: { params: Promise<{ 
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <p className="text-sm font-medium text-slate-500">{t.branchDetails.salesToday}</p>
           <p className="mt-2 text-2xl font-semibold text-slate-900">
-            {formatMoney(branch.sales.today.total, "SAR")}
+            {formatMoney(branch.sales.today.total, "EGP")}
           </p>
           <p className="mt-1 text-xs text-slate-400">{salesHint(branch.sales.today.orders, branch.sales.today.items)}</p>
         </div>
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <p className="text-sm font-medium text-slate-500">{t.branchDetails.salesMonth}</p>
           <p className="mt-2 text-2xl font-semibold text-slate-900">
-            {formatMoney(branch.sales.month.total, "SAR")}
+            {formatMoney(branch.sales.month.total, "EGP")}
           </p>
           <p className="mt-1 text-xs text-slate-400">{salesHint(branch.sales.month.orders, branch.sales.month.items)}</p>
         </div>

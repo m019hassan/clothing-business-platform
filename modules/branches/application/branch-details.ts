@@ -87,7 +87,7 @@ export async function getBranchDetails(
     throw new NotFoundError("Branch not found.");
   }
 
-  const timeZone = account.timezone || "Asia/Riyadh";
+  const timeZone = account.timezone || "Africa/Cairo";
 
   return withDatabaseError(async () => {
     const branch = await prisma.branch.findUnique({
@@ -294,7 +294,7 @@ export type BranchOverview = {
 export async function listBranchOverviews(account: AuthenticatedAccount): Promise<BranchOverview[]> {
   await requirePermission(PERMISSIONS.BRANCHES_VIEW);
 
-  const timeZone = account.timezone || "Asia/Riyadh";
+  const timeZone = account.timezone || "Africa/Cairo";
 
   return withDatabaseError(async () => {
     const branches = await prisma.branch.findMany({

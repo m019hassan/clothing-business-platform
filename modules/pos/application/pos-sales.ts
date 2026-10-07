@@ -324,7 +324,7 @@ export async function createPosSale(
 
       const lines: PosReceiptView["lines"] = [];
       let total = new Prisma.Decimal(0);
-      let currency = "SAR";
+      let currency = "EGP";
 
       for (const item of input.items) {
         const variant = await transaction.productVariant.findFirst({

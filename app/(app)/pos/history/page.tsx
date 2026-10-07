@@ -26,7 +26,7 @@ export default async function PosHistoryPage() {
     throw error;
   }
 
-  const dateFormat = new Intl.DateTimeFormat(locale === "ar" ? "ar-SA" : "en-GB", {
+  const dateFormat = new Intl.DateTimeFormat(locale === "ar" ? "ar-EG" : "en-GB", {
     dateStyle: "short",
     timeStyle: "short",
   });

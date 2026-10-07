@@ -8,6 +8,7 @@ import type { AccountPreferenceView, PreferencesFormState } from "@/modules/noti
 const initialState: PreferencesFormState = { ok: true, message: "" };
 
 const TIMEZONE_SUGGESTIONS = [
+  "Africa/Cairo",
   "Asia/Riyadh",
   "Asia/Dubai",
   "Asia/Cairo",

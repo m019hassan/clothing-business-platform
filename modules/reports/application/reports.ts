@@ -203,7 +203,7 @@ async function getTopProducts(since: Date, branchId: string | null): Promise<Top
       productName: product?.name ?? "Unknown product",
       quantity: row.quantity,
       revenue: row.revenue.toString(),
-      currency: product?.currency ?? "SAR",
+      currency: product?.currency ?? "EGP",
     };
   });
 }
@@ -240,7 +240,7 @@ async function getTopCustomers(since: Date, branchId: string | null): Promise<To
       customerName: [profile?.firstName, profile?.lastName].filter(Boolean).join(" ") || "Unknown",
       orders: row.orders,
       revenue: row.revenue.toString(),
-      currency: "SAR",
+      currency: "EGP",
     };
   });
 }

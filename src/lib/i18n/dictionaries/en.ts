@@ -414,7 +414,7 @@ export const en = {
       inventory: "Inventory alerts",
       language: "Language",
       timezone: "Timezone",
-      timezonePlaceholder: "Asia/Riyadh",
+      timezonePlaceholder: "Africa/Cairo",
       marketing: "Marketing consent",
     marketingNote: "Marketing consent applies to customer accounts only.",
     },

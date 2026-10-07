@@ -41,7 +41,7 @@ describe("parseProductWriteInput", () => {
     description: "  Breathable summer shirt  ",
     status: "ACTIVE",
     basePrice: "149.9",
-    currency: "SAR",
+    currency: "EGP",
     categoryId: CATEGORY_ID,
     variants: [{ sku: "LINEN-M", size: "M", priceOverride: "139.00" }],
   };
@@ -53,7 +53,7 @@ describe("parseProductWriteInput", () => {
     expect(input.description).toBe("Breathable summer shirt");
     expect(input.basePrice).toBe("149.90");
     expect(input.status).toBe("ACTIVE");
-    expect(input.currency).toBe("SAR");
+    expect(input.currency).toBe("EGP");
     expect(input.variants?.[0]).toEqual({
       sku: "LINEN-M",
       size: "M",

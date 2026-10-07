@@ -51,7 +51,7 @@ function addressFormToPayload(formData: FormData): Record<string, unknown> {
     city: value("city") ?? "",
     region: value("region"),
     postalCode: value("postalCode"),
-    country: value("country") ?? "SA",
+    country: value("country") ?? "EG",
     isDefault: formData.get("isDefault") === "on",
   };
 }

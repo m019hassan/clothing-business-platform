@@ -283,7 +283,7 @@ export async function createAddress(
           city: input.city as string,
           region: input.region ?? null,
           postalCode: input.postalCode ?? null,
-          country: input.country ?? "SA",
+          country: input.country ?? "EG",
           isDefault,
         },
         select: addressSelection,

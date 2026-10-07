@@ -29,7 +29,7 @@ const MAX_ATTRIBUTE = 50;
 const MAX_PRICE = "9999999999.99";
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const SKU_PATTERN = /^[A-Za-z0-9._-]+$/;
-const SUPPORTED_CURRENCIES = ["SAR"];
+const SUPPORTED_CURRENCIES = ["EGP"];
 const PRODUCT_STATUSES: readonly ProductStatus[] = ["DRAFT", "ACTIVE", "ARCHIVED"];
 
 export type ProductWriteInput = {
@@ -416,7 +416,7 @@ export async function createProduct(
           material: input.material ?? null,
           status: input.status ?? ProductStatus.DRAFT,
           basePrice: new Prisma.Decimal(input.basePrice!),
-          currency: input.currency ?? "SAR",
+          currency: input.currency ?? "EGP",
           categoryId: input.categoryId!,
           variants: input.variants
             ? {
