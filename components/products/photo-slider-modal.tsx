@@ -2,6 +2,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { ChevronLeftIcon, ChevronRightIcon, XIcon } from "@/components/ui/icons";
 
 /**
@@ -76,7 +77,14 @@ export function PhotoSliderModal({
 
   if (total === 0) return null;
 
-  return (
+  // The portal keeps the overlay at the document root: the product card animates with a
+  // transform, and a transformed ancestor would otherwise trap this fixed overlay inside
+  // the card itself.
+  if (typeof document === "undefined") {
+    return null;
+  }
+
+  return createPortal(
     <div
       role="dialog"
       aria-modal="true"
@@ -132,6 +140,7 @@ export function PhotoSliderModal({
           </>
         )}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
