@@ -746,6 +746,13 @@ export const en = {
     cancel: "Cancel",
     exchangeHint: "To exchange: return the item here, then sell the replacement from the till.",
     link: "Action history",
+    openInvoice: "View invoice",
+    searchPlaceholder: "Search by invoice number or date…",
+    filterAll: "All",
+    filterSold: "Completed",
+    filterPartial: "Partial return",
+    filterReturned: "Returned",
+    noResults: "No results match your search or filter.",
   },
   pos: {
     permissionTitle: "Point of sale requires a distributor account",

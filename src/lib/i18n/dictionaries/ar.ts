@@ -746,6 +746,13 @@ export const ar: Dictionary = {
     cancel: "تراجع",
     exchangeHint: "للتبديل: أرجع القطعة هنا ثم بِع البديل من شاشة الكاشير.",
     link: "سجل العمليات",
+    openInvoice: "عرض الفاتورة",
+    searchPlaceholder: "ابحث برقم الفاتورة أو التاريخ…",
+    filterAll: "الكل",
+    filterSold: "مكتملة",
+    filterPartial: "مرتجع جزئي",
+    filterReturned: "مرتجعة",
+    noResults: "لا توجد نتائج مطابقة للبحث أو الفلتر المحدد.",
   },
   pos: {
     permissionTitle: "نقطة البيع تتطلب حساب موزّع",
