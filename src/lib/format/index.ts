@@ -5,11 +5,11 @@ const CURRENCY_LABELS: Record<string, string> = {
   USD: "$",
 };
 
-export function formatMoney(value: string, currency: string): string {
+export function formatMoney(value: string | number, currency: string): string {
   const amount = Number(value);
 
   if (!Number.isFinite(amount)) {
-    return `${value} ${CURRENCY_LABELS[currency] ?? currency}`;
+    return `${String(value)} ${CURRENCY_LABELS[currency] ?? currency}`;
   }
 
   return `${amount.toFixed(2)} ${CURRENCY_LABELS[currency] ?? currency}`;
