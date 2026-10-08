@@ -736,6 +736,8 @@ export const en = {
     refunded: "Refunded",
     unitsReturned: "{count} unit(s) back",
     return: "Return / exchange",
+    returnDone: "{units} unit(s) back for {amount} EGP -",
+    sellReplacement: "Sell the replacement",
     returnTitle: "Set the quantities coming back",
     quantity: "Quantity",
     confirmReturn: "Confirm the return",

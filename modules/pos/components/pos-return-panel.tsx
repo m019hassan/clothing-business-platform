@@ -8,6 +8,8 @@ import type { PosHistoryRow } from "@/modules/pos/application/pos-returns";
 
 type Labels = {
   return: string;
+  returnDone: string;
+  sellReplacement: string;
   returnTitle: string;
   quantity: string;
   confirmReturn: string;
@@ -22,6 +24,7 @@ export function PosReturnPanel({ sale, labels }: { sale: PosHistoryRow; labels: 
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [lastReturn, setLastReturn] = useState<{ units: number; amount: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [quantities, setQuantities] = useState<Record<string, string>>({});
 
@@ -42,12 +45,15 @@ export function PosReturnPanel({ sale, labels }: { sale: PosHistoryRow; labels: 
     setError(null);
 
     try {
-      await apiRequest(`/api/pos/sales/${sale.orderId}/return`, {
+      const result = await apiRequest<{
+        result: { returnedUnits: number; refundedAmount: string };
+      }>(`/api/pos/sales/${sale.orderId}/return`, {
         method: "POST",
         body: JSON.stringify({ lines }),
       });
       setOpen(false);
       setQuantities({});
+      setLastReturn({ units: result.result.returnedUnits, amount: result.result.refundedAmount });
       router.refresh();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : String(cause));
@@ -77,13 +83,29 @@ export function PosReturnPanel({ sale, labels }: { sale: PosHistoryRow; labels: 
 
   if (!open) {
     return (
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50"
-      >
-        {labels.return}
-      </button>
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+        >
+          {labels.return}
+        </button>
+        {lastReturn ? (
+          <span className="inline-flex flex-wrap items-center gap-2 rounded-lg bg-emerald-50 px-2 py-1 text-[11px] text-emerald-800">
+            {labels.returnDone
+              .replace("{units}", String(lastReturn.units))
+              .replace("{amount}", lastReturn.amount)}
+            <button
+              type="button"
+              onClick={() => router.push("/pos")}
+              className="rounded-md bg-emerald-700 px-2 py-0.5 text-[11px] font-semibold text-white transition-colors hover:bg-emerald-600"
+            >
+              {labels.sellReplacement}
+            </button>
+          </span>
+        ) : null}
+      </div>
     );
   }
 

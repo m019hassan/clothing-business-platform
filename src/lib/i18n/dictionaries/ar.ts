@@ -736,6 +736,8 @@ export const ar: Dictionary = {
     refunded: "المبلغ المسترد",
     unitsReturned: "{count} قطعة رجعت",
     return: "إرجاع / استبدال",
+    returnDone: "رجع {units} قطعة بمبلغ {amount} ج.م —",
+    sellReplacement: "ابدأ بيع البديل",
     returnTitle: "حدّد الكميات الراجعة",
     quantity: "الكمية",
     confirmReturn: "تأكيد الإرجاع",
