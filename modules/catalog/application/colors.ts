@@ -201,3 +201,36 @@ export async function updateColorOption(
 
   return mapColor(updated);
 }
+
+/**
+ * Names typed before the library existed were not consistent ("ازرق", "Blue"), so the
+ * lookup ignores case, the Arabic hamza forms, the final letter variants and the
+ * tatweel, and it tries the English name too. Shared by the till and the catalogue.
+ */
+export function normalizeColorKey(value: string): string {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[\u0623\u0625\u0622]/g, "\u0627")
+    .replace(/\u0649/g, "\u064a")
+    .replace(/\u0629/g, "\u0647")
+    .replace(/\u0640/g, "");
+}
+
+export type ColorLibraryEntry = { hex: string; nameEn: string | null };
+
+/** Every library colour keyed by its normalised Arabic and English names. */
+export async function colorLibraryIndex(): Promise<Map<string, ColorLibraryEntry>> {
+  const options = await prisma.colorOption.findMany({ select: { name: true, nameEn: true, hex: true } });
+  const index = new Map<string, ColorLibraryEntry>();
+
+  for (const option of options) {
+    index.set(normalizeColorKey(option.name), { hex: option.hex, nameEn: option.nameEn });
+
+    if (option.nameEn) {
+      index.set(normalizeColorKey(option.nameEn), { hex: option.hex, nameEn: option.nameEn });
+    }
+  }
+
+  return index;
+}

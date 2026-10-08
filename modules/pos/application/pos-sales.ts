@@ -7,6 +7,7 @@ import { sellStock } from "@/modules/inventory/application/reservations";
 import { notifyBranchPermissionHolders } from "@/modules/notification/application/branch-notifications";
 import type { PosCatalogView, PosReceiptView } from "@/modules/pos/types";
 import { prisma } from "@/src/lib/db";
+import { colorLibraryIndex, normalizeColorKey } from "@/modules/catalog/application/colors";
 import {
   AuthorizationError,
   ConflictError,
@@ -236,29 +237,8 @@ export async function getPosCatalog(account: AuthenticatedAccount): Promise<PosC
     }),
   );
 
-  // Colour swatches come from the shared library. Names typed before the library were
-  // not consistent ("ازرق", "Blue"), so the lookup ignores case, the Arabic hamza
-  // forms and the final letter variants.
-  const colorOptions = await withDatabaseError(() =>
-    prisma.colorOption.findMany({ select: { name: true, nameEn: true, hex: true } }),
-  );
-  const normalizeColorKey = (value: string) =>
-    value
-      .trim()
-      .toLowerCase()
-      .replace(/[\u0623\u0625\u0622]/g, "\u0627")
-      .replace(/\u0649/g, "\u064a")
-      .replace(/\u0629/g, "\u0647")
-      .replace(/\u0640/g, "");
-  const libraryByColor = new Map<string, { hex: string; nameEn: string | null }>();
-
-  for (const option of colorOptions) {
-    libraryByColor.set(normalizeColorKey(option.name), { hex: option.hex, nameEn: option.nameEn });
-
-    if (option.nameEn) {
-      libraryByColor.set(normalizeColorKey(option.nameEn), { hex: option.hex, nameEn: option.nameEn });
-    }
-  }
+  // Colour swatches come from the shared library through the normalised index.
+  const libraryByColor = await colorLibraryIndex();
 
   // A variant can sit in several warehouses of the branch: aggregate availability.
   const aggregated = new Map<string, PosCatalogView["items"][number]>();

@@ -1056,7 +1056,8 @@ export const ar: Dictionary = {
     orders: "الطلبات",
     placed: "تاريخ الطلب",
     skus: "الأكواد",
-    sizesLabel: "المقاسات:",
+    sizesLabel: "المقاسات",
+    colorsLabel: "الألوان",
     uncategorized: "بدون تصنيف",
     sortOptions: {
       name: "الاسم (أ-ي)",

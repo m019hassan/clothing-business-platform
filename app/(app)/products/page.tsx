@@ -54,6 +54,21 @@ function parseLimit(raw: string | undefined): number {
   return Number.isInteger(value) && value >= 1 && value <= 100 ? value : PAGE_SIZE;
 }
 
+type ProductColor = { name: string; hex: string | null; nameEn: string | null };
+
+/** The distinct colours of a product's active variants, with their library swatches. */
+function productColors(product: ProductView): ProductColor[] {
+  const seen = new Map<string, ProductColor>();
+
+  for (const variant of product.variants) {
+    if (variant.color && !seen.has(variant.color)) {
+      seen.set(variant.color, { name: variant.color, hex: variant.colorHex, nameEn: variant.colorNameEn });
+    }
+  }
+
+  return [...seen.values()];
+}
+
 /** The distinct sizes of a product's active variants, smallest number first. */
 function productSizes(product: ProductView): string[] {
   const sizes = new Set<string>();
@@ -396,6 +411,25 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                             ))}
                           </div>
                         ) : null}
+{productColors(product).length > 0 ? (
+                          <div className="mt-1 flex flex-wrap items-center gap-1">
+                            {productColors(product).slice(0, 5).map((color) => (
+                              <span
+                                key={color.name}
+                                className="inline-flex items-center gap-1 rounded-full border border-slate-200 px-1.5 py-0.5 text-[10px] font-medium text-slate-600"
+                              >
+                                <span
+                                  className="inline-block h-2.5 w-2.5 rounded-full border border-black/10"
+                                  style={{ backgroundColor: color.hex ?? "transparent" }}
+                                />
+                                {color.name}
+                              </span>
+                            ))}
+                            {productColors(product).length > 5 ? (
+                              <span className="text-[10px] text-slate-400">+{productColors(product).length - 5}</span>
+                            ) : null}
+                          </div>
+                        ) : null}
                       </div>
                     </div>
                   </td>
@@ -509,6 +543,38 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                         ) : null}
                       </div>
                     ) : null}
+
+                    {/* Available Colours Chips */}
+                    {(() => {
+                      const colors = productColors(product);
+
+                      if (colors.length === 0) {
+                        return null;
+                      }
+
+                      return (
+                        <div className="mt-2 flex flex-wrap items-center gap-1">
+                          <span className="text-[10px] uppercase font-semibold text-slate-400 me-1">
+                            {t.catalog.colorsLabel}:
+                          </span>
+                          {colors.slice(0, 5).map((color) => (
+                            <span
+                              key={color.name}
+                              className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[11px] font-medium text-slate-700"
+                            >
+                              <span
+                                className="inline-block h-2.5 w-2.5 rounded-full border border-black/10"
+                                style={{ backgroundColor: color.hex ?? "transparent" }}
+                              />
+                              {color.name}
+                            </span>
+                          ))}
+                          {colors.length > 5 ? (
+                            <span className="text-[10px] text-slate-400">+{colors.length - 5}</span>
+                          ) : null}
+                        </div>
+                      );
+                    })()}
                   </div>
 
                   {/* Price & Stock Row */}

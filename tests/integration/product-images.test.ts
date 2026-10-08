@@ -160,6 +160,15 @@ describe("product photos", () => {
 
     expect(row?.imageId).toBe(first.id);
     expect(row?.imageIds).toEqual([first.id, second.id]);
+
+    // the catalogue also carries the colour swatch for the card
+    const { prisma: db } = await import("@/src/lib/db");
+    await db.productVariant.updateMany({ where: { productId }, data: { color: "أحمر" } });
+    const after = (await listProducts({ limit: 50, offset: 0 }, { search: "Vitest Images" })).find(
+      (entry) => entry.id === productId,
+    );
+    expect(after?.variants[0].colorHex).toBe("#DC2626");
+    expect(after?.variants[0].colorNameEn).toBe("Red");
   });
 
   it("refuses a file that is not an image", async () => {

@@ -1060,7 +1060,8 @@ export const en = {
     orders: "Orders",
     placed: "Placed",
     skus: "SKUs",
-    sizesLabel: "Sizes:",
+    sizesLabel: "Sizes",
+    colorsLabel: "Colours",
     uncategorized: "Uncategorized",
     sortOptions: {
       name: "Name (A-Z)",

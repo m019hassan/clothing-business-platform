@@ -5,6 +5,9 @@ export type ProductVariantView = {
   sku: string;
   size: string | null;
   color: string | null;
+  /** The library colour behind the name, for swatches; null for legacy names. */
+  colorHex: string | null;
+  colorNameEn: string | null;
   status: ProductStatus;
   priceOverride: string | null;
   availableQuantity: number;

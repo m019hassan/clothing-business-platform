@@ -7,6 +7,7 @@ import type {
   ProductView,
 } from "@/modules/catalog/types";
 import { prisma } from "@/src/lib/db";
+import { colorLibraryIndex, normalizeColorKey } from "@/modules/catalog/application/colors";
 import { AuthorizationError, NotFoundError, ValidationError, withDatabaseError } from "@/src/lib/errors";
 import { hasPermission } from "@/modules/auth/application/authorization";
 import { PERMISSIONS } from "@/modules/auth/application/permissions";
@@ -56,7 +57,10 @@ const sellableProductWhere = {
   variants: { some: { status: ProductStatus.ACTIVE } },
 } satisfies Prisma.ProductWhereInput;
 
-export function mapProduct(product: ProductRecord): ProductView {
+export function mapProduct(
+  product: ProductRecord,
+  colorIndex?: Map<string, { hex: string; nameEn: string | null }>,
+): ProductView {
   return {
     id: product.id,
     name: product.name,
@@ -74,6 +78,12 @@ export function mapProduct(product: ProductRecord): ProductView {
       sku: variant.sku,
       size: variant.size,
       color: variant.color,
+      colorHex: variant.color
+        ? (colorIndex?.get(normalizeColorKey(variant.color))?.hex ?? null)
+        : null,
+      colorNameEn: variant.color
+        ? (colorIndex?.get(normalizeColorKey(variant.color))?.nameEn ?? null)
+        : null,
       status: variant.status,
       priceOverride: variant.priceOverride ? variant.priceOverride.toString() : null,
       availableQuantity: variant.inventoryItems.reduce(
@@ -216,7 +226,9 @@ export async function listProducts(
     }),
   );
 
-  return products.map(mapProduct);
+  const colorIndex = await colorLibraryIndex();
+
+  return products.map((product) => mapProduct(product, colorIndex));
 }
 
 /** True when the caller may see draft/archived products in listing filters. */
@@ -239,6 +251,8 @@ export async function getProductInventory(
   if (!isUuid(productId)) {
     throw new NotFoundError("Product not found.");
   }
+
+  const colorIndex = await colorLibraryIndex();
 
   const product = await withDatabaseError(() =>
     prisma.product.findFirst({
@@ -309,6 +323,8 @@ export async function getProductInventory(
         sku: variant.sku,
         size: variant.size,
         color: variant.color,
+        colorHex: variant.color ? (colorIndex.get(normalizeColorKey(variant.color))?.hex ?? null) : null,
+        colorNameEn: variant.color ? (colorIndex.get(normalizeColorKey(variant.color))?.nameEn ?? null) : null,
         status: variant.status,
         priceOverride: variant.priceOverride ? variant.priceOverride.toString() : null,
         quantityOnHand,
@@ -335,5 +351,7 @@ export async function getProduct(productId: string): Promise<ProductView> {
     throw new NotFoundError("Product not found.");
   }
 
-  return mapProduct(product);
+  const colorIndex = await colorLibraryIndex();
+
+  return mapProduct(product, colorIndex);
 }
