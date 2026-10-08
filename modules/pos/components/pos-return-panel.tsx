@@ -87,7 +87,7 @@ export function PosReturnPanel({ sale, labels }: { sale: PosHistoryRow; labels: 
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+          className="min-h-11 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
         >
           {labels.return}
         </button>
@@ -128,12 +128,13 @@ export function PosReturnPanel({ sale, labels }: { sale: PosHistoryRow; labels: 
                   <span className="text-xs text-slate-500">{labels.quantity}</span>
                   <input
                     type="number"
+                    inputMode="numeric"
                     min={0}
                     max={remaining}
                     value={quantities[line.orderItemId] ?? ""}
                     onChange={(event) => setQuantity(line.orderItemId, event.target.value)}
                     placeholder={`0 / ${remaining}`}
-                    className="w-20 rounded-lg border border-slate-300 px-2 py-1 text-sm focus:border-slate-500 focus:outline-none"
+                    className="w-20 rounded-lg border border-slate-300 px-2 py-2 text-sm focus:border-slate-500 focus:outline-none"
                   />
                 </label>
               </li>
@@ -143,12 +144,12 @@ export function PosReturnPanel({ sale, labels }: { sale: PosHistoryRow; labels: 
 
       <p className="text-xs text-slate-500">{labels.exchangeHint}</p>
 
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
         <button
           type="button"
           onClick={submitReturn}
           disabled={busy}
-          className="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-slate-700 disabled:opacity-60"
+          className="min-h-11 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-slate-700 disabled:opacity-60"
         >
           {labels.confirmReturn}
         </button>
@@ -156,7 +157,7 @@ export function PosReturnPanel({ sale, labels }: { sale: PosHistoryRow; labels: 
           type="button"
           onClick={submitVoid}
           disabled={busy}
-          className="rounded-lg border border-rose-200 px-3 py-1.5 text-xs font-semibold text-rose-700 transition-colors hover:bg-rose-50 disabled:opacity-60"
+          className="min-h-11 rounded-xl border border-rose-200 bg-white px-4 py-2.5 text-sm font-semibold text-rose-700 transition-colors hover:bg-rose-50 disabled:opacity-60"
         >
           {labels.voidSale}
         </button>
@@ -167,11 +168,11 @@ export function PosReturnPanel({ sale, labels }: { sale: PosHistoryRow; labels: 
             setQuantities({});
             setError(null);
           }}
-          className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:bg-white"
+          className="min-h-11 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-white"
         >
           {labels.cancel}
         </button>
-        {error ? <span className="text-xs text-rose-600">{error}</span> : null}
+        {error ? <span className="text-sm text-rose-600">{error}</span> : null}
       </div>
     </div>
   );

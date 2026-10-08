@@ -56,7 +56,13 @@ export function ProductPhotoGrid({
             className="relative h-full w-full overflow-hidden"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={`/api/products/images/${visible[0]}`} alt={alt} className="h-full w-full object-cover" />
+            <img
+              src={`/api/products/images/${visible[0]}`}
+              alt={alt}
+              loading="lazy"
+              decoding="async"
+              className="h-full w-full object-cover"
+            />
           </button>
         ) : (
           visible.map((imageId, position) => {
@@ -75,7 +81,13 @@ export function ProductPhotoGrid({
                 ].join(" ")}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={`/api/products/images/${imageId}`} alt={alt} className="h-full w-full object-cover" />
+                <img
+                  src={`/api/products/images/${imageId}`}
+                  alt={alt}
+                  loading="lazy"
+                  decoding="async"
+                  className="h-full w-full object-cover"
+                />
                 {showMore ? (
                   <span className="absolute inset-0 flex items-center justify-center bg-slate-950/60 text-lg font-bold text-white">
                     +{hidden}

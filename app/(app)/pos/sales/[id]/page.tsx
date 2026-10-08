@@ -4,7 +4,10 @@ import { redirect } from "next/navigation";
 
 import { requireAuthenticated } from "@/modules/auth/infrastructure/session";
 import { getPosSaleDetail } from "@/modules/pos/application/pos-returns";
+import { listOrderSwaps } from "@/modules/pos/application/pos-swaps";
+import { CsvDownloadButton } from "@/modules/pos/components/csv-download-button";
 import { PrintButton } from "@/modules/pos/components/print-button";
+import { SwapTracker } from "@/modules/pos/components/swap-tracker";
 import { AuthorizationError } from "@/src/lib/errors";
 import { formatMoney } from "@/src/lib/format";
 import { getInterfaceLanguage } from "@/src/lib/i18n/server";
@@ -16,13 +19,15 @@ export const dynamic = "force-dynamic";
 
 export default async function PosInvoicePage({ params }: { params: Promise<{ id: string }> }) {
   const account = await requireAuthenticated();
-  const { t } = await getInterfaceLanguage();
+  const { t, locale } = await getInterfaceLanguage();
   const { id } = await params;
 
   let invoice;
+  let swaps;
 
   try {
     invoice = await getPosSaleDetail(account, id);
+    swaps = await listOrderSwaps(account, id);
   } catch (error) {
     if (error instanceof AuthorizationError) {
       redirect("/dashboard");
@@ -58,14 +63,32 @@ export default async function PosInvoicePage({ params }: { params: Promise<{ id:
   // Generate QR code SVG on the server (zero client bundle cost)
   const qrSvg = await generateInvoiceQr(invoiceUrl);
 
+  // Lines with units that are neither returned nor already swapped can open a new
+  // exchange request; the rest are spoken for.
+  const swappedByLine = new Map<string, number>();
+  for (const swap of swaps) {
+    swappedByLine.set(swap.orderItemId, (swappedByLine.get(swap.orderItemId) ?? 0) + swap.quantity);
+  }
+  const swapLines = invoice.lines
+    .map((line) => ({
+      orderItemId: line.orderItemId,
+      productName: line.productName,
+      sku: line.sku,
+      remaining: line.quantity - line.returnedQuantity - (swappedByLine.get(line.orderItemId) ?? 0),
+    }))
+    .filter((line) => line.remaining > 0);
+
   return (
     <div className="mx-auto max-w-3xl space-y-5">
-      {/* Navigation + print button */}
+      {/* Navigation + print/export buttons */}
       <div className="flex flex-wrap items-center justify-between gap-3 print:hidden">
         <Link href="/pos/history" className="text-sm text-blue-700 hover:underline">
           ← {t.posHistory.title}
         </Link>
-        <PrintButton label={t.posInvoice.print} />
+        <div className="flex flex-wrap items-center gap-2">
+          <CsvDownloadButton href={`/api/pos/sales/${id}/export`} label={t.posInvoice.downloadCsv} />
+          <PrintButton label={t.posInvoice.print} />
+        </div>
       </div>
 
       {/* Invoice summary card + QR code side by side */}
@@ -95,7 +118,7 @@ export default async function PosInvoicePage({ params }: { params: Promise<{ id:
       </div>
 
       {/* Items table (detail + print) */}
-      <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm print:border-0 print:shadow-none">
+      <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm print:break-inside-avoid print:border-0 print:shadow-none">
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">
           {t.posInvoice.item}
         </h2>
@@ -164,6 +187,9 @@ export default async function PosInvoicePage({ params }: { params: Promise<{ id:
             : ""}
         </footer>
       </article>
+
+      {/* Exchange tracker: stage stepper per swap request, screen only */}
+      <SwapTracker orderId={id} swaps={swaps} lines={swapLines} labels={t.posSwap} locale={locale} />
     </div>
   );
 }

@@ -68,3 +68,22 @@ html[data-cashier="1"] .pos-screen {
     overflow-y: auto;
   }
 }
+
+/* Invoice printing: A4 sheets with paper-friendly margins. The app shell and
+   the on-screen controls hide themselves through print:hidden utilities; here
+   we only set the page geometry and keep table rows from splitting. */
+@media print {
+  @page {
+    size: A4;
+    margin: 14mm 12mm;
+  }
+
+  body {
+    background: #ffffff !important;
+  }
+
+  tr,
+  figure {
+    break-inside: avoid;
+  }
+}

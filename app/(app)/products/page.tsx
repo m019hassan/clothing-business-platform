@@ -191,7 +191,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
         {canCreate ? (
           <Link
             href="/products/new"
-            className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-slate-800 hover:shadow"
+            className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-slate-800 hover:shadow"
           >
             <PlusIcon className="h-4 w-4" />
             <span>{t.catalog.addProduct}</span>
@@ -283,18 +283,18 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
             </div>
           ) : null}
 
-          <div className="flex flex-wrap items-center justify-between gap-3 pt-1 sm:col-span-2 lg:col-span-5">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-1 sm:col-span-2 lg:col-span-5">
+            <div className="flex flex-wrap items-center gap-2">
               <button
                 type="submit"
-                className="rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-slate-800"
+                className="min-h-11 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
               >
                 {t.catalog.applyFilters}
               </button>
               {activeFilters.length > 0 ? (
                 <Link
                   href="/products"
-                  className="inline-flex items-center gap-1 rounded-xl border border-slate-200 px-3 py-2 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
+                  className="inline-flex min-h-11 items-center gap-1 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
                 >
                   <XIcon className="h-3.5 w-3.5" />
                   <span>{t.catalog.clear}</span>
@@ -313,7 +313,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                 href={makeViewUrl("grid")}
                 scroll={false}
                 title="Grid view"
-                className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-medium transition-all ${
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium transition-all sm:px-2.5 sm:py-1 ${
                   !isTableView
                     ? "bg-white text-slate-900 shadow-xs"
                     : "text-slate-500 hover:text-slate-900"
@@ -326,7 +326,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                 href={makeViewUrl("table")}
                 scroll={false}
                 title="Table view"
-                className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-medium transition-all ${
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium transition-all sm:px-2.5 sm:py-1 ${
                   isTableView
                     ? "bg-white text-slate-900 shadow-xs"
                     : "text-slate-500 hover:text-slate-900"
@@ -448,7 +448,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                   <td className="whitespace-nowrap px-6 py-4 text-end">
                     <Link
                       href={`/products/${product.id}`}
-                      className="inline-flex items-center gap-1 rounded-xl border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-50 hover:text-slate-900"
+                      className="inline-flex min-h-11 items-center gap-1 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-50 hover:text-slate-900 sm:min-h-0 sm:px-3 sm:py-1.5"
                     >
                       <span>{t.common.view}</span>
                       <ArrowRightIcon className="h-3 w-3" />
@@ -491,6 +491,8 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                       <img
                         src={`/api/products/images/${product.imageId}`}
                         alt={product.name}
+                        loading="lazy"
+                        decoding="async"
                         className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                       />
                     </div>
@@ -594,7 +596,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                   {/* Bottom Action */}
                   <Link
                     href={`/products/${product.id}`}
-                    className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl bg-slate-50 py-2 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-900 hover:text-white"
+                    className="mt-3 flex min-h-11 w-full items-center justify-center gap-1.5 rounded-xl bg-slate-50 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-900 hover:text-white"
                   >
                     <span>{t.common.view}</span>
                     <ArrowRightIcon className="h-3 w-3" />
@@ -623,13 +625,13 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
             {hasPrevious ? (
               <Link
                 href={makePageUrl(Math.max(offset - limit, 0))}
-                className="inline-flex items-center gap-1 rounded-xl border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+                className="inline-flex min-h-11 items-center gap-1 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 sm:px-3 sm:py-1.5 sm:text-xs"
               >
                 <ChevronLeftIcon className="h-3.5 w-3.5 rtl:rotate-180" />
                 <span>{t.common.previous}</span>
               </Link>
             ) : (
-              <span className="inline-flex cursor-not-allowed items-center gap-1 rounded-xl border border-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-300">
+              <span className="inline-flex cursor-not-allowed items-center gap-1 rounded-xl border border-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-300 sm:px-3 sm:py-1.5 sm:text-xs">
                 <ChevronLeftIcon className="h-3.5 w-3.5 rtl:rotate-180" />
                 <span>{t.common.previous}</span>
               </span>
@@ -638,13 +640,13 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
             {hasNext ? (
               <Link
                 href={makePageUrl(offset + limit)}
-                className="inline-flex items-center gap-1 rounded-xl border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+                className="inline-flex min-h-11 items-center gap-1 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 sm:px-3 sm:py-1.5 sm:text-xs"
               >
                 <span>{t.common.next}</span>
                 <ChevronRightIcon className="h-3.5 w-3.5 rtl:rotate-180" />
               </Link>
             ) : (
-              <span className="inline-flex cursor-not-allowed items-center gap-1 rounded-xl border border-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-300">
+              <span className="inline-flex cursor-not-allowed items-center gap-1 rounded-xl border border-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-300 sm:px-3 sm:py-1.5 sm:text-xs">
                 <span>{t.common.next}</span>
                 <ChevronRightIcon className="h-3.5 w-3.5 rtl:rotate-180" />
               </span>

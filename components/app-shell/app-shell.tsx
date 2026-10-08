@@ -399,7 +399,7 @@ export function AppShell({
   return (
     <div className="min-h-screen bg-slate-100/70 lg:flex">
       {/* Desktop Sidebar */}
-      <aside className="hidden w-64 shrink-0 border-e border-slate-200/80 bg-white lg:sticky lg:top-0 lg:block lg:h-screen">
+      <aside className="hidden w-64 shrink-0 border-e border-slate-200/80 bg-white lg:sticky lg:top-0 lg:block lg:h-screen print:hidden">
         <SidebarContent
           navLabels={labels.nav}
           shellLabels={labels.shell}
@@ -423,7 +423,7 @@ export function AppShell({
 
       {/* Mobile Drawer */}
       {mobileOpen ? (
-        <div className="fixed inset-0 z-40 lg:hidden">
+        <div className="fixed inset-0 z-40 print:hidden lg:hidden">
           <button
             type="button"
             aria-label={labels.shell.closeNavigation}
@@ -467,7 +467,7 @@ export function AppShell({
 
       {/* Main Content Area */}
       <div className="flex min-h-screen min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/85 backdrop-blur-md">
+        <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/85 backdrop-blur-md print:hidden">
           <div className="flex h-16 items-center gap-3 px-4 sm:px-6 lg:px-8">
             <button
               type="button"

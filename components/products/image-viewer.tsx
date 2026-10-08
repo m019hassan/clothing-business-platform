@@ -84,6 +84,8 @@ export function ImageViewer({
         <img
           src={source}
           alt={alt}
+          loading="lazy"
+          decoding="async"
           className={size === "large" ? "h-40 w-full object-cover" : "h-[50px] w-[50px] object-cover"}
         />
         {hasMany ? (

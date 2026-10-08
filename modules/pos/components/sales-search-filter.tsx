@@ -241,7 +241,7 @@ export function SalesSearchFilter({ sales, locale, labels }: SalesSearchFilterPr
                   <div className="flex items-center gap-2">
                     <Link
                       href={`/pos/sales/${sale.orderId}`}
-                      className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+                      className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
                     >
                       {labels.openInvoice}
                     </Link>

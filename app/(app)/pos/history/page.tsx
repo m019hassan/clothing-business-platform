@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 
 import { requireAuthenticated } from "@/modules/auth/infrastructure/session";
 import { listPosSales } from "@/modules/pos/application/pos-returns";
+import { CsvDownloadButton } from "@/modules/pos/components/csv-download-button";
 import { AuthorizationError } from "@/src/lib/errors";
 import { getInterfaceLanguage } from "@/src/lib/i18n/server";
 import { SalesSearchFilter } from "@/modules/pos/components/sales-search-filter";
@@ -31,8 +32,15 @@ export default async function PosHistoryPage() {
         <Link href="/pos" className="text-sm text-blue-700 hover:underline">
           ← {t.pos.kicker}
         </Link>
-        <h1 className="text-2xl font-semibold text-slate-900">{t.posHistory.title}</h1>
-        <p className="text-sm text-slate-600">{t.posHistory.subtitle}</p>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-semibold text-slate-900">{t.posHistory.title}</h1>
+            <p className="text-sm text-slate-600">{t.posHistory.subtitle}</p>
+          </div>
+          {sales.length > 0 ? (
+            <CsvDownloadButton href="/api/pos/sales/export" label={t.posHistory.exportCsv} />
+          ) : null}
+        </div>
       </header>
 
       {sales.length === 0 ? (

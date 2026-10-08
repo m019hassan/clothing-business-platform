@@ -172,7 +172,7 @@ async function loadSaleForReturn(
 }
 
 /** Adds stock back to the branch for a returned line and writes the ledger entry. */
-async function restockReturnedLine(
+export async function restockReturnedLine(
   transaction: Prisma.TransactionClient,
   variantId: string,
   warehouseId: string,
