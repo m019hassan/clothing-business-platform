@@ -6,6 +6,7 @@ import Link from "next/link";
 import type { PosHistoryRow } from "@/modules/pos/application/pos-returns";
 import { PosReturnPanel } from "@/modules/pos/components/pos-return-panel";
 import { SearchIcon, FilterIcon } from "@/components/ui/icons";
+import { formatMoney } from "@/src/lib/format";
 
 /** Status filter values – "ALL" means no filter */
 type StatusFilter = "ALL" | "SOLD" | "PARTIAL" | "RETURNED";
@@ -42,7 +43,6 @@ interface SalesSearchFilterProps {
   sales: PosHistoryRow[];
   locale: string;
   labels: Labels;
-  formatMoney: (amount: string | number, currency: string) => string;
 }
 
 function getStatus(sale: PosHistoryRow): StatusFilter {
@@ -51,7 +51,7 @@ function getStatus(sale: PosHistoryRow): StatusFilter {
   return "SOLD";
 }
 
-export function SalesSearchFilter({ sales, locale, labels, formatMoney }: SalesSearchFilterProps) {
+export function SalesSearchFilter({ sales, locale, labels }: SalesSearchFilterProps) {
   const [query, setQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState<StatusFilter>("ALL");
 

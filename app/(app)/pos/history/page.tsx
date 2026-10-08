@@ -4,7 +4,6 @@ import { redirect } from "next/navigation";
 import { requireAuthenticated } from "@/modules/auth/infrastructure/session";
 import { listPosSales } from "@/modules/pos/application/pos-returns";
 import { AuthorizationError } from "@/src/lib/errors";
-import { formatMoney } from "@/src/lib/format";
 import { getInterfaceLanguage } from "@/src/lib/i18n/server";
 import { SalesSearchFilter } from "@/modules/pos/components/sales-search-filter";
 
@@ -45,7 +44,6 @@ export default async function PosHistoryPage() {
           sales={sales}
           locale={locale}
           labels={t.posHistory}
-          formatMoney={formatMoney}
         />
       )}
     </div>
