@@ -288,6 +288,7 @@ export async function createOrderFromCart(
                         status: true,
                         deletedAt: true,
                         basePrice: true,
+                        cost: true,
                         currency: true,
                       },
                     },
@@ -346,6 +347,7 @@ export async function createOrderFromCart(
             variantId: item.variant.id,
             quantity: item.quantity,
             unitPrice,
+            unitCost: item.variant.product.cost ?? null,
             discountAmount: new Prisma.Decimal(0),
           };
         });

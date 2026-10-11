@@ -39,6 +39,8 @@ export type ProductWriteInput = {
   description?: string | null;
   status?: ProductStatus;
   basePrice?: string;
+  /** The optional buying cost; an empty value clears it. */
+  cost?: string | null;
   currency?: string;
   categoryId?: string;
   variants?: VariantWriteInput[];
@@ -215,6 +217,7 @@ export function parseProductWriteInput(
     "description",
     "status",
     "basePrice",
+    "cost",
     "currency",
     "categoryId",
     "material",
@@ -267,6 +270,13 @@ export function parseProductWriteInput(
   if (body.material !== undefined) {
     input.material =
       body.material === null ? null : parseAttribute(body.material, "material");
+  }
+
+  if (body.cost !== undefined) {
+    input.cost =
+      body.cost === null || String(body.cost).trim() === ""
+        ? null
+        : parseMoney(body.cost, "cost");
   }
 
   if (body.variants !== undefined) {
@@ -416,6 +426,7 @@ export async function createProduct(
           material: input.material ?? null,
           status: input.status ?? ProductStatus.DRAFT,
           basePrice: new Prisma.Decimal(input.basePrice!),
+          cost: input.cost ? new Prisma.Decimal(input.cost) : null,
           currency: input.currency ?? "EGP",
           categoryId: input.categoryId!,
           variants: input.variants
@@ -503,11 +514,22 @@ export async function updateProduct(
 
   const input = parseProductWriteInput(payload, { partial: true });
 
+  if (input.cost !== undefined) {
+    await requirePermission(PERMISSIONS.PRODUCTS_COST_VIEW);
+  }
+
   if (input.categoryId) {
     await assertCategoryExists(input.categoryId);
   }
 
   await assertProductExists(productId);
+
+  const previousCost =
+    input.cost !== undefined
+      ? ((await withDatabaseError(() =>
+          prisma.product.findUnique({ where: { id: productId }, select: { cost: true } }),
+        ))?.cost?.toString() ?? null)
+      : null;
 
   const data: Prisma.ProductUpdateInput = {};
 
@@ -517,6 +539,7 @@ export async function updateProduct(
         if (input.material !== undefined) data.material = input.material;
   if (input.status !== undefined) data.status = input.status;
   if (input.basePrice !== undefined) data.basePrice = new Prisma.Decimal(input.basePrice);
+  if (input.cost !== undefined) data.cost = input.cost === null ? null : new Prisma.Decimal(input.cost);
   if (input.currency !== undefined) data.currency = input.currency;
   if (input.categoryId !== undefined) data.category = { connect: { id: input.categoryId } };
 
@@ -527,6 +550,25 @@ export async function updateProduct(
       return conflictFrom(error, "A product with this slug already exists.");
     }
   });
+
+  if (input.cost !== undefined) {
+    const nextCost = input.cost === null ? null : input.cost;
+
+    if (previousCost !== nextCost) {
+      await withDatabaseError(() =>
+        prisma.auditLog.create({
+          data: {
+            accountId: account.id,
+            action: "PRODUCT_COST_UPDATED",
+            entity: "Product",
+            entityId: productId,
+            oldValue: previousCost,
+            newValue: nextCost ?? "—",
+          },
+        }),
+      );
+    }
+  }
 
   return getProductInventory(productId);
 }

@@ -303,6 +303,7 @@ export async function createPosSale(
       });
 
       const lines: PosReceiptView["lines"] = [];
+      const itemCosts: (Prisma.Decimal | null)[] = [];
       let total = new Prisma.Decimal(0);
       let currency = "EGP";
 
@@ -315,7 +316,7 @@ export async function createPosSale(
             size: true,
             color: true,
             priceOverride: true,
-            product: { select: { name: true, basePrice: true, currency: true, status: true, deletedAt: true } },
+            product: { select: { name: true, basePrice: true, cost: true, currency: true, status: true, deletedAt: true } },
           },
         });
 
@@ -325,6 +326,7 @@ export async function createPosSale(
 
         const unitPrice = variant.priceOverride ?? variant.product.basePrice;
         const lineTotal = unitPrice.mul(item.quantity);
+        itemCosts.push(variant.product.cost ?? null);
         currency = variant.product.currency;
 
         try {
@@ -376,6 +378,7 @@ export async function createPosSale(
               variantId: item.variantId,
               quantity: item.quantity,
               unitPrice: new Prisma.Decimal(lines[index].unitPrice),
+              unitCost: itemCosts[index] ?? null,
               discountAmount: new Prisma.Decimal(0),
             })),
           },

@@ -107,6 +107,7 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
           materials={materials}
             labels={{ ...t.catalog.form, status: t.common.status, category: t.catalog.category }}
             statusLabels={t.catalog.statusLabels}
+            canViewCost={permissions.has(PERMISSIONS.PRODUCTS_COST_VIEW)}
             product={{
               id: product.id,
               name: product.name,
@@ -114,6 +115,7 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
               description: product.description,
               material: product.material,
               basePrice: product.basePrice,
+              ...(permissions.has(PERMISSIONS.PRODUCTS_COST_VIEW) ? { cost: product.cost } : {}),
               status: product.status,
               categoryId: product.categoryId,
             }}

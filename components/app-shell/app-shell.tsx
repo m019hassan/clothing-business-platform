@@ -62,6 +62,7 @@ const INVENTORY_SUB_ITEMS = [
 
 /** Links shown indented under the point-of-sale entry. */
 const POS_SUB_ITEMS = [{ href: "/pos/history", key: "posHistory" }] as const;
+const REPORTS_SUB_ITEMS = [{ href: "/reports/profit", key: "reportsProfit" }] as const;
 
 /** Links shown indented under the admin entry. */
 const ADMIN_SUB_ITEMS = [
@@ -161,6 +162,31 @@ function SidebarContent({
   const renderPosSubItems = () => (
     <div className="ms-4 my-1 space-y-1 border-s-2 border-slate-200 ps-3">
       {POS_SUB_ITEMS.map((sub) => {
+        const isSubActive = pathname === sub.href;
+
+        return (
+          <Link
+            key={sub.href}
+            href={sub.href}
+            onClick={onNavigate}
+            aria-current={isSubActive ? "page" : undefined}
+            className={[
+              "block rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors",
+              isSubActive
+                ? "bg-slate-100 font-semibold text-slate-900"
+                : "text-slate-500 hover:bg-slate-50 hover:text-slate-900",
+            ].join(" ")}
+          >
+            {navLabels[sub.key as keyof typeof navLabels]}
+          </Link>
+        );
+      })}
+    </div>
+  );
+
+  const renderReportsSubItems = () => (
+    <div className="ms-4 my-1 space-y-1 border-s-2 border-slate-200 ps-3">
+      {REPORTS_SUB_ITEMS.map((sub) => {
         const isSubActive = pathname === sub.href;
 
         return (
@@ -294,6 +320,7 @@ function SidebarContent({
 
               {isAdminEntry ? renderAdminSubItems() : null}
               {isProductEntry && canViewProducts ? renderProductSubItems() : null}
+              {item.href === "/reports" && canViewReports ? renderReportsSubItems() : null}
               {isPosEntry && isDistributor ? renderPosSubItems() : null}
               {isInventoryEntry && canViewInventory ? renderInventorySubItems() : null}
             </Fragment>

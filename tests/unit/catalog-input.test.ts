@@ -84,7 +84,7 @@ describe("parseProductWriteInput", () => {
 
   it("rejects unknown fields", () => {
     expect(() =>
-      parseProductWriteInput({ ...valid, cost: "10" }, { partial: false }),
+      parseProductWriteInput({ ...valid, warranty: "12" }, { partial: false }),
     ).toThrowError();
   });
 

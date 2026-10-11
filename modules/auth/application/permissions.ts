@@ -3,6 +3,7 @@ export const PERMISSIONS = {
   PRODUCTS_CREATE: "products.create",
   PRODUCTS_UPDATE: "products.update",
   PRODUCTS_DELETE: "products.delete",
+  PRODUCTS_COST_VIEW: "products.cost.view",
   INVENTORY_VIEW: "inventory.view",
   INVENTORY_ADJUST: "inventory.adjust",
   ORDERS_VIEW: "orders.view",

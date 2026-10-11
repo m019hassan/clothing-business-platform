@@ -27,6 +27,8 @@ export type ProductInventoryView = {
   status: ProductStatus;
   basePrice: string;
   currency: string;
+  /** The buying cost; never rendered for accounts without products.cost.view. */
+  cost: string | null;
   categoryId: string;
   categoryName: string | null;
   /** The first photo, shown as a thumbnail in lists. */
@@ -47,6 +49,8 @@ export type ProductView = {
   status: ProductStatus;
   basePrice: string;
   currency: string;
+  /** Present only when the viewer holds products.cost.view. */
+  cost?: string | null;
   categoryName: string | null;
   /** The first photo, shown as a thumbnail in lists. */
   imageId: string | null;

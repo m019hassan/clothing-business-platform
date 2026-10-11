@@ -51,6 +51,13 @@ export function productFormToPayload(
     payload.material = material;
   }
 
+  // Sent whenever the field was on the form; an empty box clears the cost.
+  const cost = text(formData, "cost");
+
+  if (cost !== null) {
+    payload.cost = cost.trim();
+  }
+
   assign("status", text(formData, "status") ?? "");
 
   if (!partial) {

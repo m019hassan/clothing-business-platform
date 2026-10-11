@@ -49,3 +49,38 @@ export type ReportsOverviewView = {
     outOfStockRows: number;
   } | null;
 };
+
+export type ProfitRow = {
+  productId: string;
+  productName: string;
+  netUnits: number;
+  revenue: string;
+  cost: string;
+  profit: string;
+  /** Units sold on lines that carry no recorded cost snapshot. */
+  missingCostUnits: number;
+  currency: string;
+};
+
+export type ProfitReportView = {
+  period: ReportPeriod;
+  totals: {
+    revenue: string;
+    cost: string;
+    profit: string;
+    netUnits: number;
+    missingCostUnits: number;
+  };
+  rows: ProfitRow[];
+  currency: string;
+};
+
+/** One sale line, already reduced to its net (post-return) units. */
+export type ProfitLine = {
+  productId: string;
+  productName: string;
+  netUnits: number;
+  unitPrice: string;
+  unitCost: string | null;
+  currency: string;
+};

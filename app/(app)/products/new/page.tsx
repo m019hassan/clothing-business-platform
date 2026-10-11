@@ -62,6 +62,7 @@ export default async function NewProductPage() {
           materials={materials}
           labels={{ ...t.catalog.form, status: t.common.status, category: t.catalog.category }}
           statusLabels={t.catalog.statusLabels}
+          canViewCost={permissions.has(PERMISSIONS.PRODUCTS_COST_VIEW)}
         />
       </section>
     </div>

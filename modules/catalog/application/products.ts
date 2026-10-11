@@ -29,6 +29,7 @@ export const productSelection = {
   material: true,
   status: true,
   basePrice: true,
+  cost: true,
   currency: true,
   category: { select: { name: true } },
   images: { orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }], select: { id: true } },
@@ -60,6 +61,7 @@ const sellableProductWhere = {
 export function mapProduct(
   product: ProductRecord,
   colorIndex?: Map<string, { hex: string; nameEn: string | null }>,
+  options?: { includeCost?: boolean },
 ): ProductView {
   return {
     id: product.id,
@@ -70,6 +72,7 @@ export function mapProduct(
     status: product.status,
     basePrice: product.basePrice.toString(),
     currency: product.currency,
+    ...(options?.includeCost ? { cost: product.cost?.toString() ?? null } : {}),
     categoryName: product.category?.name ?? null,
     imageId: product.images?.[0]?.id ?? null,
     imageIds: (product.images ?? []).map((image) => image.id),
@@ -265,6 +268,7 @@ export async function getProductInventory(
   material: true,
         status: true,
         basePrice: true,
+        cost: true,
         currency: true,
         createdAt: true,
         updatedAt: true,
@@ -302,6 +306,7 @@ export async function getProductInventory(
     status: product.status,
     basePrice: product.basePrice.toString(),
     currency: product.currency,
+    cost: product.cost?.toString() ?? null,
     categoryId: product.categoryId,
     categoryName: product.category?.name ?? null,
     imageId: product.images?.[0]?.id ?? null,

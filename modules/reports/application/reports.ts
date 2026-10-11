@@ -28,7 +28,7 @@ import { withDatabaseError } from "@/src/lib/errors";
 
 // Statuses treated as realised sales. Cancelled, returned and refunded orders
 // are reported separately instead of being counted as revenue.
-const REVENUE_STATUSES: OrderStatus[] = [
+export const REVENUE_STATUSES: OrderStatus[] = [
   OrderStatus.CONFIRMED,
   OrderStatus.PROCESSING,
   OrderStatus.READY_TO_SHIP,
@@ -47,7 +47,7 @@ export function parseReportPeriod(value: string | undefined): ReportPeriod {
   return value === "7d" || value === "30d" || value === "90d" ? value : "all";
 }
 
-function periodStart(period: ReportPeriod): Date {
+export function periodStart(period: ReportPeriod): Date {
   const days = PERIOD_DAYS[period];
 
   if (days === null) {

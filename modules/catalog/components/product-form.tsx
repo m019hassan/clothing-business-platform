@@ -23,6 +23,8 @@ export type ProductFormValues = {
   material?: string | null;
   description: string | null;
   basePrice: string;
+  /** Sent only when the viewer may see costs. */
+  cost?: string | null;
   status: string;
   categoryId: string;
 };
@@ -32,6 +34,7 @@ export type ProductFormLabels = {
   slug: string;
   slugHint: string;
   basePrice: string;
+  cost: string;
   status: string;
   category: string;
   selectCategory: string;
@@ -69,9 +72,12 @@ export function ProductForm({
   materials,
   labels,
   statusLabels,
+  canViewCost = false,
 }: {
   mode: "create" | "edit";
   product?: ProductFormValues;
+  /** Renders the cost box only for accounts holding products.cost.view. */
+  canViewCost?: boolean;
   categories: { id: string; name: string; isActive: boolean }[];
   colors: { id: string; name: string }[];
   sizes: { id: string; label: string; ageLabel: string }[];
@@ -157,6 +163,22 @@ export function ProductForm({
             className={inputClass}
           />
         </div>
+        {canViewCost ? (
+          <div>
+            <label htmlFor="cost" className={labelClass}>
+              {labels.cost}
+            </label>
+            <input
+              id="cost"
+              name="cost"
+              type="text"
+              inputMode="decimal"
+              defaultValue={product?.cost ?? ""}
+              placeholder="80.00"
+              className={inputClass}
+            />
+          </div>
+        ) : null}
         <div>
           <label htmlFor="status" className={labelClass}>
             {labels.status}
