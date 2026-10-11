@@ -103,3 +103,10 @@ Restore: `psql clothing_platform < .data/backups/<file>.sql` on an empty databas
 an S3-compatible bucket through `src/lib/storage/s3.ts`. No other module changes, and
 files saved on disk earlier can be copied into the bucket with any S3 client
 (`aws s3 sync .data/uploads "s3://<bucket>/uploads/" --endpoint-url …`).
+
+## Current deployment (live)
+
+Production runs at https://clothing-business-platform.vercel.app — Vercel functions in
+`fra1` (Frankfurt) against a Supabase Postgres database and the Supabase Storage bucket
+`clothing-uploads` (eu-central-1). The nine environment variables live in the Vercel
+project settings; a local reference copy sits in `.data/deploy.env` (git-ignored).
