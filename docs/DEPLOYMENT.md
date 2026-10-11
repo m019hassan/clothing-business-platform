@@ -86,6 +86,16 @@ S3_PREFIX=uploads/
 - `RESERVATION_TTL_HOURS` controls how long unpaid carts hold stock; adjust for your
   market.
 
+## Backups on the Mac
+
+`scripts/backup-db.sh` dumps `clothing_platform` into `.data/backups/` with a timestamp
+and refuses a dump smaller than 50 KB, so a silent failure cannot pass as success. A
+launchd agent (`~/Library/LaunchAgents/com.clothingplatform.backup.plist`) runs it every
+Friday at 10:00 and appends its result to `.data/backups/backup.log`; loading it once
+(`launchctl load -w …`) keeps it running at login forever.
+
+Restore: `psql clothing_platform < .data/backups/<file>.sql` on an empty database.
+
 ## How the storage switch works
 
 `src/lib/storage/index.ts` exposes two calls, `saveUpload` and `readUpload`. With
