@@ -75,7 +75,9 @@ export default async function AdminWarehousesPage() {
             {warehouses.map((warehouse) => (
               <tr key={warehouse.id} className="transition-colors hover:bg-slate-50">
                 <td className="px-6 py-3">
-                  <p className="font-medium text-slate-900">{warehouse.name}</p>
+                  <Link href={`/inventory/warehouses/${warehouse.id}`} className="font-medium text-slate-900 hover:text-blue-700">
+                    {warehouse.name}
+                  </Link>
                   <p className="font-mono text-xs text-slate-400">{warehouse.code}</p>
                 </td>
                 <td className="px-6 py-3 text-slate-700">

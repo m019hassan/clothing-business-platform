@@ -1,5 +1,7 @@
 import "server-only";
 
+import { isUuid } from "@/src/lib/validation";
+
 import { GLOBAL_BRANCH_SCOPE, type BranchScope } from "@/modules/branches/application/scope";
 
 import { Prisma, ProductStatus } from "@prisma/client";
@@ -10,7 +12,7 @@ import type {
   InventorySummaryView,
 } from "@/modules/inventory/types";
 import { prisma } from "@/src/lib/db";
-import { withDatabaseError } from "@/src/lib/errors";
+import { NotFoundError, withDatabaseError } from "@/src/lib/errors";
 import { stockLevel } from "@/src/lib/inventory/stock-level";
 import type { Pagination } from "@/src/lib/validation";
 
@@ -238,5 +240,81 @@ export async function listTransferBalances(scope: BranchScope): Promise<Transfer
         availableQuantity: item.quantityOnHand - item.quantityReserved,
       }))
       .filter((row) => row.availableQuantity > 0);
+  });
+}
+
+export type WarehouseDetailsView = {
+  warehouse: {
+    id: string;
+    code: string;
+    name: string;
+    branchId: string | null;
+    branchName: string | null;
+    isActive: boolean;
+  };
+  rows: InventoryRowView[];
+  summary: {
+    variants: number;
+    products: number;
+    onHand: number;
+    available: number;
+  };
+};
+
+/** One warehouse, everything it holds, and the totals a visitor wants first. */
+export async function getWarehouseDetails(
+  warehouseId: string,
+  scope: BranchScope = GLOBAL_BRANCH_SCOPE,
+): Promise<WarehouseDetailsView> {
+  if (!isUuid(warehouseId)) {
+    throw new NotFoundError("Warehouse not found.");
+  }
+
+  return withDatabaseError(async () => {
+    const warehouse = await prisma.warehouse.findUnique({
+      where: { id: warehouseId },
+      select: {
+        id: true,
+        code: true,
+        name: true,
+        branchId: true,
+        isActive: true,
+        branch: { select: { name: true } },
+      },
+    });
+
+    if (!warehouse) {
+      throw new NotFoundError("Warehouse not found.");
+    }
+
+    if (scope.warehouseIds !== null && !scope.warehouseIds.includes(warehouse.id)) {
+      throw new NotFoundError("Warehouse not found.");
+    }
+
+    const records = await prisma.inventoryItem.findMany({
+      where: { warehouseId: warehouse.id },
+      select: inventorySelection,
+      orderBy: [{ variant: { product: { name: "asc" } } }, { variant: { sku: "asc" } }],
+    });
+
+    const rows = records.map(mapRow);
+
+    return {
+      warehouse: {
+        id: warehouse.id,
+        code: warehouse.code,
+        name: warehouse.name,
+        branchId: warehouse.branchId,
+        branchName: warehouse.branch?.name ?? null,
+        isActive: warehouse.isActive,
+      },
+      rows,
+      summary: {
+        variants: rows.length,
+        products: new Set(rows.map((row) => row.productId)).size,
+        onHand: rows.reduce((sum, row) => sum + row.quantityOnHand, 0),
+        available: rows.reduce((sum, row) => sum + row.availableQuantity, 0),
+      },
+    };
   });
 }
