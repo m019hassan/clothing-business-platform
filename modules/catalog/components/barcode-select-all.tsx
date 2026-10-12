@@ -1,7 +1,7 @@
 "use client";
 
 /** Ticks every product checkbox in the enclosing form (respects the search). */
-export function BarcodeSelectAll({ label }: { label: string }) {
+export function BarcodeSelectAll({ label, checkboxName = "ids" }: { label: string; checkboxName?: string }) {
   return (
     <label className="flex w-fit items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm">
       <input
@@ -13,7 +13,7 @@ export function BarcodeSelectAll({ label }: { label: string }) {
             return;
           }
 
-          form.querySelectorAll<HTMLInputElement>('input[name="ids"]').forEach((box) => {
+          form.querySelectorAll<HTMLInputElement>(`input[name="${checkboxName}"]`).forEach((box) => {
             box.checked = event.currentTarget.checked;
           });
         }}

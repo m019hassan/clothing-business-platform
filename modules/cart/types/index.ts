@@ -10,6 +10,9 @@ export type CartItemView = {
   productName: string;
   quantity: number;
   unitPrice: string;
+  /** Set while an active discount applies to this product. */
+  discountPercent?: number | null;
+  originalUnitPrice?: string | null;
   lineTotal: string;
   currency: string;
   availableQuantity: number;

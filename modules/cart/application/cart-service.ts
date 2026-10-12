@@ -5,6 +5,7 @@ import { AccountType, CartStatus, Prisma, ProductStatus } from "@prisma/client";
 import type { SafeAccount } from "@/modules/auth/infrastructure/session";
 import type { AddItemInput, CartView, UpdateItemInput } from "@/modules/cart/types";
 import { prisma } from "@/src/lib/db";
+import { discountedAmount, getActiveDiscountMap } from "@/modules/catalog/application/promotions";
 import {
   AuthorizationError,
   ConflictError,
@@ -84,9 +85,11 @@ function toEmptyCart(): CartView {
   return { id: null, status: CartStatus.ACTIVE, items: [], total: "0" };
 }
 
-function mapCart(cart: CartRecord): CartView {
+function mapCart(cart: CartRecord, discountMap: Map<string, number>): CartView {
   const items = cart.items.map((item) => {
-    const unitPrice = item.variant.priceOverride ?? item.variant.product.basePrice;
+    const catalogPrice = item.variant.priceOverride ?? item.variant.product.basePrice;
+    const discountPercent = discountMap.get(item.variant.product.id) ?? null;
+    const unitPrice = discountPercent ? discountedAmount(catalogPrice, discountPercent) : catalogPrice;
 
     return {
       id: item.id,
@@ -98,6 +101,9 @@ function mapCart(cart: CartRecord): CartView {
       productName: item.variant.product.name,
       quantity: item.quantity,
       unitPrice: unitPrice.toString(),
+      ...(discountPercent
+        ? { discountPercent, originalUnitPrice: catalogPrice.toString() }
+        : {}),
       lineTotal: unitPrice.mul(item.quantity).toString(),
       currency: item.variant.product.currency,
       availableQuantity: item.variant.inventoryItems.reduce(
@@ -108,7 +114,9 @@ function mapCart(cart: CartRecord): CartView {
   });
 
   const total = cart.items.reduce((sum, item) => {
-    const unitPrice = item.variant.priceOverride ?? item.variant.product.basePrice;
+    const catalogPrice = item.variant.priceOverride ?? item.variant.product.basePrice;
+    const discountPercent = discountMap.get(item.variant.product.id) ?? null;
+    const unitPrice = discountPercent ? discountedAmount(catalogPrice, discountPercent) : catalogPrice;
 
     return sum.add(unitPrice.mul(item.quantity));
   }, new Prisma.Decimal(0));
@@ -122,7 +130,7 @@ async function loadCart(customerProfileId: string): Promise<CartView> {
     select: cartSelection,
   });
 
-  return cart ? mapCart(cart) : toEmptyCart();
+  return cart ? mapCart(cart, await getActiveDiscountMap()) : toEmptyCart();
 }
 
 async function findOrCreateActiveCart(customerProfileId: string): Promise<{ id: string }> {

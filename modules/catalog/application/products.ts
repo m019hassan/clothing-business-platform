@@ -8,6 +8,7 @@ import type {
 } from "@/modules/catalog/types";
 import { prisma } from "@/src/lib/db";
 import { colorLibraryIndex, normalizeColorKey } from "@/modules/catalog/application/colors";
+import { discountedAmount, getActiveDiscountMap } from "@/modules/catalog/application/promotions";
 import { AuthorizationError, NotFoundError, ValidationError, withDatabaseError } from "@/src/lib/errors";
 import { hasPermission } from "@/modules/auth/application/authorization";
 import { PERMISSIONS } from "@/modules/auth/application/permissions";
@@ -61,7 +62,7 @@ const sellableProductWhere = {
 export function mapProduct(
   product: ProductRecord,
   colorIndex?: Map<string, { hex: string; nameEn: string | null }>,
-  options?: { includeCost?: boolean },
+  options?: { includeCost?: boolean; discountPercent?: number | null },
 ): ProductView {
   return {
     id: product.id,
@@ -73,6 +74,12 @@ export function mapProduct(
     basePrice: product.basePrice.toString(),
     currency: product.currency,
     ...(options?.includeCost ? { cost: product.cost?.toString() ?? null } : {}),
+    ...(options?.discountPercent
+      ? {
+          discountPercent: options.discountPercent,
+          salePrice: discountedAmount(product.basePrice, options.discountPercent).toString(),
+        }
+      : {}),
     categoryName: product.category?.name ?? null,
     imageId: product.images?.[0]?.id ?? null,
     imageIds: (product.images ?? []).map((image) => image.id),
@@ -89,6 +96,14 @@ export function mapProduct(
         : null,
       status: variant.status,
       priceOverride: variant.priceOverride ? variant.priceOverride.toString() : null,
+      ...(options?.discountPercent
+        ? {
+            salePrice: discountedAmount(
+              variant.priceOverride ?? product.basePrice,
+              options.discountPercent,
+            ).toString(),
+          }
+        : {}),
       availableQuantity: variant.inventoryItems.reduce(
         (sum, item) => sum + item.quantityOnHand - item.quantityReserved,
         0,
@@ -231,7 +246,11 @@ export async function listProducts(
 
   const colorIndex = await colorLibraryIndex();
 
-  return products.map((product) => mapProduct(product, colorIndex));
+  const discountMap = await getActiveDiscountMap();
+
+  return products.map((product) =>
+    mapProduct(product, colorIndex, { discountPercent: discountMap.get(product.id) ?? null }),
+  );
 }
 
 /** True when the caller may see draft/archived products in listing filters. */
@@ -297,6 +316,8 @@ export async function getProductInventory(
     throw new NotFoundError("Product not found.");
   }
 
+  const discountMap = await getActiveDiscountMap();
+
   return {
     id: product.id,
     name: product.name,
@@ -307,6 +328,12 @@ export async function getProductInventory(
     basePrice: product.basePrice.toString(),
     currency: product.currency,
     cost: product.cost?.toString() ?? null,
+    ...(discountMap.get(product.id)
+      ? {
+          discountPercent: discountMap.get(product.id),
+          salePrice: discountedAmount(product.basePrice, discountMap.get(product.id)!).toString(),
+        }
+      : {}),
     categoryId: product.categoryId,
     categoryName: product.category?.name ?? null,
     imageId: product.images?.[0]?.id ?? null,
@@ -358,5 +385,7 @@ export async function getProduct(productId: string): Promise<ProductView> {
 
   const colorIndex = await colorLibraryIndex();
 
-  return mapProduct(product, colorIndex);
+  const discountMap = await getActiveDiscountMap();
+
+  return mapProduct(product, colorIndex, { discountPercent: discountMap.get(product.id) ?? null });
 }

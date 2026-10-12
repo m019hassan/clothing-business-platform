@@ -17,6 +17,7 @@ import {
 } from "@/src/lib/errors";
 import { isUuid } from "@/src/lib/validation";
 import { stockLevel } from "@/src/lib/inventory/stock-level";
+import { discountedAmount, getActiveDiscountMap } from "@/modules/catalog/application/promotions";
 
 type AuthenticatedAccount = NonNullable<SafeAccount>;
 
@@ -239,6 +240,7 @@ export async function getPosCatalog(account: AuthenticatedAccount): Promise<PosC
 
   // Colour swatches come from the shared library through the normalised index.
   const libraryByColor = await colorLibraryIndex();
+  const discountMap = await getActiveDiscountMap();
 
   // A variant can sit in several warehouses of the branch: aggregate availability.
   const aggregated = new Map<string, PosCatalogView["items"][number]>();
@@ -251,6 +253,8 @@ export async function getPosCatalog(account: AuthenticatedAccount): Promise<PosC
       current.availableQuantity += available;
       continue;
     }
+
+    const discountPercent = discountMap.get(item.variant.product.id) ?? null;
 
     aggregated.set(item.variantId, {
       variantId: item.variantId,
@@ -267,7 +271,12 @@ export async function getPosCatalog(account: AuthenticatedAccount): Promise<PosC
       colorNameEn: item.variant.color
         ? (libraryByColor.get(normalizeColorKey(item.variant.color))?.nameEn ?? null)
         : null,
-      unitPrice: (item.variant.priceOverride ?? item.variant.product.basePrice).toString(),
+      unitPrice: (discountPercent
+        ? discountedAmount(item.variant.priceOverride ?? item.variant.product.basePrice, discountPercent)
+        : item.variant.priceOverride ?? item.variant.product.basePrice
+      ).toString(),
+      discountPercent,
+      originalUnitPrice: (item.variant.priceOverride ?? item.variant.product.basePrice).toString(),
       currency: item.variant.product.currency,
       availableQuantity: available,
       categoryId: item.variant.product.category?.id ?? null,
@@ -297,6 +306,8 @@ export async function createPosSale(
 
   return withDatabaseError(() =>
     prisma.$transaction(async (transaction) => {
+      const discountMap = await getActiveDiscountMap(transaction);
+
       const branch = await transaction.branch.findUniqueOrThrow({
         where: { id: distributor.branchId },
         select: { id: true, code: true, name: true },
@@ -316,7 +327,7 @@ export async function createPosSale(
             size: true,
             color: true,
             priceOverride: true,
-            product: { select: { name: true, basePrice: true, cost: true, currency: true, status: true, deletedAt: true } },
+            product: { select: { id: true, name: true, basePrice: true, cost: true, currency: true, status: true, deletedAt: true } },
           },
         });
 
@@ -324,7 +335,9 @@ export async function createPosSale(
           throw new NotFoundError("One of the products is no longer available.");
         }
 
-        const unitPrice = variant.priceOverride ?? variant.product.basePrice;
+        const catalogPrice = variant.priceOverride ?? variant.product.basePrice;
+        const discountPercent = discountMap.get(variant.product.id) ?? null;
+        const unitPrice = discountPercent ? discountedAmount(catalogPrice, discountPercent) : catalogPrice;
         const lineTotal = unitPrice.mul(item.quantity);
         itemCosts.push(variant.product.cost ?? null);
         currency = variant.product.currency;

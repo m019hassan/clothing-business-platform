@@ -23,6 +23,7 @@ import type {
 } from "@/modules/order/types";
 import { createNotification } from "@/modules/notification/application/notifications";
 import { prisma } from "@/src/lib/db";
+import { discountedAmount, getActiveDiscountMap } from "@/modules/catalog/application/promotions";
 import {
   AuthorizationError,
   ConflictError,
@@ -267,6 +268,8 @@ export async function createOrderFromCart(
   return withDatabaseError(() =>
     runOrderTransaction(() =>
       prisma.$transaction(async (transaction) => {
+        const discountMap = await getActiveDiscountMap(transaction);
+
         const cart = await transaction.cart.findFirst({
           where: { customerProfileId: profile.id, status: CartStatus.ACTIVE },
           select: {
@@ -341,7 +344,9 @@ export async function createOrderFromCart(
         }
 
         const orderItems = cart.items.map((item) => {
-          const unitPrice = item.variant.priceOverride ?? item.variant.product.basePrice;
+          const catalogPrice = item.variant.priceOverride ?? item.variant.product.basePrice;
+          const discountPercent = discountMap.get(item.variant.product.id) ?? null;
+          const unitPrice = discountPercent ? discountedAmount(catalogPrice, discountPercent) : catalogPrice;
 
           return {
             variantId: item.variant.id,

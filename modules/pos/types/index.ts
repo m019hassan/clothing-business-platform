@@ -17,6 +17,9 @@ export type PosCatalogItemView = {
   /** The English name of the matched library colour, when one exists. */
   colorNameEn: string | null;
   unitPrice: string;
+  /** Set while an active discount applies to this product. */
+  discountPercent?: number | null;
+  originalUnitPrice?: string | null;
   currency: string;
   availableQuantity: number;
 };

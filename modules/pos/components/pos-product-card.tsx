@@ -214,7 +214,21 @@ export function PosProductCard({
 
         <div className="mt-auto flex items-center justify-between gap-2 pt-1">
           <span className="text-sm font-semibold text-slate-800">
-            {selected ? formatMoney(selected.unitPrice, selected.currency) : "—"}
+            {selected ? (
+              <span className="flex items-baseline gap-1.5">
+                <span>{formatMoney(selected.unitPrice, selected.currency)}</span>
+                {selected.discountPercent ? (
+                  <span className="text-xs font-normal text-slate-400 line-through">
+                    {formatMoney(selected.originalUnitPrice ?? selected.unitPrice, selected.currency)}
+                  </span>
+                ) : null}
+                {selected.discountPercent ? (
+                  <span className="rounded-full bg-rose-100 px-1.5 py-0.5 text-[10px] font-bold text-rose-700">
+                    -{selected.discountPercent}%
+                  </span>
+                ) : null}
+              </span>
+            ) : "—"}
           </span>
           {selected ? (
             <span

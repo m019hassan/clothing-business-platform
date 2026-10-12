@@ -100,8 +100,18 @@ export default async function ProductDetailPage({ params }: ProductDetailProps) 
           </div>
           <div className="flex shrink-0 flex-col items-start gap-2 sm:items-end">
             <ProductStatusBadge status={product.status} labels={t.catalog.statusLabels} />
-            <p className="text-lg font-semibold text-slate-900">
-              {formatMoney(product.basePrice, product.currency)}
+            <p className="flex items-baseline gap-2 text-lg font-semibold text-slate-900">
+              <span>{formatMoney(product.salePrice ?? product.basePrice, product.currency)}</span>
+              {product.salePrice ? (
+                <>
+                  <span className="text-sm font-normal text-slate-400 line-through">
+                    {formatMoney(product.basePrice, product.currency)}
+                  </span>
+                  <span className="rounded-full bg-rose-100 px-2 py-0.5 text-[11px] font-bold text-rose-700">
+                    -{product.discountPercent}%
+                  </span>
+                </>
+              ) : null}
             </p>
             {canUpdateProduct ? (
               <div className="flex gap-2">

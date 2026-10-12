@@ -10,6 +10,7 @@ export type ProductVariantView = {
   colorNameEn: string | null;
   status: ProductStatus;
   priceOverride: string | null;
+  salePrice?: string | null;
   availableQuantity: number;
 };
 
@@ -29,6 +30,8 @@ export type ProductInventoryView = {
   currency: string;
   /** The buying cost; never rendered for accounts without products.cost.view. */
   cost: string | null;
+  discountPercent?: number | null;
+  salePrice?: string | null;
   categoryId: string;
   categoryName: string | null;
   /** The first photo, shown as a thumbnail in lists. */
@@ -51,6 +54,9 @@ export type ProductView = {
   currency: string;
   /** Present only when the viewer holds products.cost.view. */
   cost?: string | null;
+  /** Set while an active discount targets this product. */
+  discountPercent?: number | null;
+  salePrice?: string | null;
   categoryName: string | null;
   /** The first photo, shown as a thumbnail in lists. */
   imageId: string | null;
@@ -73,4 +79,19 @@ export type CategoryView = {
 export type CatalogFormState = {
   ok: boolean;
   message: string;
+};
+
+export type PromotionStatus = "ACTIVE" | "UPCOMING" | "EXPIRED" | "STOPPED";
+
+export type PromotionView = {
+  id: string;
+  name: string;
+  percent: number;
+  startsAt: string;
+  endsAt: string;
+  isActive: boolean;
+  status: PromotionStatus;
+  productCount: number;
+  productNames: string[];
+  createdAt: string;
 };

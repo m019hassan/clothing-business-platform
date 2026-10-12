@@ -440,7 +440,19 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                     <ProductStatusBadge status={product.status} />
                   </td>
                   <td className="whitespace-nowrap px-6 py-4 font-semibold text-slate-900">
-                    {formatMoney(product.basePrice, product.currency)}
+                    {product.salePrice ? (
+                      <span className="flex flex-wrap items-baseline gap-2">
+                        <span className="text-rose-700">{formatMoney(product.salePrice, product.currency)}</span>
+                        <span className="text-xs font-normal text-slate-400 line-through">
+                          {formatMoney(product.basePrice, product.currency)}
+                        </span>
+                        <span className="rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-bold text-rose-700">
+                          -{product.discountPercent}%
+                        </span>
+                      </span>
+                    ) : (
+                      formatMoney(product.basePrice, product.currency)
+                    )}
                   </td>
                   <td className="whitespace-nowrap px-6 py-4">
                     <StockBadge availableQuantity={totalAvailable(product)} />
@@ -586,8 +598,18 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                         {t.catalog.basePrice}
                       </p>
                       <p className="text-base font-bold text-slate-900">
-                        {formatMoney(product.basePrice, product.currency)}
+                        {formatMoney(product.salePrice ?? product.basePrice, product.currency)}
+                        {product.salePrice ? (
+                          <span className="ms-2 rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-bold text-rose-700">
+                            -{product.discountPercent}%
+                          </span>
+                        ) : null}
                       </p>
+                      {product.salePrice ? (
+                        <p className="text-xs text-slate-400 line-through">
+                          {formatMoney(product.basePrice, product.currency)}
+                        </p>
+                      ) : null}
                     </div>
 
                     <StockBadge availableQuantity={availableUnits} />

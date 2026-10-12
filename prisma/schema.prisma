@@ -386,6 +386,7 @@ model Product {
   category Category         @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   variants ProductVariant[]
   images   ProductImage[]
+  promotions PromotionProduct[]
 
   @@index([status], map: "idx_product_status")
   @@index([categoryId], map: "idx_product_category")
@@ -919,4 +920,37 @@ model Payment {
 
   @@index([orderId], map: "idx_payment_order")
   @@index([status], map: "idx_payment_status")
+}
+
+
+model Promotion {
+  id String @id @default(uuid()) @db.Uuid
+
+  name    String @db.VarChar(120)
+  percent Int
+
+  startsAt DateTime
+  endsAt   DateTime
+
+  isActive Boolean @default(true)
+
+  createdByAccountId String? @db.Uuid
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  products PromotionProduct[]
+
+  @@index([startsAt, endsAt])
+}
+
+model PromotionProduct {
+  promotionId String @db.Uuid
+  productId   String @db.Uuid
+
+  promotion Promotion @relation(fields: [promotionId], references: [id], onDelete: Cascade)
+  product   Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@id([promotionId, productId])
+  @@index([productId])
 }

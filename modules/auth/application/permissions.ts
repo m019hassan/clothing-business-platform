@@ -4,6 +4,7 @@ export const PERMISSIONS = {
   PRODUCTS_UPDATE: "products.update",
   PRODUCTS_DELETE: "products.delete",
   PRODUCTS_COST_VIEW: "products.cost.view",
+  DISCOUNTS_MANAGE: "discounts.manage",
   INVENTORY_VIEW: "inventory.view",
   INVENTORY_ADJUST: "inventory.adjust",
   ORDERS_VIEW: "orders.view",
