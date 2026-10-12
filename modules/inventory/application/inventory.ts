@@ -186,3 +186,57 @@ export async function listVariantsWithoutBalances(limit = 20): Promise<VariantWi
     productName: variant.product.name,
   }));
 }
+
+export type TransferBalance = {
+  id: string;
+  variantId: string;
+  productName: string;
+  size: string | null;
+  color: string | null;
+  sku: string;
+  warehouseId: string;
+  warehouseName: string;
+  warehouseCode: string;
+  branchId: string | null;
+  availableQuantity: number;
+};
+
+/** Every positive balance inside the scope, for the transfer launcher. */
+export async function listTransferBalances(scope: BranchScope): Promise<TransferBalance[]> {
+  return withDatabaseError(async () => {
+    const items = await prisma.inventoryItem.findMany({
+      where: {
+        quantityOnHand: { gt: 0 },
+        warehouse: { isActive: true },
+        ...(scope.warehouseIds ? { warehouseId: { in: scope.warehouseIds } } : {}),
+      },
+      orderBy: [{ quantityOnHand: "desc" }],
+      take: 500,
+      select: {
+        id: true,
+        variantId: true,
+        quantityOnHand: true,
+        quantityReserved: true,
+        warehouseId: true,
+        warehouse: { select: { name: true, code: true, branchId: true } },
+        variant: { select: { sku: true, size: true, color: true, product: { select: { name: true } } } },
+      },
+    });
+
+    return items
+      .map((item) => ({
+        id: item.id,
+        variantId: item.variantId,
+        productName: item.variant.product.name,
+        size: item.variant.size,
+        color: item.variant.color,
+        sku: item.variant.sku,
+        warehouseId: item.warehouseId,
+        warehouseName: item.warehouse.name,
+        warehouseCode: item.warehouse.code,
+        branchId: item.warehouse.branchId,
+        availableQuantity: item.quantityOnHand - item.quantityReserved,
+      }))
+      .filter((row) => row.availableQuantity > 0);
+  });
+}

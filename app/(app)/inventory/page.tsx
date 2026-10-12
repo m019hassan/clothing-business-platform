@@ -18,7 +18,8 @@ import { listTransferTargets } from "@/modules/inventory/application/transfers";
 import type { InventoryPageView } from "@/modules/inventory/types";
 import { formatDate, formatVariantAttributes } from "@/src/lib/format";
 import { parsePaginationParams } from "@/src/lib/validation";
-import { listVariantsWithoutBalances } from "@/modules/inventory/application/inventory";
+import { listTransferBalances, listVariantsWithoutBalances } from "@/modules/inventory/application/inventory";
+import { StockTransferLauncher } from "@/modules/inventory/components/stock-transfer-launcher";
 import { getInterfaceLanguage } from "@/src/lib/i18n/server";
 
 const PAGE_SIZE = 10;
@@ -85,6 +86,7 @@ export default async function InventoryPage({ searchParams }: InventoryPageProps
   }
 
   const variantsWithoutBalances = canAdjustInventory ? await listVariantsWithoutBalances() : [];
+  const transferBalances = canAdjustInventory ? await listTransferBalances(scope) : [];
 
   const { rows, summary, pagination } = page;
   const rangeStart = rows.length === 0 ? pagination.offset : pagination.offset + 1;
@@ -96,7 +98,35 @@ export default async function InventoryPage({ searchParams }: InventoryPageProps
     <div className="space-y-6">
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">{t.inventory.kicker}</p>
-        <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-950">{t.inventory.title}</h2>
+        <div className="mt-1 flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-2xl font-bold tracking-tight text-slate-950">{t.inventory.title}</h2>
+          {canAdjustInventory ? (
+            <StockTransferLauncher
+              balances={transferBalances}
+              targets={transferTargets}
+              labels={{
+                open: t.inventory.transferLauncher,
+                title: t.inventory.transferTitle,
+                hint: t.inventory.transferLauncherHint,
+                pickTitle: t.inventory.transferPickTitle,
+                detailsTitle: t.inventory.transferDetailsTitle,
+                search: t.inventory.transferSearchPlaceholder,
+                none: t.inventory.transferNoRows,
+                back: t.inventory.transferBack,
+                toBranch: t.inventory.toBranch,
+                quantity: t.inventory.transferQuantity,
+                all: t.inventory.all,
+                availableHere: t.inventory.availableHere,
+                from: t.inventory.warehouse,
+                confirm: t.inventory.confirmTransfer,
+                cancel: t.inventory.cancel,
+                noTargets: t.inventory.noTransferTargets,
+                done: t.inventory.transferDone,
+                autoWarehouse: t.inventory.autoWarehouse,
+              }}
+            />
+          ) : null}
+        </div>
         <p className="mt-1 text-sm text-slate-600">
           {scopeDescription(scope, t.scope)} — {t.inventory.subtitle}
         </p>
@@ -234,6 +264,7 @@ export default async function InventoryPage({ searchParams }: InventoryPageProps
                               confirmTransfer: t.inventory.confirmTransfer,
                               cancel: t.inventory.cancel,
                               noTargets: t.inventory.noTransferTargets,
+                              autoWarehouse: t.inventory.autoWarehouse,
                             }}
                           />
                         </div>
@@ -303,6 +334,7 @@ export default async function InventoryPage({ searchParams }: InventoryPageProps
                         confirmTransfer: t.inventory.confirmTransfer,
                         cancel: t.inventory.cancel,
                         noTargets: t.inventory.noTransferTargets,
+                        autoWarehouse: t.inventory.autoWarehouse,
                       }}
                     />
                     <StockAdjustForm labels={{ ...t.inventory, saving: t.catalog.form.saving }} variantId={row.variantId} warehouseId={row.warehouseId} sku={row.sku} />

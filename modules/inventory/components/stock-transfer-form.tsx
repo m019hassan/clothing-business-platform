@@ -18,6 +18,7 @@ type Labels = {
   confirmTransfer: string;
   cancel: string;
   noTargets: string;
+  autoWarehouse: string;
 };
 
 /**
@@ -158,6 +159,7 @@ export function StockTransferForm({
                       </option>
                     ))}
                   </select>
+                  <p className="mt-1 text-xs text-slate-400">{labels.autoWarehouse}</p>
                 </label>
 
                 <label className="block text-sm">
