@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import { getCurrentAccount } from "@/modules/auth/infrastructure/session";
 import { getDistributorDashboard } from "@/modules/pos/application/pos-dashboard";
 import { getPosCatalog } from "@/modules/pos/application/pos-sales";
+import { listRequestableVariants } from "@/modules/inventory/application/stock-requests";
+import { StockRequestDialog } from "@/modules/inventory/components/stock-request-dialog";
 import { PosDashboardCards } from "@/modules/pos/components/pos-dashboard-cards";
 import { CashierModeToggle } from "@/modules/pos/components/cashier-mode-toggle";
 import { PosTerminal } from "@/modules/pos/components/pos-terminal";
@@ -37,6 +39,7 @@ export default async function PosPage() {
 
   let catalog;
   let dashboard;
+  let requestables: Awaited<ReturnType<typeof listRequestableVariants>> = [];
 
   try {
     [catalog, dashboard] = await Promise.all([
@@ -50,6 +53,8 @@ export default async function PosPage() {
 
     throw error;
   }
+
+  requestables = await listRequestableVariants().catch(() => []);
 
   return (
     <div className="space-y-6">
@@ -67,6 +72,25 @@ export default async function PosPage() {
           >
             {t.posHistory.link}
           </Link>
+          <StockRequestDialog
+            variants={requestables}
+            labels={{
+              open: t.stockRequests.open,
+              title: t.stockRequests.title,
+              hint: t.stockRequests.hint,
+              search: t.stockRequests.search,
+              empty: t.stockRequests.empty,
+              basket: t.stockRequests.basket,
+              remove: t.stockRequests.remove,
+              note: t.stockRequests.note,
+              notePlaceholder: t.stockRequests.notePlaceholder,
+              submit: t.stockRequests.submit,
+              submitting: t.stockRequests.submitting,
+              success: t.stockRequests.success,
+              failed: t.stockRequests.failed,
+              units: t.stockRequests.units,
+            }}
+          />
           <CashierModeToggle />
         </div>
         <p className="mt-1 text-sm text-slate-600">
