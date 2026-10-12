@@ -1,6 +1,6 @@
 import "server-only";
 
-import { OrderChannel, OrderStatus, Prisma } from "@prisma/client";
+import { OrderChannel, OrderStatus, Prisma, SwapStage } from "@prisma/client";
 
 import type { SafeAccount } from "@/modules/auth/infrastructure/session";
 import { recordMovement } from "@/modules/inventory/application/ledger";
@@ -42,6 +42,8 @@ export type PosHistoryRow = {
   refundedAmount: string;
   returnedUnits: number;
   soldUnits: number;
+  /** True while at least one swap request on this sale has not arrived yet. */
+  underSwap: boolean;
   lines: PosHistoryLine[];
 };
 
@@ -378,6 +380,7 @@ export async function listPosSales(account: AuthenticatedAccount, limit = 25): P
           quantity: true,
           returnedQuantity: true,
           unitPrice: true,
+          swaps: { select: { stage: true } },
           variant: { select: { sku: true, product: { select: { name: true } } } },
         },
       },
@@ -399,6 +402,7 @@ export async function listPosSales(account: AuthenticatedAccount, limit = 25): P
       refundedAmount: refunded.toFixed(2),
       returnedUnits,
       soldUnits,
+      underSwap: order.items.some((item) => item.swaps.some((swap) => swap.stage !== SwapStage.RECEIVED)),
       lines: order.items.map((item) => ({
         orderItemId: item.id,
         sku: item.variant.sku,

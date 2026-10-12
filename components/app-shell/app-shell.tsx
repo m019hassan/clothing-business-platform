@@ -52,6 +52,7 @@ const PRODUCT_SUB_ITEMS = [
   { href: "/products/colors", key: "productColors" },
   { href: "/products/sizes", key: "productSizes" },
   { href: "/products/materials", key: "productMaterials" },
+  { href: "/products/barcodes", key: "productBarcodes" },
 ] as const;
 
 /** Links shown indented under the inventory entry. */

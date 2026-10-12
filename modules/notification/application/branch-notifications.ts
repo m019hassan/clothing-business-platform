@@ -25,10 +25,11 @@ export type BranchNotificationInput = {
  * the audience automatically. The recipient's own notification preference is still
  * honoured by createNotification, and the actor is skipped.
  */
-export async function notifyBranchPermissionHolders(
+/** The active accounts of one branch that hold a given permission. */
+export async function listBranchPermissionHolders(
   transaction: Prisma.TransactionClient,
-  input: BranchNotificationInput,
-): Promise<number> {
+  input: { branchId: string; permission: string; excludeAccountId?: string },
+): Promise<string[]> {
   const profiles = await transaction.employeeProfile.findMany({
     where: {
       branchId: input.branchId,
@@ -47,9 +48,16 @@ export async function notifyBranchPermissionHolders(
     select: { accountId: true },
   });
 
-  const recipients = profiles
+  return profiles
     .map((profile) => profile.accountId)
     .filter((accountId) => accountId !== input.excludeAccountId);
+}
+
+export async function notifyBranchPermissionHolders(
+  transaction: Prisma.TransactionClient,
+  input: BranchNotificationInput,
+): Promise<number> {
+  const recipients = await listBranchPermissionHolders(transaction, input);
 
   for (const accountId of recipients) {
     await createNotification(transaction, {

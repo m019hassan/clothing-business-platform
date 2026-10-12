@@ -17,6 +17,7 @@ interface Labels {
   filterSold: string;
   filterPartial: string;
   filterReturned: string;
+  filterUnderSwap: string;
   noResults: string;
   statusSold: string;
   statusPartial: string;
@@ -54,6 +55,7 @@ function getStatus(sale: PosHistoryRow): StatusFilter {
 export function SalesSearchFilter({ sales, locale, labels }: SalesSearchFilterProps) {
   const [query, setQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState<StatusFilter>("ALL");
+  const [underSwapOnly, setUnderSwapOnly] = useState(false);
 
   const dateFormat = useMemo(
     () =>
@@ -80,6 +82,9 @@ export function SalesSearchFilter({ sales, locale, labels }: SalesSearchFilterPr
       // Status filter
       if (activeFilter !== "ALL" && getStatus(sale) !== activeFilter) return false;
 
+      // Swap filter: only sales whose swap has not arrived back yet.
+      if (underSwapOnly && !sale.underSwap) return false;
+
       // Text search: order number OR date string
       if (q) {
         const dateStr = normalise(dateFormat.format(new Date(sale.createdAt)));
@@ -89,7 +94,7 @@ export function SalesSearchFilter({ sales, locale, labels }: SalesSearchFilterPr
 
       return true;
     });
-  }, [sales, query, activeFilter, dateFormat]);
+  }, [sales, query, activeFilter, underSwapOnly, dateFormat]);
 
   const filterButtons: { key: StatusFilter; label: string; active: string; inactive: string }[] = [
     {
@@ -156,6 +161,17 @@ export function SalesSearchFilter({ sales, locale, labels }: SalesSearchFilterPr
               {label}
             </button>
           ))}
+          <button
+            type="button"
+            onClick={() => setUnderSwapOnly((value) => !value)}
+            className={[
+              "rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold transition",
+              underSwapOnly ? "bg-violet-600 text-white" : "bg-white text-violet-700 hover:bg-violet-50",
+            ].join(" ")}
+            aria-pressed={underSwapOnly}
+          >
+            {labels.filterUnderSwap}
+          </button>
         </div>
       </div>
 
