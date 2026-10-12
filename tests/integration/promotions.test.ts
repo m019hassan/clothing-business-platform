@@ -186,5 +186,7 @@ describe("promotions", () => {
 
     expect(item.unitPrice.toFixed(2)).toBe("85.00");
     expect(item.unitCost?.toFixed(2)).toBe("60.00");
+    expect(item.originalUnitPrice?.toFixed(2)).toBe("100.00");
+    expect(item.discountPercent).toBe(15);
   });
 });

@@ -728,6 +728,7 @@ export const ar: Dictionary = {
     stale: "لم يعد هذا الطلب بانتظار قرار دفع.",
   },
   posInvoice: {
+    discount: "خصم",
     title: "فاتورة بيع",
     print: "طباعة",
     item: "الصنف",
@@ -958,6 +959,7 @@ export const ar: Dictionary = {
     emptyHint: "ستظهر هنا الطلبات التي تنشئها.",
   },
   orderDetail: {
+    discount: "خصم",
     refundLine: "استرداد بقيمة {amount} سُجّل بتاريخ {date}.",
     loadErrorTitle: "تعذّر تحميل هذا الطلب",
     kicker: "الطلب",

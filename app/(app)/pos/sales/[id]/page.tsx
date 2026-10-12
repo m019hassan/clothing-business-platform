@@ -153,6 +153,16 @@ export default async function PosInvoicePage({ params }: { params: Promise<{ id:
                 </td>
                 <td className="py-2.5 text-end text-slate-700">
                   {formatMoney(line.unitPrice, invoice.currency)}
+                  {line.discountPercent ? (
+                    <span className="ms-2 text-xs">
+                      <span className="text-slate-400 line-through">
+                        {formatMoney(line.originalUnitPrice ?? line.unitPrice, invoice.currency)}
+                      </span>
+                      <span className="ms-1 rounded-full bg-rose-100 px-1.5 py-0.5 font-bold text-rose-700">
+                        {t.posInvoice.discount} {line.discountPercent}%
+                      </span>
+                    </span>
+                  ) : null}
                 </td>
                 <td className="py-2.5 text-end font-medium text-slate-900">
                   {formatMoney(line.lineTotal, invoice.currency)}

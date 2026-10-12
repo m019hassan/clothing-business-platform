@@ -728,6 +728,7 @@ export const en = {
     stale: "This order is no longer awaiting a payment decision.",
   },
   posInvoice: {
+    discount: "Discount",
     title: "Sales invoice",
     print: "Print",
     item: "Item",
@@ -959,6 +960,7 @@ export const en = {
     emptyHint: "Orders you place will appear here.",
   },
   orderDetail: {
+    discount: "Discount",
     refundLine: "Refund of {amount} recorded on {date}.",
     loadErrorTitle: "Unable to load this order",
     kicker: "Order",

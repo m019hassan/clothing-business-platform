@@ -11,6 +11,9 @@ export type OrderItemView = {
   productName: string;
   quantity: number;
   unitPrice: string;
+  /** The pre-discount price; null unless a campaign applied at sale time. */
+  originalUnitPrice: string | null;
+  discountPercent: number | null;
   discountAmount: string;
   lineTotal: string;
 };

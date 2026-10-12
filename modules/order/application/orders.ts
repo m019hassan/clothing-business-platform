@@ -57,6 +57,8 @@ export const orderSelection = {
       variantId: true,
       quantity: true,
       unitPrice: true,
+      originalUnitPrice: true,
+      discountPercent: true,
       discountAmount: true,
       variant: {
         select: {
@@ -144,6 +146,8 @@ export function mapOrder(order: OrderRecord): OrderView {
       productName: item.variant.product.name,
       quantity: item.quantity,
       unitPrice: item.unitPrice.toString(),
+      originalUnitPrice: item.originalUnitPrice?.toString() ?? null,
+      discountPercent: item.discountPercent ?? null,
       discountAmount: item.discountAmount.toString(),
       lineTotal: item.unitPrice.mul(item.quantity).toString(),
     })),
@@ -352,6 +356,8 @@ export async function createOrderFromCart(
             variantId: item.variant.id,
             quantity: item.quantity,
             unitPrice,
+            originalUnitPrice: discountPercent ? catalogPrice : null,
+            discountPercent,
             unitCost: item.variant.product.cost ?? null,
             discountAmount: new Prisma.Decimal(0),
           };

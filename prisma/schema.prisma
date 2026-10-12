@@ -745,6 +745,10 @@ model OrderItem {
   returnedQuantity Int @default(0)
 
   unitPrice      Decimal @db.Decimal(12, 2)
+  /// Pre-discount price snapshot; null unless a campaign applied at sale time.
+  originalUnitPrice Decimal? @db.Decimal(12, 2)
+  /// The campaign percent live at sale time; null when none applied.
+  discountPercent Int?
   discountAmount Decimal @default(0) @db.Decimal(12, 2)
   /// Cost snapshot at sale time, so profit is not rewritten when costs change later.
   unitCost Decimal? @db.Decimal(12, 2)

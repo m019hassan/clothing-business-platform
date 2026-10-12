@@ -425,6 +425,9 @@ export type PosInvoiceLine = {
   quantity: number;
   returnedQuantity: number;
   unitPrice: string;
+  /** The pre-discount price; null unless a campaign applied at sale time. */
+  originalUnitPrice: string | null;
+  discountPercent: number | null;
   lineTotal: string;
 };
 
@@ -478,6 +481,8 @@ export async function getPosSaleDetail(
           quantity: true,
           returnedQuantity: true,
           unitPrice: true,
+          originalUnitPrice: true,
+          discountPercent: true,
           variant: { select: { sku: true, size: true, color: true, product: { select: { name: true } } } },
         },
       },
@@ -517,6 +522,8 @@ export async function getPosSaleDetail(
       quantity: item.quantity,
       returnedQuantity: item.returnedQuantity,
       unitPrice: item.unitPrice.toFixed(2),
+      originalUnitPrice: item.originalUnitPrice?.toFixed(2) ?? null,
+      discountPercent: item.discountPercent ?? null,
       lineTotal: item.unitPrice.mul(item.quantity).toFixed(2),
     })),
   };
