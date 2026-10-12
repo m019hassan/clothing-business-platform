@@ -63,7 +63,7 @@ async function seedFixtures() {
 
   const warehouse =
     (await prisma.warehouse.findFirst({ where: { code: "MAIN" } })) ??
-    (await prisma.warehouse.create({ data: { name: "Main Store", code: "MAIN" } }));
+    (await prisma.warehouse.create({ data: { kind: "STORE", name: "Main Store", code: "MAIN" } }));
 
   const variantARecord = product.variants.find((v) => v.sku.startsWith("VIT-A"))!;
   const variantBRecord = product.variants.find((v) => v.sku.startsWith("VIT-B"))!;

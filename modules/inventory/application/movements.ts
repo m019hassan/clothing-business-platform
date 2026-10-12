@@ -108,6 +108,22 @@ export async function resolveStockingWarehouseId(
 
   const scope = await resolveBranchScope(account);
 
+  const store = await withDatabaseError(() =>
+    prisma.warehouse.findFirst({
+      where: {
+        isActive: true,
+        kind: "STORE",
+        ...(scope.branchId ? { branchId: scope.branchId } : {}),
+      },
+      select: { id: true },
+      orderBy: { code: "asc" },
+    }),
+  );
+
+  if (store) {
+    return store.id;
+  }
+
   if (scope.warehouseIds && scope.warehouseIds.length > 0) {
     return scope.warehouseIds[0];
   }

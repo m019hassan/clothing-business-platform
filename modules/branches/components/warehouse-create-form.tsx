@@ -15,6 +15,9 @@ type Labels = {
   branch: string;
   noBranch: string;
   add: string;
+  kind: string;
+  kindStore: string;
+  kindStorage: string;
 };
 
 export function WarehouseCreateForm({ branches, labels }: { branches: BranchOption[]; labels: Labels }) {
@@ -22,6 +25,7 @@ export function WarehouseCreateForm({ branches, labels }: { branches: BranchOpti
   const [code, setCode] = useState("");
   const [name, setName] = useState("");
   const [branchId, setBranchId] = useState("");
+  const [kind, setKind] = useState<"STORE" | "STORAGE">("STORAGE");
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -33,7 +37,7 @@ export function WarehouseCreateForm({ branches, labels }: { branches: BranchOpti
     try {
       await apiRequest("/api/warehouses", {
         method: "POST",
-        body: JSON.stringify({ code, name, branchId: branchId === "" ? null : branchId }),
+        body: JSON.stringify({ code, name, branchId: branchId === "" ? null : branchId, kind }),
       });
       setCode("");
       setName("");
@@ -49,6 +53,17 @@ export function WarehouseCreateForm({ branches, labels }: { branches: BranchOpti
   return (
     <form onSubmit={submit} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
       <div className="flex flex-wrap items-end gap-3">
+        <label className="w-40 text-sm">
+          <span className="mb-1 block font-medium text-slate-700">{labels.kind}</span>
+          <select
+            value={kind}
+            onChange={(event) => setKind(event.target.value as "STORE" | "STORAGE")}
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 focus:border-slate-500 focus:outline-none"
+          >
+            <option value="STORAGE">{labels.kindStorage}</option>
+            <option value="STORE">{labels.kindStore}</option>
+          </select>
+        </label>
         <label className="w-36 text-sm">
           <span className="mb-1 block font-medium text-slate-700">{labels.code}</span>
           <input

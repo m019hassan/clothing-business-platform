@@ -61,7 +61,7 @@ async function ensureBranchWarehouse(
   branch: { id: string; code: string; name: string },
 ): Promise<Warehouse> {
   const existing = await transaction.warehouse.findFirst({
-    where: { branchId: branch.id, isActive: true },
+    where: { branchId: branch.id, isActive: true, kind: "STORE" },
     orderBy: { code: "asc" },
   });
 
@@ -71,9 +71,10 @@ async function ensureBranchWarehouse(
 
   return transaction.warehouse.create({
     data: {
-      code: `${branch.code}-WH`.slice(0, 30),
-      name: `مستودع ${branch.name}`.slice(0, 100),
+      code: `${branch.code}-STORE`.slice(0, 30),
+      name: `محل ${branch.name}`.slice(0, 100),
       branchId: branch.id,
+      kind: "STORE",
       isActive: true,
     },
   });

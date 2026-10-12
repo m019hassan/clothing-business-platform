@@ -62,7 +62,7 @@ beforeEach(async () => {
     (await prisma.category.create({ data: { name: "Vitest", slug: "vitest" } }));
   const warehouse =
     (await prisma.warehouse.findFirst({ where: { code: "MAIN" } })) ??
-    (await prisma.warehouse.create({ data: { name: "Main Store", code: "MAIN" } }));
+    (await prisma.warehouse.create({ data: { kind: "STORE", name: "Main Store", code: "MAIN" } }));
   const suffix = Date.now().toString(36) + Math.floor(Math.random() * 100000);
 
   const customerRecord = await prisma.account.create({

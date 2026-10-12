@@ -13,6 +13,7 @@ export type WarehouseView = {
   id: string;
   code: string;
   name: string;
+  kind: "STORE" | "STORAGE";
   branchId: string | null;
   branchName: string | null;
   isActive: boolean;
@@ -23,20 +24,23 @@ export type WarehouseView = {
 
 const CODE = /^[A-Za-z0-9-]{2,30}$/;
 
-function parseWrite(payload: unknown, partial: boolean): { code?: string; name?: string; branchId?: string | null; isActive?: boolean } {
+function parseWrite(
+  payload: unknown,
+  partial: boolean,
+): { code?: string; name?: string; branchId?: string | null; isActive?: boolean; kind?: "STORE" | "STORAGE" } {
   if (typeof payload !== "object" || payload === null || Array.isArray(payload)) {
     throw new ValidationError("Request body must be a JSON object.");
   }
 
   const body = payload as Record<string, unknown>;
-  const allowed = ["code", "name", "branchId", "isActive"];
+  const allowed = ["code", "name", "branchId", "isActive", "kind"];
   const unknown = Object.keys(body).filter((key) => !allowed.includes(key));
 
   if (unknown.length > 0) {
     throw new ValidationError(`Unknown field(s): ${unknown.join(", ")}.`);
   }
 
-  const input: { code?: string; name?: string; branchId?: string | null; isActive?: boolean } = {};
+  const input: { code?: string; name?: string; branchId?: string | null; isActive?: boolean; kind?: "STORE" | "STORAGE" } = {};
 
   if (body.code !== undefined) {
     const code = typeof body.code === "string" ? body.code.trim().toUpperCase() : "";
@@ -76,6 +80,14 @@ function parseWrite(payload: unknown, partial: boolean): { code?: string; name?:
     input.isActive = body.isActive;
   }
 
+  if (body.kind !== undefined) {
+    if (body.kind !== "STORE" && body.kind !== "STORAGE") {
+      throw new ValidationError("kind must be STORE or STORAGE.");
+    }
+
+    input.kind = body.kind;
+  }
+
   if (Object.keys(input).length === 0) {
     throw new ValidationError(partial ? "Nothing to update." : "code and name are required.");
   }
@@ -110,6 +122,7 @@ export async function listWarehouses(): Promise<WarehouseView[]> {
         id: true,
         code: true,
         name: true,
+        kind: true,
         branchId: true,
         isActive: true,
         branch: { select: { name: true } },
@@ -130,6 +143,7 @@ export async function listWarehouses(): Promise<WarehouseView[]> {
         id: warehouse.id,
         code: warehouse.code,
         name: warehouse.name,
+        kind: warehouse.kind,
         branchId: warehouse.branchId,
         branchName: warehouse.branch?.name ?? null,
         isActive: warehouse.isActive,
@@ -148,6 +162,17 @@ export async function createWarehouse(account: AuthenticatedAccount, payload: un
   const input = parseWrite(payload, false);
   await assertBranch(input.branchId);
 
+  if ((input.kind ?? "STORAGE") === "STORE" && input.branchId) {
+    const existingStore = await prisma.warehouse.findFirst({
+      where: { branchId: input.branchId, kind: "STORE" },
+      select: { id: true },
+    });
+
+    if (existingStore) {
+      throw new ConflictError("This branch already has a store location.");
+    }
+  }
+
   const clash = await prisma.warehouse.findUnique({ where: { code: input.code! }, select: { id: true } });
 
   if (clash) {
@@ -156,8 +181,8 @@ export async function createWarehouse(account: AuthenticatedAccount, payload: un
 
   const created = await withDatabaseError(() =>
     prisma.warehouse.create({
-      data: { code: input.code!, name: input.name!, branchId: input.branchId ?? null, isActive: input.isActive ?? true },
-      select: { id: true, code: true, name: true, branchId: true, isActive: true, branch: { select: { name: true } } },
+      data: { code: input.code!, name: input.name!, branchId: input.branchId ?? null, kind: input.kind ?? "STORAGE", isActive: input.isActive ?? true },
+      select: { id: true, code: true, name: true, kind: true, branchId: true, isActive: true, branch: { select: { name: true } } },
     }),
   );
 
@@ -175,6 +200,7 @@ export async function createWarehouse(account: AuthenticatedAccount, payload: un
     id: created.id,
     code: created.code,
     name: created.name,
+    kind: created.kind,
     branchId: created.branchId,
     branchName: created.branch?.name ?? null,
     isActive: created.isActive,
@@ -196,7 +222,7 @@ export async function updateWarehouse(
     throw new NotFoundError("The warehouse was not found.");
   }
 
-  const existing = await prisma.warehouse.findUnique({ where: { id: warehouseId }, select: { id: true, code: true } });
+  const existing = await prisma.warehouse.findUnique({ where: { id: warehouseId }, select: { id: true, code: true, branchId: true } });
 
   if (!existing) {
     throw new NotFoundError("The warehouse was not found.");
@@ -204,6 +230,21 @@ export async function updateWarehouse(
 
   const input = parseWrite(payload, true);
   await assertBranch(input.branchId);
+
+  if (input.kind === "STORE") {
+    const targetBranchId = input.branchId !== undefined ? input.branchId : existing.branchId;
+
+    if (targetBranchId) {
+      const other = await prisma.warehouse.findFirst({
+        where: { branchId: targetBranchId, kind: "STORE", NOT: { id: warehouseId } },
+        select: { id: true },
+      });
+
+      if (other) {
+        throw new ConflictError("This branch already has a store location.");
+      }
+    }
+  }
 
   if (input.code && input.code !== existing.code) {
     const clash = await prisma.warehouse.findUnique({ where: { code: input.code }, select: { id: true } });
@@ -221,8 +262,9 @@ export async function updateWarehouse(
         ...(input.name !== undefined ? { name: input.name } : {}),
         ...(input.branchId !== undefined ? { branchId: input.branchId } : {}),
         ...(input.isActive !== undefined ? { isActive: input.isActive } : {}),
+        ...(input.kind !== undefined ? { kind: input.kind } : {}),
       },
-      select: { id: true, code: true, name: true, branchId: true, isActive: true, branch: { select: { name: true } } },
+      select: { id: true, code: true, name: true, kind: true, branchId: true, isActive: true, branch: { select: { name: true } } },
     }),
   );
 
@@ -246,6 +288,7 @@ export async function updateWarehouse(
     id: updated.id,
     code: updated.code,
     name: updated.name,
+    kind: updated.kind,
     branchId: updated.branchId,
     branchName: updated.branch?.name ?? null,
     isActive: updated.isActive,

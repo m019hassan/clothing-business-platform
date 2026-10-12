@@ -95,7 +95,7 @@ beforeEach(async () => {
   // compete for the same rows.
   const branch = await prisma.branch.create({ data: { code: `RACE-${suffix.toUpperCase()}`, name: `Race ${suffix}` } });
   const warehouse = await prisma.warehouse.create({
-    data: { code: `RACEW-${suffix.toUpperCase()}`, name: `Race WH ${suffix}`, branchId: branch.id },
+    data: { kind: "STORE", code: `RACEW-${suffix.toUpperCase()}`, name: `Race WH ${suffix}`, branchId: branch.id },
   });
   created.branchIds.push(branch.id);
   created.warehouseIds.push(warehouse.id);

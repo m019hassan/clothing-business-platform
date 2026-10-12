@@ -248,6 +248,7 @@ export type WarehouseDetailsView = {
     id: string;
     code: string;
     name: string;
+    kind: "STORE" | "STORAGE";
     branchId: string | null;
     branchName: string | null;
     isActive: boolean;
@@ -277,6 +278,7 @@ export async function getWarehouseDetails(
         id: true,
         code: true,
         name: true,
+        kind: true,
         branchId: true,
         isActive: true,
         branch: { select: { name: true } },
@@ -304,6 +306,7 @@ export async function getWarehouseDetails(
         id: warehouse.id,
         code: warehouse.code,
         name: warehouse.name,
+        kind: warehouse.kind,
         branchId: warehouse.branchId,
         branchName: warehouse.branch?.name ?? null,
         isActive: warehouse.isActive,

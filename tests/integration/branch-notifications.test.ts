@@ -111,7 +111,7 @@ async function createBranch(label: string) {
     select: { id: true, code: true },
   });
   const warehouse = await prisma.warehouse.create({
-    data: { code: `BNW-${suffix}`, name: `Notif WH ${label}`, branchId: branch.id },
+    data: { kind: "STORE", code: `BNW-${suffix}`, name: `Notif WH ${label}`, branchId: branch.id },
     select: { id: true },
   });
 

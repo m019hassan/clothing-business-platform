@@ -55,6 +55,9 @@ export default async function AdminWarehousesPage() {
             branch: t.warehouses.branch,
             noBranch: t.warehouses.noBranch,
             add: t.warehouses.add,
+            kind: t.warehouses.kind,
+            kindStore: t.warehouses.kindStore,
+            kindStorage: t.warehouses.kindStorage,
           }}
         />
       ) : null}
@@ -79,6 +82,14 @@ export default async function AdminWarehousesPage() {
                     {warehouse.name}
                   </Link>
                   <p className="font-mono text-xs text-slate-400">{warehouse.code}</p>
+                  <span
+                    className={[
+                      "mt-1 inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold",
+                      warehouse.kind === "STORE" ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-600",
+                    ].join(" ")}
+                  >
+                    {warehouse.kind === "STORE" ? t.warehouses.kindStore : t.warehouses.kindStorage}
+                  </span>
                 </td>
                 <td className="px-6 py-3 text-slate-700">
                   {warehouse.branchName ?? t.warehouses.central}

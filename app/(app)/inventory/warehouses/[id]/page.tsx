@@ -79,7 +79,17 @@ export default async function WarehouseDetailsPage({ params }: WarehouseDetailsP
             <h1 className="text-2xl font-semibold text-slate-900">
               {warehouse.name} <span className="font-mono text-base text-slate-400">({warehouse.code})</span>
             </h1>
-            <p className="text-sm text-slate-600">{warehouse.branchName ?? t.warehouses.central}</p>
+            <p className="flex items-center gap-2 text-sm text-slate-600">
+              {warehouse.branchName ?? t.warehouses.central}
+              <span
+                className={[
+                  "rounded-full px-2 py-0.5 text-[10px] font-semibold",
+                  warehouse.kind === "STORE" ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-600",
+                ].join(" ")}
+              >
+                {warehouse.kind === "STORE" ? t.warehouses.kindStore : t.warehouses.kindStorage}
+              </span>
+            </p>
           </div>
           {canAdjustInventory ? (
             <StockTransferLauncher

@@ -100,29 +100,13 @@ export function requireDistributor(account: AuthenticatedAccount): DistributorCo
   };
 }
 
-/** The branch's warehouses; branches without their own use the central one. */
+/** The branch's store locations: the counter sells from these only. */
 export async function resolveWarehouseIds(branchId: string): Promise<string[]> {
-  const branchWarehouses = await withDatabaseError(() =>
-    prisma.warehouse.findMany({ where: { branchId, isActive: true }, select: { id: true } }),
+  const stores = await withDatabaseError(() =>
+    prisma.warehouse.findMany({ where: { branchId, isActive: true, kind: "STORE" }, select: { id: true } }),
   );
 
-  if (branchWarehouses.length > 0) {
-    return branchWarehouses.map((warehouse) => warehouse.id);
-  }
-
-  const fallback = await withDatabaseError(() =>
-    prisma.warehouse.findFirst({
-      where: { isActive: true },
-      select: { id: true },
-      orderBy: { code: "asc" },
-    }),
-  );
-
-  if (!fallback) {
-    throw new NotFoundError("No active warehouse is configured.");
-  }
-
-  return [fallback.id];
+  return stores.map((warehouse) => warehouse.id);
 }
 
 /** Walk-in customer used as the buyer of point-of-sale orders (one per branch). */

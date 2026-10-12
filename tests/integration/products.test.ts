@@ -91,7 +91,7 @@ beforeAll(async () => {
 
   const warehouse =
     (await prisma.warehouse.findFirst({ where: { code: "MAIN" } })) ??
-    (await prisma.warehouse.create({ data: { name: "Main Store", code: "MAIN" } }));
+    (await prisma.warehouse.create({ data: { kind: "STORE", name: "Main Store", code: "MAIN" } }));
 
   const activeVariantA = a.variants.find((variant) => variant.sku.startsWith("VITP-A1"))!;
   await prisma.inventoryItem.create({

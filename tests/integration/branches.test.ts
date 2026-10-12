@@ -95,7 +95,7 @@ describe("branch lifecycle", () => {
 
   it("attaches and detaches warehouses", async () => {
     const warehouse = await prisma.warehouse.create({
-      data: { code: `WH-${suffix.toUpperCase()}`, name: `Warehouse ${suffix}` },
+      data: { kind: "STORE", code: `WH-${suffix.toUpperCase()}`, name: `Warehouse ${suffix}` },
       select: { id: true },
     });
     createdWarehouseIds.push(warehouse.id);

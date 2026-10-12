@@ -80,7 +80,7 @@ beforeEach(async () => {
   branchId = branch.id;
 
   const warehouse = await prisma.warehouse.create({
-    data: { code: `SWPW-${suffix.toUpperCase()}`, name: `Swap Warehouse ${suffix}`, branchId: branch.id },
+    data: { kind: "STORE", code: `SWPW-${suffix.toUpperCase()}`, name: `Swap Warehouse ${suffix}`, branchId: branch.id },
     select: { id: true },
   });
   created.warehouseIds.push(warehouse.id);

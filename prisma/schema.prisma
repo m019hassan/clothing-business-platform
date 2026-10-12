@@ -418,6 +418,11 @@ model ProductVariant {
   @@index([productId], map: "idx_variant_product")
 }
 
+enum WarehouseKind {
+  STORE
+  STORAGE
+}
+
 model Warehouse {
   id String @id @default(uuid()) @db.Uuid
 
@@ -427,6 +432,8 @@ model Warehouse {
   code String @unique @db.VarChar(50)
 
   isActive Boolean @default(true)
+  /// STORE locations sell; STORAGE locations only hold stock.
+  kind WarehouseKind @default(STORAGE)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
