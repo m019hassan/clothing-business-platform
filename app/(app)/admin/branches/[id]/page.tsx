@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 
 import { getCurrentAccount } from "@/modules/auth/infrastructure/session";
 import { getBranchDetails } from "@/modules/branches/application/branch-details";
+import { BranchStoreCreate } from "@/modules/branches/components/branch-store-create";
 import { formatDate, formatDateTime, formatMoney } from "@/src/lib/format";
 import { getInterfaceLanguage } from "@/src/lib/i18n/server";
 import { NotFoundError } from "@/src/lib/errors";
@@ -96,6 +97,33 @@ export default async function BranchDetailsPage({ params }: { params: Promise<{ 
             {branch.staff.distributors} · {t.branchDetails.customers}: {branch.staff.customers}
           </p>
         </div>
+      </section>
+
+      <section className="rounded-2xl border border-emerald-200 bg-emerald-50/60 p-5">
+        <h3 className="text-base font-semibold text-emerald-900">{t.branchDetails.storeTitle}</h3>
+        <p className="mt-1 text-xs text-emerald-800">{t.branchDetails.storeHint}</p>
+        {(() => {
+          const store = branch.warehouses.find((warehouse) => warehouse.kind === "STORE") ?? null;
+
+          return store ? (
+            <div className="mt-3 flex flex-wrap items-center gap-3">
+              <p className="text-sm font-medium text-emerald-900">
+                {store.name} <span className="font-mono text-xs text-emerald-700">({store.code})</span>
+              </p>
+              <Link
+                href={`/inventory/warehouses/${store.id}`}
+                className="rounded-lg border border-emerald-300 bg-white px-3 py-1.5 text-xs font-semibold text-emerald-800 transition-colors hover:bg-emerald-100"
+              >
+                {t.warehouses.openContents}
+              </Link>
+            </div>
+          ) : (
+            <div className="mt-3 space-y-2">
+              <p className="text-xs text-emerald-800">{t.branchDetails.storeNone}</p>
+              <BranchStoreCreate branchId={branch.id} label={t.branchDetails.storeCreate} />
+            </div>
+          );
+        })()}
       </section>
 
       <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">

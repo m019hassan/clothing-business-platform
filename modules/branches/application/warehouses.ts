@@ -112,11 +112,12 @@ async function assertBranch(branchId: string | null | undefined): Promise<void> 
 }
 
 /** Every warehouse with its branch and how much stock it holds. */
-export async function listWarehouses(): Promise<WarehouseView[]> {
+export async function listWarehouses(kind?: "STORE" | "STORAGE"): Promise<WarehouseView[]> {
   await requirePermission(PERMISSIONS.INVENTORY_VIEW);
 
   return withDatabaseError(async () => {
     const warehouses = await prisma.warehouse.findMany({
+      where: kind ? { kind } : {},
       orderBy: [{ code: "asc" }],
       select: {
         id: true,
@@ -181,7 +182,7 @@ export async function createWarehouse(account: AuthenticatedAccount, payload: un
 
   const created = await withDatabaseError(() =>
     prisma.warehouse.create({
-      data: { code: input.code!, name: input.name!, branchId: input.branchId ?? null, kind: input.kind ?? "STORAGE", isActive: input.isActive ?? true },
+      data: { code: input.code!, name: input.name!, branchId: null, kind: "STORAGE", isActive: input.isActive ?? true },
       select: { id: true, code: true, name: true, kind: true, branchId: true, isActive: true, branch: { select: { name: true } } },
     }),
   );
@@ -303,6 +304,72 @@ export async function updateWarehouse(
  * ledger movements is refused, because deleting it would erase where stock went;
  * deactivating it is the answer there.
  */
+export async function ensureBranchStore(account: AuthenticatedAccount, branchId: string): Promise<WarehouseView> {
+  await requirePermission(PERMISSIONS.BRANCHES_MANAGE);
+
+  if (!isUuid(branchId)) {
+    throw new NotFoundError("The branch was not found.");
+  }
+
+  const branch = await prisma.branch.findUnique({
+    where: { id: branchId },
+    select: { id: true, code: true, name: true, isActive: true },
+  });
+
+  if (!branch || !branch.isActive) {
+    throw new NotFoundError("The branch was not found.");
+  }
+
+  const existing = await prisma.warehouse.findFirst({
+    where: { branchId, kind: "STORE" },
+    select: { id: true, code: true, name: true, kind: true, branchId: true, isActive: true },
+  });
+
+  const store = existing ?? (await withDatabaseError(() =>
+    prisma.warehouse.create({
+      data: {
+        code: `${branch.code}-STORE`.slice(0, 30),
+        name: `محل ${branch.name}`.slice(0, 100),
+        branchId,
+        kind: "STORE",
+        isActive: true,
+      },
+      select: { id: true, code: true, name: true, kind: true, branchId: true, isActive: true },
+    }),
+  ));
+
+  if (!existing) {
+    await prisma.auditLog.create({
+      data: {
+        accountId: account.id,
+        action: "WAREHOUSE_CREATED",
+        entity: "Warehouse",
+        entityId: store.id,
+        newValue: `${store.code} — ${store.name}`,
+      },
+    });
+  }
+
+  const stock = await prisma.inventoryItem.aggregate({
+    where: { warehouseId: store.id },
+    _sum: { quantityOnHand: true, quantityReserved: true },
+    _count: { _all: true },
+  });
+
+  return {
+    id: store.id,
+    code: store.code,
+    name: store.name,
+    kind: store.kind,
+    branchId: store.branchId,
+    branchName: branch.name,
+    isActive: store.isActive,
+    onHand: stock._sum.quantityOnHand ?? 0,
+    available: (stock._sum.quantityOnHand ?? 0) - (stock._sum.quantityReserved ?? 0),
+    trackedItems: stock._count._all,
+  };
+}
+
 export async function deleteWarehouse(account: AuthenticatedAccount, warehouseId: string): Promise<{ name: string }> {
   await requirePermission(PERMISSIONS.BRANCHES_MANAGE);
 

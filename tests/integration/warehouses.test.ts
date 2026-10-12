@@ -61,13 +61,14 @@ afterAll(async () => {
 });
 
 describe("warehouse administration", () => {
-  it("creates a warehouse linked to a branch and lists it with its numbers", async () => {
+  it("creates a storage warehouse and lists it with its numbers", async () => {
     const suffix = Date.now().toString(36).toUpperCase();
     const warehouse = await createWarehouse(staff, { code: `wh-${suffix}`, name: "مستودع الاختبار", branchId });
     created.warehouseIds.push(warehouse.id);
 
     expect(warehouse.code).toBe(`WH-${suffix}`);
-    expect(warehouse.branchName).toContain("WH Branch");
+    expect(warehouse.kind).toBe("STORAGE");
+    expect(warehouse.branchId).toBeNull();
 
     const audit = await prisma.auditLog.findFirst({ where: { entityId: warehouse.id, action: "WAREHOUSE_CREATED" } });
     expect(audit).not.toBeNull();
@@ -162,7 +163,10 @@ describe("removing warehouses and branches", () => {
     expect(removed.name).toContain("Empty");
 
     // a branch holding a warehouse cannot go
-    const held = await createWarehouse(staff, { code: `wz-${suffix}`, name: "مستودع الفرع", branchId });
+    const held = await prisma.warehouse.create({
+      data: { code: `WZ-${suffix}`, name: "محل الفرع", branchId, kind: "STORE" },
+      select: { id: true },
+    });
     created.warehouseIds.push(held.id);
 
     await expect(deleteBranch(staff, branchId)).rejects.toMatchObject({ statusCode: 409 });

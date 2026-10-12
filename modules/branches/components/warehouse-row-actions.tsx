@@ -5,8 +5,6 @@ import { useState } from "react";
 
 import { apiRequest } from "@/src/lib/api";
 
-type BranchOption = { id: string; name: string; code: string };
-
 type Labels = {
   edit: string;
   save: string;
@@ -14,8 +12,6 @@ type Labels = {
   cancel: string;
   code: string;
   name: string;
-  branch: string;
-  noBranch: string;
   active: string;
   remove: string;
   removeConfirm: string;
@@ -23,18 +19,15 @@ type Labels = {
 
 export function WarehouseRowActions({
   warehouse,
-  branches,
   labels,
 }: {
-  warehouse: { id: string; code: string; name: string; branchId: string | null; isActive: boolean };
-  branches: BranchOption[];
+  warehouse: { id: string; code: string; name: string; isActive: boolean };
   labels: Labels;
 }) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [code, setCode] = useState(warehouse.code);
   const [name, setName] = useState(warehouse.name);
-  const [branchId, setBranchId] = useState(warehouse.branchId ?? "");
   const [isActive, setIsActive] = useState(warehouse.isActive);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -47,7 +40,7 @@ export function WarehouseRowActions({
     try {
       await apiRequest(`/api/warehouses/${warehouse.id}`, {
         method: "PUT",
-        body: JSON.stringify({ code, name, branchId: branchId === "" ? null : branchId, isActive }),
+        body: JSON.stringify({ code, name, isActive }),
       });
       setEditing(false);
       router.refresh();
@@ -117,19 +110,6 @@ export function WarehouseRowActions({
         maxLength={100}
         className="w-40 rounded-lg border border-slate-300 px-2 py-1 text-xs"
       />
-      <select
-        value={branchId}
-        onChange={(event) => setBranchId(event.target.value)}
-        aria-label={labels.branch}
-        className="rounded-lg border border-slate-300 px-2 py-1 text-xs"
-      >
-        <option value="">{labels.noBranch}</option>
-        {branches.map((branch) => (
-          <option key={branch.id} value={branch.id}>
-            {branch.name} ({branch.code})
-          </option>
-        ))}
-      </select>
       <label className="flex items-center gap-1 text-xs text-slate-600">
         <input type="checkbox" checked={isActive} onChange={(event) => setIsActive(event.target.checked)} />
         {labels.active}

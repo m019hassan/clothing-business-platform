@@ -27,6 +27,7 @@ export type BranchDetailsView = {
     id: string;
     code: string;
     name: string;
+    kind: "STORE" | "STORAGE";
     isActive: boolean;
     onHand: number;
     reserved: number;
@@ -103,7 +104,7 @@ export async function getBranchDetails(
         createdAt: true,
         warehouses: {
           orderBy: { code: "asc" },
-          select: { id: true, code: true, name: true, isActive: true },
+          select: { id: true, code: true, name: true, kind: true, isActive: true },
         },
       },
     });
@@ -237,6 +238,7 @@ export async function getBranchDetails(
           id: warehouse.id,
           code: warehouse.code,
           name: warehouse.name,
+          kind: warehouse.kind,
           isActive: warehouse.isActive,
           onHand: entry.onHand,
           reserved: entry.reserved,

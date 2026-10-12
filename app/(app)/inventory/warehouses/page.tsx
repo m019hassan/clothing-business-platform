@@ -7,7 +7,6 @@ import { getCurrentAccount } from "@/modules/auth/infrastructure/session";
 import { listWarehouses } from "@/modules/branches/application/warehouses";
 import { WarehouseCreateForm } from "@/modules/branches/components/warehouse-create-form";
 import { WarehouseRowActions } from "@/modules/branches/components/warehouse-row-actions";
-import { prisma } from "@/src/lib/db";
 import { getInterfaceLanguage } from "@/src/lib/i18n/server";
 
 export const dynamic = "force-dynamic";
@@ -27,12 +26,7 @@ export default async function AdminWarehousesPage() {
 
   const canManage = permissions.has(PERMISSIONS.BRANCHES_MANAGE);
   const { t } = await getInterfaceLanguage();
-  const warehouses = await listWarehouses();
-  const branches = await prisma.branch.findMany({
-    where: { isActive: true },
-    orderBy: { code: "asc" },
-    select: { id: true, name: true, code: true },
-  });
+  const warehouses = await listWarehouses("STORAGE");
 
   return (
     <div className="space-y-6">
@@ -46,18 +40,12 @@ export default async function AdminWarehousesPage() {
 
       {canManage ? (
         <WarehouseCreateForm
-          branches={branches}
           labels={{
             code: t.warehouses.code,
             codePlaceholder: t.warehouses.codePlaceholder,
             name: t.warehouses.name,
             namePlaceholder: t.warehouses.namePlaceholder,
-            branch: t.warehouses.branch,
-            noBranch: t.warehouses.noBranch,
             add: t.warehouses.add,
-            kind: t.warehouses.kind,
-            kindStore: t.warehouses.kindStore,
-            kindStorage: t.warehouses.kindStorage,
           }}
         />
       ) : null}
@@ -67,7 +55,6 @@ export default async function AdminWarehousesPage() {
           <thead className="bg-slate-50 text-xs uppercase text-slate-500">
             <tr>
               <th className="px-6 py-3 text-start font-medium">{t.warehouses.name}</th>
-              <th className="px-6 py-3 text-start font-medium">{t.warehouses.branch}</th>
               <th className="px-6 py-3 text-end font-medium">{t.branchDetails.stockOnHand}</th>
               <th className="px-6 py-3 text-end font-medium">{t.branchDetails.stockAvailable}</th>
               <th className="px-6 py-3 text-start font-medium">{t.common.status}</th>
@@ -91,10 +78,6 @@ export default async function AdminWarehousesPage() {
                     {warehouse.kind === "STORE" ? t.warehouses.kindStore : t.warehouses.kindStorage}
                   </span>
                 </td>
-                <td className="px-6 py-3 text-slate-700">
-                  {warehouse.branchName ?? t.warehouses.central}
-                  <span className="ms-1 text-xs text-slate-400">({warehouse.trackedItems})</span>
-                </td>
                 <td className="px-6 py-3 text-end text-slate-700">{warehouse.onHand}</td>
                 <td className="px-6 py-3 text-end font-medium text-slate-900">{warehouse.available}</td>
                 <td className="px-6 py-3">
@@ -114,20 +97,16 @@ export default async function AdminWarehousesPage() {
                         id: warehouse.id,
                         code: warehouse.code,
                         name: warehouse.name,
-                        branchId: warehouse.branchId,
-                        isActive: warehouse.isActive,
+                                                isActive: warehouse.isActive,
                       }}
-                      branches={branches}
-                      labels={{
+                                            labels={{
                         edit: t.warehouses.edit,
                         save: t.warehouses.save,
                         saving: t.warehouses.saving,
                         cancel: t.warehouses.cancel,
                         code: t.warehouses.code,
                         name: t.warehouses.name,
-                        branch: t.warehouses.branch,
-                        noBranch: t.warehouses.noBranch,
-                        active: t.branchDetails.active,
+                                                                        active: t.branchDetails.active,
                         remove: t.warehouses.remove,
                         removeConfirm: t.warehouses.removeConfirm,
                       }}
@@ -138,7 +117,7 @@ export default async function AdminWarehousesPage() {
             ))}
             {warehouses.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-6 py-8 text-center text-slate-500">
+                <td colSpan={5} className="px-6 py-8 text-center text-slate-500">
                   {t.warehouses.empty}
                 </td>
               </tr>
@@ -158,27 +137,22 @@ export default async function AdminWarehousesPage() {
                   {t.branchDetails.stockAvailable}: <span className="font-semibold text-slate-800">{warehouse.available}</span>
                 </span>
               </div>
-              <p className="text-xs text-slate-500">{warehouse.branchName ?? t.warehouses.central}</p>
               {canManage ? (
                 <WarehouseRowActions
                   warehouse={{
                     id: warehouse.id,
                     code: warehouse.code,
                     name: warehouse.name,
-                    branchId: warehouse.branchId,
-                    isActive: warehouse.isActive,
+                                        isActive: warehouse.isActive,
                   }}
-                  branches={branches}
-                  labels={{
+                                    labels={{
                     edit: t.warehouses.edit,
                     save: t.warehouses.save,
                     saving: t.warehouses.saving,
                     cancel: t.warehouses.cancel,
                     code: t.warehouses.code,
                     name: t.warehouses.name,
-                    branch: t.warehouses.branch,
-                    noBranch: t.warehouses.noBranch,
-                    active: t.branchDetails.active,
+                                                            active: t.branchDetails.active,
                     remove: t.warehouses.remove,
                     removeConfirm: t.warehouses.removeConfirm,
                   }}
