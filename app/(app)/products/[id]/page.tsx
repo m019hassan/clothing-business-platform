@@ -8,7 +8,11 @@ import { StockAdjustForm } from "@/modules/inventory/components/stock-adjust-for
 import { getCurrentPermissions } from "@/modules/auth/application/authorization";
 import { PERMISSIONS } from "@/modules/auth/application/permissions";
 import { getCurrentAccount } from "@/modules/auth/infrastructure/session";
-import { getProductInventory } from "@/modules/catalog/application/products";
+import {
+  getProductBranchStock,
+  getProductInventory,
+  type ProductBranchStockView,
+} from "@/modules/catalog/application/products";
 import type { ProductInventoryView } from "@/modules/catalog/types";
 import { NotFoundError } from "@/src/lib/errors";
 import { formatDate, formatMoney, variantLabel } from "@/src/lib/format";
@@ -44,10 +48,12 @@ export default async function ProductDetailPage({ params }: ProductDetailProps) 
   const { id } = await params;
 
   let product: ProductInventoryView | null = null;
+  let branchStock: ProductBranchStockView | null = null;
   let loadError = false;
 
   try {
     product = await getProductInventory(id);
+    branchStock = await getProductBranchStock(id);
   } catch (error) {
     if (error instanceof NotFoundError) {
       notFound();
@@ -210,6 +216,61 @@ export default async function ProductDetailPage({ params }: ProductDetailProps) 
           <p className="mt-1 text-xs text-slate-400">{t.catalog.detail.onHandMinusReserved}</p>
         </div>
       </section>
+
+      {branchStock ? (
+        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h3 className="text-base font-semibold text-slate-900">{t.catalog.detail.branchStockTitle}</h3>
+          <p className="mt-1 text-sm text-slate-600">{t.catalog.detail.branchStockHint}</p>
+
+          <div className="mt-4 rounded-xl bg-slate-50 p-4">
+            <p className="text-sm font-semibold text-slate-800">
+              {t.catalog.detail.storageLabel}:{" "}
+              <span className="text-lg font-bold text-slate-900">{branchStock.storage.totalAvailable}</span>
+            </p>
+            {branchStock.storage.warehouses.length > 0 ? (
+              <p className="mt-1 flex flex-wrap gap-2 text-xs text-slate-500">
+                {branchStock.storage.warehouses.map((warehouse) => (
+                  <span key={warehouse.id} className="rounded-full bg-white px-2 py-0.5 ring-1 ring-slate-200">
+                    {warehouse.name} ({warehouse.code}): {warehouse.available}
+                  </span>
+                ))}
+              </p>
+            ) : null}
+          </div>
+
+          <ul className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {branchStock.branches.map((branch) => (
+              <li
+                key={branch.branchId}
+                className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 px-4 py-3"
+              >
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium text-slate-900">{branch.branchName}</p>
+                  <p className="font-mono text-[11px] text-slate-400">{branch.branchCode}</p>
+                </div>
+                <div className="flex shrink-0 items-center gap-2">
+                  <span
+                    className={[
+                      "text-lg font-bold",
+                      branch.available > 0 ? "text-slate-900" : "text-rose-600",
+                    ].join(" ")}
+                  >
+                    {branch.available}
+                  </span>
+                  {branch.storeId ? (
+                    <Link
+                      href={"/inventory/warehouses/" + branch.storeId}
+                      className="text-xs text-blue-700 hover:underline"
+                    >
+                      {t.catalog.detail.storeLabel}
+                    </Link>
+                  ) : null}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       {/* Variants */}
       <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">

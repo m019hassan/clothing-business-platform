@@ -389,3 +389,92 @@ export async function getProduct(productId: string): Promise<ProductView> {
 
   return mapProduct(product, colorIndex, { discountPercent: discountMap.get(product.id) ?? null });
 }
+
+export type ProductBranchStockView = {
+  storage: { totalAvailable: number; warehouses: { id: string; name: string; code: string; available: number }[] };
+  branches: {
+    branchId: string;
+    branchName: string;
+    branchCode: string;
+    storeId: string | null;
+    available: number;
+  }[];
+};
+
+/** Where this product sits right now: storage totals and every branch store. */
+export async function getProductBranchStock(productId: string): Promise<ProductBranchStockView> {
+  if (!isUuid(productId)) {
+    throw new NotFoundError("Product not found.");
+  }
+
+  return withDatabaseError(async () => {
+    const [branches, balances] = await Promise.all([
+      prisma.branch.findMany({
+        where: { isActive: true },
+        orderBy: { code: "asc" },
+        select: {
+          id: true,
+          code: true,
+          name: true,
+          warehouses: { where: { kind: "STORE" }, select: { id: true } },
+        },
+      }),
+      prisma.inventoryItem.findMany({
+        where: { variant: { productId }, warehouse: { isActive: true } },
+        select: {
+          warehouseId: true,
+          quantityOnHand: true,
+          quantityReserved: true,
+          warehouse: { select: { id: true, code: true, name: true, kind: true, branchId: true } },
+        },
+      }),
+    ]);
+
+    const perWarehouse = new Map<
+      string,
+      { id: string; code: string; name: string; kind: "STORE" | "STORAGE"; branchId: string | null; available: number }
+    >();
+
+    for (const balance of balances) {
+      const entry = perWarehouse.get(balance.warehouseId) ?? {
+        id: balance.warehouse.id,
+        code: balance.warehouse.code,
+        name: balance.warehouse.name,
+        kind: balance.warehouse.kind,
+        branchId: balance.warehouse.branchId,
+        available: 0,
+      };
+
+      entry.available += balance.quantityOnHand - balance.quantityReserved;
+      perWarehouse.set(balance.warehouseId, entry);
+    }
+
+    const storage = [...perWarehouse.values()].filter((warehouse) => warehouse.kind !== "STORE");
+    const storesByBranch = new Map<string, number>();
+
+    for (const warehouse of perWarehouse.values()) {
+      if (warehouse.kind === "STORE" && warehouse.branchId) {
+        storesByBranch.set(warehouse.branchId, (storesByBranch.get(warehouse.branchId) ?? 0) + warehouse.available);
+      }
+    }
+
+    return {
+      storage: {
+        totalAvailable: storage.reduce((sum, warehouse) => sum + warehouse.available, 0),
+        warehouses: storage.map((warehouse) => ({
+          id: warehouse.id,
+          name: warehouse.name,
+          code: warehouse.code,
+          available: warehouse.available,
+        })),
+      },
+      branches: branches.map((branch) => ({
+        branchId: branch.id,
+        branchName: branch.name,
+        branchCode: branch.code,
+        storeId: branch.warehouses[0]?.id ?? null,
+        available: storesByBranch.get(branch.id) ?? 0,
+      })),
+    };
+  });
+}
