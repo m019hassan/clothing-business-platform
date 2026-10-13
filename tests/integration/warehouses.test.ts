@@ -164,7 +164,7 @@ describe("removing warehouses and branches", () => {
 
     // a branch holding a warehouse cannot go
     const held = await prisma.warehouse.create({
-      data: { code: `WZ-${suffix}`, name: "محل الفرع", branchId, kind: "STORE" },
+      data: { code: `WZ-${suffix}`, name: "مستودع الفرع", branchId, kind: "STORAGE" },
       select: { id: true },
     });
     created.warehouseIds.push(held.id);
