@@ -223,4 +223,23 @@ describe("stock requests", () => {
     });
     expect(confirmation).not.toBeNull();
   });
+
+  it("names the products in the shortage message instead of the codes", async () => {
+    await prisma.inventoryItem.updateMany({
+      where: { variantId, warehouseId: storageId },
+      data: { quantityOnHand: 1 },
+    });
+
+    const request = await createStockRequest(requester, {
+      items: [{ variantId, quantity: 5 }],
+    });
+
+    await expect(
+      fulfillStockRequest(warehouseKeeper, request.id, { fromWarehouseId: storageId }, "ar"),
+    ).rejects.toThrowError(/كمية المخزن أقل من المطلوب/);
+
+    await expect(
+      fulfillStockRequest(warehouseKeeper, request.id, { fromWarehouseId: storageId }, "ar"),
+    ).rejects.toThrowError(/ناقص 4/);
+  });
 });

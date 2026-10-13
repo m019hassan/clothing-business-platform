@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { requireAuthenticated } from "@/modules/auth/infrastructure/session";
 import { fulfillStockRequest } from "@/modules/inventory/application/stock-requests";
+import { getInterfaceLanguage } from "@/src/lib/i18n/server";
 import { toErrorResponse } from "@/src/lib/errors";
 
 export const dynamic = "force-dynamic";
@@ -13,7 +14,8 @@ export async function POST(request: Request, context: RouteContext) {
     const account = await requireAuthenticated();
     const { id } = await context.params;
     const body = await request.json().catch(() => null);
-    const stockRequest = await fulfillStockRequest(account, id, body);
+    const { locale } = await getInterfaceLanguage();
+    const stockRequest = await fulfillStockRequest(account, id, body, locale === "en" ? "en" : "ar");
 
     return NextResponse.json({ request: stockRequest });
   } catch (error) {

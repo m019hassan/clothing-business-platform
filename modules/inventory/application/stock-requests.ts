@@ -11,6 +11,7 @@ import { colorLibraryIndex, normalizeColorKey } from "@/modules/catalog/applicat
 import { createNotification } from "@/modules/notification/application/notifications";
 import { prisma } from "@/src/lib/db";
 import { NotFoundError, ValidationError, withDatabaseError } from "@/src/lib/errors";
+import { formatVariantAttributes } from "@/src/lib/format";
 import { isUuid } from "@/src/lib/validation";
 
 type AuthenticatedAccount = NonNullable<SafeAccount>;
@@ -335,6 +336,7 @@ export async function fulfillStockRequest(
   account: AuthenticatedAccount,
   requestId: string,
   payload: unknown,
+  locale: "ar" | "en" = "ar",
 ): Promise<StockRequestView> {
   await requirePermission(PERMISSIONS.INVENTORY_ADJUST);
 
@@ -391,9 +393,35 @@ export async function fulfillStockRequest(
   );
 
   if (shortages.length > 0) {
-    throw new ValidationError(
-      `The warehouse is short on ${shortages.map((item) => item.variant.sku).join("، ")} — restock it or split the request.`,
-    );
+    const lines = shortages.slice(0, 5).map((item) => {
+      const available = availableByVariant.get(item.variantId) ?? 0;
+      const attrs = formatVariantAttributes(
+        item.variant.size,
+        item.variant.color,
+        locale === "ar" ? "بدون مقاس" : "no size",
+      );
+      const label = locale === "ar" ? "ناقص" : "short by";
+
+      return `«${item.variant.product.name}» (${attrs}): ${label} ${item.quantity - available}`;
+    });
+
+    if (shortages.length > 5) {
+      lines.push(locale === "ar" ? `و${shortages.length - 5} أصناف كمان` : `and ${shortages.length - 5} more items`);
+    }
+
+    const intro = locale === "ar" ? "كمية المخزن أقل من المطلوب:" : "The warehouse is short:";
+    const outro = locale === "ar" ? "رصّف المخزن أو قسّم الطلبية." : "restock it or split the request.";
+
+    throw new ValidationError(`${intro} ${lines.join("، ")} — ${outro}`, {
+      shortages: shortages.map((item) => ({
+        variantId: item.variantId,
+        name: item.variant.product.name,
+        size: item.variant.size,
+        color: item.variant.color,
+        needed: item.quantity,
+        available: availableByVariant.get(item.variantId) ?? 0,
+      })),
+    });
   }
 
   for (const item of request.items) {
