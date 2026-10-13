@@ -374,8 +374,9 @@ export async function deleteBranch(account: AuthenticatedAccount, branchId: stri
     select: {
       id: true,
       name: true,
+      warehouses: { select: { id: true, kind: true } },
       _count: {
-        select: { warehouses: true, employees: true, distributors: true, orders: true, customers: true },
+        select: { employees: true, distributors: true, orders: true, customers: true },
       },
     },
   });
@@ -386,7 +387,21 @@ export async function deleteBranch(account: AuthenticatedAccount, branchId: stri
 
   const blockers: string[] = [];
 
-  if (branch._count.warehouses > 0) blockers.push(`${branch._count.warehouses} warehouse(s)`);
+  const storageWarehouses = branch.warehouses.filter((warehouse) => warehouse.kind !== "STORE");
+  const stores = branch.warehouses.filter((warehouse) => warehouse.kind === "STORE");
+
+  if (storageWarehouses.length > 0) blockers.push(`${storageWarehouses.length} warehouse(s)`);
+
+  if (stores.length > 0) {
+    const storeIds = stores.map((store) => store.id);
+    const [storeRows, storeMovements] = await Promise.all([
+      prisma.inventoryItem.count({ where: { warehouseId: { in: storeIds } } }),
+      prisma.stockMovement.count({ where: { warehouseId: { in: storeIds } } }),
+    ]);
+
+    if (storeRows > 0 || storeMovements > 0) blockers.push("stock or history in the branch store");
+  }
+
   if (branch._count.employees > 0) blockers.push(`${branch._count.employees} employee(s)`);
   if (branch._count.distributors > 0) blockers.push(`${branch._count.distributors} distributor(s)`);
   if (branch._count.orders > 0) blockers.push(`${branch._count.orders} order(s)`);
@@ -397,6 +412,7 @@ export async function deleteBranch(account: AuthenticatedAccount, branchId: stri
   }
 
   await prisma.$transaction([
+    ...stores.map((store) => prisma.warehouse.delete({ where: { id: store.id } })),
     prisma.branch.delete({ where: { id: branch.id } }),
     prisma.auditLog.create({
       data: {

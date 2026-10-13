@@ -309,6 +309,7 @@ export const en = {
     storeHint: "The store is where the counter sells from — warehouse transfers land here.",
     storeNone: "This branch has no store yet.",
     storeCreate: "Create the branch store",
+    storeData: "Store details",
     staff: "Team and customers",
     employees: "Employees",
     distributors: "Distributors",

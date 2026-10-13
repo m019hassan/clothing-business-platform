@@ -310,6 +310,7 @@ export const ar: Dictionary = {
     storeHint: "المحل هو مكان البيع في الكاشير — والنقل من المخزن بيوصّل هنا تلقائيًا.",
     storeNone: "لسه مفيش محل للفرع.",
     storeCreate: "إنشاء محل للفرع",
+    storeData: "بيانات محل الفرع",
     staff: "الفريق والعملاء",
     employees: "موظفون",
     distributors: "موزّعون",

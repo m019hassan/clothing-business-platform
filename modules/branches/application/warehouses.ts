@@ -379,11 +379,17 @@ export async function deleteWarehouse(account: AuthenticatedAccount, warehouseId
 
   const warehouse = await prisma.warehouse.findUnique({
     where: { id: warehouseId },
-    select: { id: true, code: true, name: true },
+    select: { id: true, code: true, name: true, kind: true },
   });
 
   if (!warehouse) {
     throw new NotFoundError("The warehouse was not found.");
+  }
+
+  if (warehouse.kind === "STORE") {
+    throw new ConflictError(
+      "This is a branch store, not a warehouse. Stores are managed from the branch page and are never deleted from here.",
+    );
   }
 
   const [items, movements] = await Promise.all([
