@@ -62,7 +62,7 @@ beforeEach(async () => {
       basePrice: new Prisma.Decimal("40.00"),
       currency: "EGP",
       categoryId: category.id,
-      variants: { create: [{ sku: `SR-${suffix}`, size: "M", status: "ACTIVE" }] },
+      variants: { create: [{ sku: `SR-${suffix}`, size: "M", color: "أزرق", status: "ACTIVE" }] },
     },
     include: { variants: true },
   });
@@ -72,6 +72,17 @@ beforeEach(async () => {
 
   await prisma.inventoryItem.createMany({
     data: [{ variantId, warehouseId: storage.id, quantityOnHand: 5, quantityReserved: 0 }],
+  });
+
+  await prisma.productImage.create({
+    data: {
+      productId: product.id,
+      variantId,
+      fileKey: `sr-${suffix}.jpg`,
+      originalName: `sr-${suffix}.jpg`,
+      mimeType: "image/jpeg",
+      sizeBytes: 1234,
+    },
   });
 
   const role = await prisma.role.create({
@@ -159,6 +170,7 @@ beforeEach(async () => {
 
 afterAll(async () => {
   const requests = await prisma.stockRequest.findMany({ where: { branchId: { in: created.branchIds } }, select: { id: true } });
+  await prisma.productImage.deleteMany({ where: { productId: { in: created.productIds } } });
   await prisma.stockRequestItem.deleteMany({ where: { requestId: { in: requests.map((request) => request.id) } } });
   await prisma.stockRequest.deleteMany({ where: { id: { in: requests.map((request) => request.id) } } });
   await prisma.notification.deleteMany({ where: { accountId: { in: created.accountIds } } });
@@ -186,6 +198,9 @@ describe("stock requests", () => {
 
     expect(request.status).toBe("PENDING");
     expect(request.itemCount).toBe(1);
+    expect(request.items[0].color).toBe("أزرق");
+    expect(request.items[0].colorHex).not.toBeNull();
+    expect(request.items[0].imageId).not.toBeNull();
 
     const alert = await prisma.notification.findFirst({
       where: { accountId: warehouseKeeper.id, entityType: "StockRequest", entityId: request.id },
