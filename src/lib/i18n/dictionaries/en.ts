@@ -853,6 +853,7 @@ export const en = {
     success: "The warehouse has it ✓ — you will get a notification when it ships.",
     failed: "Could not send the request.",
     units: "units",
+    sizeLabel: "Size",
   },
   pos: {
     permissionTitle: "Point of sale requires a distributor account",

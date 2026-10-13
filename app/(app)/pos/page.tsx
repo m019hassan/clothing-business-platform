@@ -89,6 +89,7 @@ export default async function PosPage() {
               success: t.stockRequests.success,
               failed: t.stockRequests.failed,
               units: t.stockRequests.units,
+              sizeLabel: t.stockRequests.sizeLabel,
             }}
           />
           <CashierModeToggle />

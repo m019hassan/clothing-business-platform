@@ -7,6 +7,7 @@ import { PERMISSIONS } from "@/modules/auth/application/permissions";
 import type { SafeAccount } from "@/modules/auth/infrastructure/session";
 import { resolveBranchScope } from "@/modules/branches/application/scope";
 import { transferStock } from "@/modules/inventory/application/transfers";
+import { colorLibraryIndex, normalizeColorKey } from "@/modules/catalog/application/colors";
 import { createNotification } from "@/modules/notification/application/notifications";
 import { prisma } from "@/src/lib/db";
 import { NotFoundError, ValidationError, withDatabaseError } from "@/src/lib/errors";
@@ -394,6 +395,8 @@ export type RequestableVariant = {
   sku: string;
   size: string | null;
   color: string | null;
+  colorHex: string | null;
+  imageId: string | null;
 };
 
 /** Everything a branch can ask the warehouse for: the whole active catalogue. */
@@ -404,9 +407,33 @@ export async function listRequestableVariants(): Promise<RequestableVariant[]> {
       where: { status: "ACTIVE", product: { status: "ACTIVE", deletedAt: null } },
       orderBy: [{ product: { name: "asc" } }, { sku: "asc" }],
       take: 1000,
-      select: { id: true, sku: true, size: true, color: true, product: { select: { name: true } } },
+      select: { id: true, productId: true, sku: true, size: true, color: true, product: { select: { name: true } } },
     }),
   );
+
+  const productIds = [...new Set(variants.map((variant) => variant.productId))];
+  const images = await withDatabaseError(() =>
+    prisma.productImage.findMany({
+      where: { productId: { in: productIds } },
+      orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+      select: { id: true, productId: true, variantId: true },
+    }),
+  );
+
+  const imageByVariant = new Map<string, string>();
+  const imageByProduct = new Map<string, string>();
+
+  for (const image of images) {
+    if (image.variantId && !imageByVariant.has(image.variantId)) {
+      imageByVariant.set(image.variantId, image.id);
+    }
+
+    if (!imageByProduct.has(image.productId)) {
+      imageByProduct.set(image.productId, image.id);
+    }
+  }
+
+  const library = await colorLibraryIndex();
 
   return variants.map((variant) => ({
     variantId: variant.id,
@@ -414,5 +441,7 @@ export async function listRequestableVariants(): Promise<RequestableVariant[]> {
     sku: variant.sku,
     size: variant.size,
     color: variant.color,
+    colorHex: library.get(normalizeColorKey(variant.color ?? ""))?.hex ?? null,
+    imageId: imageByVariant.get(variant.id) ?? imageByProduct.get(variant.productId) ?? null,
   }));
 }

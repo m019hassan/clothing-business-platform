@@ -853,6 +853,7 @@ export const ar: Dictionary = {
     success: "وصلت الطلبية للمخزن ✓ — هتلاقي رد في الإشعارات أول ما تتجهز.",
     failed: "تعذّر إرسال الطلبية.",
     units: "وحدة",
+    sizeLabel: "مقاس",
   },
   pos: {
     permissionTitle: "نقطة البيع تتطلب حساب موزّع",

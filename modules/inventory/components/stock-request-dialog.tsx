@@ -12,6 +12,8 @@ type VariantOption = {
   sku: string;
   size: string | null;
   color: string | null;
+  colorHex: string | null;
+  imageId: string | null;
 };
 
 export type StockRequestDialogLabels = {
@@ -29,6 +31,7 @@ export type StockRequestDialogLabels = {
   success: string;
   failed: string;
   units: string;
+  sizeLabel: string;
 };
 
 export function StockRequestDialog({
@@ -178,11 +181,39 @@ export function StockRequestDialog({
                           onClick={() => add(variant)}
                           className="flex w-full items-center justify-between gap-2 px-3 py-2 text-start transition-colors hover:bg-slate-50"
                         >
-                          <span className="min-w-0">
-                            <span className="block truncate text-sm font-medium text-slate-900">
-                              {variant.productName} · {formatVariantAttributes(variant.size, variant.color, "—")}
+                          <span className="flex min-w-0 items-center gap-3">
+                            {variant.imageId ? (
+                              /* eslint-disable-next-line @next/next/no-img-element */
+                              <img
+                                src={`/api/products/images/${variant.imageId}`}
+                                alt={variant.productName}
+                                className="h-11 w-11 shrink-0 rounded-lg border border-slate-200 object-cover"
+                              />
+                            ) : (
+                              <span className="h-11 w-11 shrink-0 rounded-lg border border-dashed border-slate-200 bg-slate-50" />
+                            )}
+                            <span className="min-w-0">
+                              <span className="flex flex-wrap items-center gap-2">
+                                <span className="truncate text-sm font-medium text-slate-900">{variant.productName}</span>
+                                {variant.size ? (
+                                  <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-700">
+                                    {labels.sizeLabel} {variant.size}
+                                  </span>
+                                ) : null}
+                              </span>
+                              <span className="mt-0.5 flex items-center gap-1.5 text-xs text-slate-500">
+                                {variant.color ? (
+                                  <>
+                                    <span
+                                      className="inline-block h-2.5 w-2.5 rounded-full ring-1 ring-slate-300"
+                                      style={{ backgroundColor: variant.colorHex ?? "transparent" }}
+                                    />
+                                    <span>{variant.color}</span>
+                                  </>
+                                ) : null}
+                                <span className="truncate font-mono text-[11px] text-slate-400">{variant.sku}</span>
+                              </span>
                             </span>
-                            <span className="block truncate font-mono text-[11px] text-slate-400">{variant.sku}</span>
                           </span>
                           <span
                             className={[
