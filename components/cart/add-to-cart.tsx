@@ -79,15 +79,9 @@ export function AddToCart({
     }
   }
 
+  // Cart actions belong to customer accounts only — everyone else sees nothing here.
   if (!canPurchase) {
-    return (
-      <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-5 py-4">
-        <p className="text-sm font-medium text-slate-700">{labels.customersOnly}</p>
-        <p className="mt-1 text-sm text-slate-500">
-          {labels.customersOnlyHint}
-        </p>
-      </div>
-    );
+    return null;
   }
 
   if (sellableVariants.length === 0) {
