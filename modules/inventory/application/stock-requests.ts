@@ -22,6 +22,8 @@ export type StockRequestItemView = {
   productName: string;
   size: string | null;
   color: string | null;
+  colorHex: string | null;
+  imageId: string | null;
   quantity: number;
 };
 
@@ -47,14 +49,20 @@ const requestInclude = {
       id: true,
       variantId: true,
       quantity: true,
-      variant: { select: { sku: true, size: true, color: true, product: { select: { name: true } } } },
+      variant: { select: { productId: true, sku: true, size: true, color: true, product: { select: { name: true } } } },
     },
   },
 } satisfies Prisma.StockRequestInclude;
 
 type RequestRecord = Prisma.StockRequestGetPayload<{ include: typeof requestInclude }>;
 
-function toView(request: RequestRecord): StockRequestView {
+type ItemMedia = {
+  imageByVariant: Map<string, string>;
+  imageByProduct: Map<string, string>;
+  colorHexByKey: Map<string, string>;
+};
+
+function toView(request: RequestRecord, media: ItemMedia): StockRequestView {
   const items: StockRequestItemView[] = request.items.map((item) => ({
     id: item.id,
     variantId: item.variantId,
@@ -62,6 +70,8 @@ function toView(request: RequestRecord): StockRequestView {
     productName: item.variant.product.name,
     size: item.variant.size,
     color: item.variant.color,
+    colorHex: media.colorHexByKey.get(normalizeColorKey(item.variant.color ?? "")) ?? null,
+    imageId: media.imageByVariant.get(item.variantId) ?? media.imageByProduct.get(item.variant.productId) ?? null,
     quantity: item.quantity,
   }));
 
@@ -78,6 +88,49 @@ function toView(request: RequestRecord): StockRequestView {
     fulfilledAt: request.fulfilledAt?.toISOString() ?? null,
     requestedByAccountId: request.requestedByAccountId,
   };
+}
+
+/** Loads per-colour photos and hexes once for a batch of requests. */
+async function decorateRequests(requests: RequestRecord[]): Promise<StockRequestView[]> {
+  if (requests.length === 0) {
+    return [];
+  }
+
+  const productIds = [
+    ...new Set(requests.flatMap((request) => request.items.map((item) => item.variant.productId))),
+  ];
+
+  const images = await withDatabaseError(() =>
+    prisma.productImage.findMany({
+      where: { productId: { in: productIds } },
+      orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+      select: { id: true, productId: true, variantId: true },
+    }),
+  );
+
+  const imageByVariant = new Map<string, string>();
+  const imageByProduct = new Map<string, string>();
+
+  for (const image of images) {
+    if (image.variantId && !imageByVariant.has(image.variantId)) {
+      imageByVariant.set(image.variantId, image.id);
+    }
+
+    if (!imageByProduct.has(image.productId)) {
+      imageByProduct.set(image.productId, image.id);
+    }
+  }
+
+  const library = await colorLibraryIndex();
+  const colorHexByKey = new Map<string, string>();
+
+  for (const [key, entry] of library) {
+    colorHexByKey.set(key, entry.hex);
+  }
+
+  const media: ItemMedia = { imageByVariant, imageByProduct, colorHexByKey };
+
+  return requests.map((request) => toView(request, media));
 }
 
 export function parseStockRequestInput(
@@ -216,7 +269,7 @@ export async function createStockRequest(
     request.id,
   );
 
-  return toView(request);
+  return (await decorateRequests([request]))[0];
 }
 
 export async function listStockRequests(account: AuthenticatedAccount): Promise<StockRequestView[]> {
@@ -231,7 +284,7 @@ export async function listStockRequests(account: AuthenticatedAccount): Promise<
     }),
   );
 
-  return requests.map((request) => toView(request));
+  return decorateRequests(requests);
 }
 
 export async function cancelStockRequest(account: AuthenticatedAccount, requestId: string): Promise<StockRequestView> {
@@ -275,7 +328,7 @@ export async function cancelStockRequest(account: AuthenticatedAccount, requestI
     }),
   );
 
-  return toView(request);
+  return (await decorateRequests([request]))[0];
 }
 
 export async function fulfillStockRequest(
@@ -386,7 +439,7 @@ export async function fulfillStockRequest(
     }),
   );
 
-  return toView(updated);
+  return (await decorateRequests([updated]))[0];
 }
 
 export type RequestableVariant = {

@@ -67,13 +67,40 @@ export default async function StockRequestsPage() {
                     <span className="text-xs text-slate-400">{formatDateTime(request.createdAt)}</span>
                   </div>
                   <ul className="space-y-0.5 text-xs text-slate-600">
-                    {request.items.slice(0, 5).map((item) => (
-                      <li key={item.id}>
-                        {item.productName} · {formatVariantAttributes(item.size, item.color, "—")} — <b>{item.quantity}</b>{" "}
-                        <span className="font-mono text-[10px] text-slate-400">{item.sku}</span>
+                    {request.items.slice(0, 6).map((item) => (
+                      <li key={item.id} className="flex items-center gap-2.5 py-0.5">
+                        {item.imageId ? (
+                          /* eslint-disable-next-line @next/next/no-img-element */
+                          <img
+                            src={`/api/products/images/${item.imageId}`}
+                            alt={item.productName}
+                            className="h-9 w-9 shrink-0 rounded-lg border border-slate-200 object-cover"
+                          />
+                        ) : (
+                          <span className="h-9 w-9 shrink-0 rounded-lg border border-dashed border-slate-200 bg-slate-50" />
+                        )}
+                        <span className="flex min-w-0 flex-wrap items-center gap-1.5">
+                          <span className="text-xs font-medium text-slate-800">{item.productName}</span>
+                          {item.size ? (
+                            <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-bold text-slate-700">
+                              {t.stockRequests.sizeLabel} {item.size}
+                            </span>
+                          ) : null}
+                          {item.color ? (
+                            <span className="flex items-center gap-1 text-[11px] text-slate-500">
+                              <span
+                                className="inline-block h-2.5 w-2.5 rounded-full ring-1 ring-slate-300"
+                                style={{ backgroundColor: item.colorHex ?? "transparent" }}
+                              />
+                              {item.color}
+                            </span>
+                          ) : null}
+                          <b className="text-[11px] text-slate-700">× {item.quantity}</b>
+                          <span className="font-mono text-[10px] text-slate-400">{item.sku}</span>
+                        </span>
                       </li>
                     ))}
-                    {request.items.length > 5 ? <li className="text-slate-400">… +{request.items.length - 5}</li> : null}
+                    {request.items.length > 6 ? <li className="text-slate-400">… +{request.items.length - 6}</li> : null}
                   </ul>
                   {request.note ? <p className="text-xs text-slate-400">📝 {request.note}</p> : null}
                 </div>
