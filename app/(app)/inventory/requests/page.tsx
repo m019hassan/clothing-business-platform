@@ -69,6 +69,9 @@ export default async function StockRequestsPage() {
                   <ul className="space-y-0.5 text-xs text-slate-600">
                     {request.items.slice(0, 6).map((item) => (
                       <li key={item.id} className="flex items-center gap-2.5 py-0.5">
+                        <b className="w-9 shrink-0 text-center text-base font-extrabold text-slate-900">
+                          × {item.quantity}
+                        </b>
                         {item.imageId ? (
                           /* eslint-disable-next-line @next/next/no-img-element */
                           <img
@@ -95,7 +98,6 @@ export default async function StockRequestsPage() {
                               {item.color}
                             </span>
                           ) : null}
-                          <b className="text-[11px] text-slate-700">× {item.quantity}</b>
                           <span className="font-mono text-[10px] text-slate-400">{item.sku}</span>
                         </span>
                       </li>
