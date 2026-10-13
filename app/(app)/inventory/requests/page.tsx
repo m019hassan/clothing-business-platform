@@ -27,10 +27,6 @@ export default async function StockRequestsPage() {
 
   const permissions = await getCurrentPermissions();
 
-  if (!permissions.has(PERMISSIONS.INVENTORY_VIEW)) {
-    redirect("/dashboard");
-  }
-
   const canFulfill = permissions.has(PERMISSIONS.INVENTORY_ADJUST);
   const { t } = await getInterfaceLanguage();
   const requests = await listStockRequests(account);

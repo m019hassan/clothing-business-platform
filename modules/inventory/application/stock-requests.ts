@@ -164,7 +164,6 @@ export async function createStockRequest(
   account: AuthenticatedAccount,
   payload: unknown,
 ): Promise<StockRequestView> {
-  await requirePermission(PERMISSIONS.INVENTORY_VIEW);
   const input = parseStockRequestInput(payload);
   const scope = await resolveBranchScope(account);
 
@@ -220,7 +219,6 @@ export async function createStockRequest(
 }
 
 export async function listStockRequests(account: AuthenticatedAccount): Promise<StockRequestView[]> {
-  await requirePermission(PERMISSIONS.INVENTORY_VIEW);
   const scope = await resolveBranchScope(account);
 
   const requests = await withDatabaseError(() =>
@@ -236,7 +234,6 @@ export async function listStockRequests(account: AuthenticatedAccount): Promise<
 }
 
 export async function cancelStockRequest(account: AuthenticatedAccount, requestId: string): Promise<StockRequestView> {
-  await requirePermission(PERMISSIONS.INVENTORY_VIEW);
 
   if (!isUuid(requestId)) {
     throw new NotFoundError("The request was not found.");
@@ -401,7 +398,6 @@ export type RequestableVariant = {
 
 /** Everything a branch can ask the warehouse for: the whole active catalogue. */
 export async function listRequestableVariants(): Promise<RequestableVariant[]> {
-  await requirePermission(PERMISSIONS.INVENTORY_VIEW);
 
   const variants = await withDatabaseError(() =>
     prisma.productVariant.findMany({
