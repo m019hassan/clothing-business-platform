@@ -178,6 +178,10 @@ export default async function ProductDetailPage({ params }: ProductDetailProps) 
               product.status === "ACTIVE" &&
               variant.status === "ACTIVE" &&
               variant.availableQuantity > 0,
+            outOfStock:
+              product.status === "ACTIVE" &&
+              variant.status === "ACTIVE" &&
+              variant.availableQuantity <= 0,
           }))}
         />
       </section>

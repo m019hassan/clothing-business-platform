@@ -177,7 +177,7 @@ export function parseStockRequestInput(
 }
 
 /** The people who run the warehouse: every active holder of inventory.adjust. */
-async function listStockAdjusters(): Promise<string[]> {
+export async function listStockAdjusters(): Promise<string[]> {
   const holders = await withDatabaseError(() =>
     prisma.employeeProfile.findMany({
       where: {

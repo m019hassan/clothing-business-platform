@@ -124,6 +124,11 @@ export function SizeGuideModal({ isOpen, onClose, isArabic = true }: SizeGuideMo
           </table>
         </div>
 
+        {/* Model reference */}
+        <p className="mt-3 rounded-xl bg-slate-50 px-3 py-2 text-center text-xs font-medium text-slate-600 dark:bg-slate-800/60 dark:text-slate-300">
+          {isArabic ? "🧍 عارضنا طوله 180 سم ويرتدي مقاس L" : "🧍 Our model is 180 cm tall and wears size L"}
+        </p>
+
         {/* Fitting Tip */}
         <div className="mt-4 rounded-xl bg-blue-50/70 p-3 text-xs text-blue-800 dark:bg-blue-950/40 dark:text-blue-300">
           <p className="font-semibold">{isArabic ? "💡 نصيحة لاختيار المقاس:" : "💡 Fitting Tip:"}</p>

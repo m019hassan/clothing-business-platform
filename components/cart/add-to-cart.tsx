@@ -18,6 +18,7 @@ export type AddToCartVariant = {
   unitPrice: string;
   availableQuantity: number;
   sellable: boolean;
+  outOfStock: boolean;
 };
 
 export type AddToCartLabels = {
@@ -51,14 +52,20 @@ export function AddToCart({
 }) {
   const router = useRouter();
   const sellableVariants = variants.filter((variant) => variant.sellable);
-  const [variantId, setVariantId] = useState(sellableVariants[0]?.id ?? "");
+  const orderableVariants = variants.filter((variant) => variant.sellable || variant.outOfStock);
+  const [variantId, setVariantId] = useState(sellableVariants[0]?.id ?? orderableVariants[0]?.id ?? "");
   const [quantity, setQuantity] = useState(1);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
+  const [notifyContact, setNotifyContact] = useState("");
+  const [notifyPending, setNotifyPending] = useState(false);
+  const [notifyError, setNotifyError] = useState<string | null>(null);
+  const [notifyDone, setNotifyDone] = useState(false);
 
-  const selected = sellableVariants.find((variant) => variant.id === variantId) ?? null;
+  const selected = orderableVariants.find((variant) => variant.id === variantId) ?? null;
+  const selectedOutOfStock = selected !== null && !selected.sellable && selected.outOfStock;
 
   async function addToCart() {
     if (!selected) {
@@ -86,11 +93,42 @@ export function AddToCart({
     }
   }
 
+  async function submitNotify() {
+    if (!selected) {
+      return;
+    }
+
+    const value = notifyContact.trim();
+    const digits = value.replace(/[\s\-()]/g, "").replace(/^\+/, "");
+    const looksLikeEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+    const looksLikePhone = /^[0-9]{8,15}$/.test(digits);
+
+    if (!looksLikeEmail && !looksLikePhone) {
+      setNotifyError(isArabic ? "اكتب إيميل صحيح أو رقم موبايل (٨ أرقام على الأقل)." : "Enter a valid email or phone number.");
+      return;
+    }
+
+    setNotifyPending(true);
+    setNotifyError(null);
+
+    try {
+      await apiRequest("/api/stock-alerts", {
+        method: "POST",
+        body: JSON.stringify({ variantId: selected.id, contact: value }),
+      });
+      setNotifyDone(true);
+    } catch (requestError) {
+      setNotifyError(apiErrorMessage(requestError, errors));
+    } finally {
+      setNotifyPending(false);
+    }
+  }
+
   if (!canPurchase) {
     return null;
   }
 
-  if (sellableVariants.length === 0) {
+  if (orderableVariants.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-5 py-6 text-center dark:border-slate-700 dark:bg-slate-800/50">
         <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">{labels.notAvailable}</p>
@@ -124,7 +162,7 @@ export function AddToCart({
             {labels.variant}
           </span>
           <div className="flex flex-wrap gap-2">
-            {sellableVariants.map((variant) => {
+            {orderableVariants.map((variant) => {
               const isSelected = variant.id === variantId;
               const displayLabel = variant.size ? `${variant.size}${variant.color ? ` - ${variant.color}` : ""}` : variant.label;
               return (
@@ -134,15 +172,24 @@ export function AddToCart({
                   onClick={() => {
                     setVariantId(variant.id);
                     setError(null);
+                    setNotifyDone(false);
+                    setNotifyError(null);
                   }}
                   className={`relative flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-xs font-semibold transition-all ${
                     isSelected
                       ? "border-slate-950 bg-slate-950 text-white shadow-sm dark:border-white dark:bg-white dark:text-slate-900"
-                      : "border-slate-200 bg-white text-slate-800 hover:border-slate-400 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                      : variant.sellable
+                        ? "border-slate-200 bg-white text-slate-800 hover:border-slate-400 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                        : "border-dashed border-slate-300 bg-slate-50 text-slate-500 hover:border-amber-400 hover:bg-amber-50/60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400"
                   }`}
                 >
-                  {isSelected ? <CheckIcon className="h-3.5 w-3.5 shrink-0" /> : null}
-                  <span>{displayLabel}</span>
+                  {isSelected && variant.sellable ? <CheckIcon className="h-3.5 w-3.5 shrink-0" /> : null}
+                  <span className={variant.sellable ? "" : "line-through decoration-rose-400/70"}>{displayLabel}</span>
+                  {!variant.sellable ? (
+                    <span className="rounded-full bg-rose-100 px-1.5 py-0.5 text-[9px] font-bold text-rose-700 dark:bg-rose-950/60 dark:text-rose-300">
+                      {isArabic ? "نفد" : "Out"}
+                    </span>
+                  ) : null}
                   <span className={`text-[10px] font-normal ${isSelected ? "text-slate-300 dark:text-slate-600" : "text-slate-400"}`}>
                     ({variant.unitPrice} {currency})
                   </span>
@@ -164,7 +211,56 @@ export function AddToCart({
           </div>
         ) : null}
 
+        {/* Out of stock: collect a contact instead of a dead add button */}
+        {selectedOutOfStock ? (
+          <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50/70 p-4 dark:border-amber-900/60 dark:bg-amber-950/30">
+            <p className="text-sm font-bold text-amber-900 dark:text-amber-200">
+              {isArabic
+                ? `مقاس ${selected.size ?? ""} نفد حاليًا`
+                : `Size ${selected.size ?? ""} is out of stock`}
+            </p>
+            <p className="mt-0.5 text-xs text-amber-800/80 dark:text-amber-300/80">
+              {isArabic
+                ? "سجّل إيميلك أو رقمك وهنبلّغك أول ما يرجع."
+                : "Leave your email or phone and we will tell you the moment it returns."}
+            </p>
+            {notifyDone ? (
+              <p className="mt-2 flex items-center gap-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-400">
+                <CheckIcon className="h-4 w-4 shrink-0" />
+                <span>{isArabic ? "اتسجّلت ✓ هنبلّغك أول ما يتوفر" : "Saved — we will let you know when it is back"}</span>
+              </p>
+            ) : (
+              <div className="mt-2.5 flex flex-wrap items-center gap-2">
+                <input
+                  type="text"
+                  value={notifyContact}
+                  onChange={(event) => {
+                    setNotifyContact(event.target.value);
+                    setNotifyError(null);
+                  }}
+                  placeholder={isArabic ? "الإيميل أو رقم الموبايل" : "Email or phone number"}
+                  className="min-w-0 flex-1 rounded-xl border border-amber-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-amber-500 focus:outline-none dark:border-amber-900/60 dark:bg-slate-900 dark:text-slate-100"
+                />
+                <button
+                  type="button"
+                  onClick={submitNotify}
+                  disabled={notifyPending || notifyContact.trim() === ""}
+                  className="rounded-xl bg-amber-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {notifyPending ? "..." : isArabic ? "🔔 أعلمني عند التوفر" : "🔔 Notify me"}
+                </button>
+              </div>
+            )}
+            {notifyError ? (
+              <p role="alert" className="mt-2 text-xs font-semibold text-rose-700 dark:text-rose-300">
+                {notifyError}
+              </p>
+            ) : null}
+          </div>
+        ) : null}
+
         {/* Quantity and Add to Cart action */}
+        {!selectedOutOfStock ? (
         <div className="mt-4 flex flex-wrap items-center gap-3">
           <div className="flex items-center rounded-xl border border-slate-200 bg-white p-1 dark:border-slate-700 dark:bg-slate-800">
             <button
@@ -204,6 +300,7 @@ export function AddToCart({
             <span>{pending ? labels.adding : labels.add}</span>
           </button>
         </div>
+        ) : null}
 
         {error ? (
           <p role="alert" className="mt-3 rounded-xl bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700 dark:bg-rose-950/50 dark:text-rose-300">
@@ -228,7 +325,7 @@ export function AddToCart({
       </div>
 
       {/* Sticky Mobile Bar */}
-      {selected ? (
+      {selected && selected.sellable ? (
         <div className="fixed inset-x-0 bottom-0 z-40 flex items-center justify-between gap-3 border-t border-slate-200 bg-white/95 p-3 px-4 shadow-lg backdrop-blur-md sm:hidden dark:border-slate-800 dark:bg-slate-900/95">
           <div className="min-w-0">
             <p className="text-xs text-slate-500">
