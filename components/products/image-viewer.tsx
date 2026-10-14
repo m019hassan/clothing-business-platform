@@ -62,7 +62,9 @@ export function ImageViewer({
     return null;
   }
 
-  const source = `/api/products/images/${imageIds[index]}`;
+  // The tile must show its own photo (startIndex), not always the product's first one.
+  const thumbnailIndex = Math.min(Math.max(startIndex, 0), total - 1);
+  const source = `/api/products/images/${imageIds[thumbnailIndex]}`;
 
   return (
     <>
