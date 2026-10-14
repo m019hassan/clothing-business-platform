@@ -17,6 +17,7 @@ import type { ProductInventoryView } from "@/modules/catalog/types";
 import { NotFoundError } from "@/src/lib/errors";
 import { formatDate, formatMoney, variantLabel } from "@/src/lib/format";
 import { ImageViewer } from "@/components/products/image-viewer";
+import { ProductAccordions } from "@/components/products/product-accordions";
 import { listProductImages } from "@/modules/catalog/application/product-images";
 import { getInterfaceLanguage } from "@/src/lib/i18n/server";
 
@@ -43,7 +44,8 @@ export default async function ProductDetailPage({ params }: ProductDetailProps) 
   const permissionSet = await getCurrentPermissions();
   const canUpdateProduct = permissionSet.has(PERMISSIONS.PRODUCTS_UPDATE);
   const canAdjustInventory = permissionSet.has(PERMISSIONS.INVENTORY_ADJUST);
-  const { t } = await getInterfaceLanguage();
+  const canPurchase = account.accountType === "CUSTOMER" && account.customerProfile !== null;
+  const { t, locale } = await getInterfaceLanguage();
 
   const { id } = await params;
 
@@ -152,16 +154,20 @@ export default async function ProductDetailPage({ params }: ProductDetailProps) 
         </dl>
       </section>
 
-      {/* Add to cart */}
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      {/* Add to cart — customer accounts only */}
+      {canPurchase ? (
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <AddToCart
           labels={t.catalog.addToCart}
           errors={t.errors}
           currency={product.currency}
-          canPurchase={account.accountType === "CUSTOMER" && account.customerProfile !== null}
+          isArabic={locale === "ar"}
+          canPurchase={canPurchase}
           variants={product.variants.map((variant) => ({
             id: variant.id,
             sku: variant.sku,
+            size: variant.size,
+            color: variant.color,
             label: variantLabel(variant.sku, variant.size, variant.color),
             unitPrice: formatMoney(variant.priceOverride ?? product.basePrice, product.currency).replace(
               ` ${product.currency}`,
@@ -175,6 +181,10 @@ export default async function ProductDetailPage({ params }: ProductDetailProps) 
           }))}
         />
       </section>
+      ) : null}
+
+      {/* Product Care, Shipping & Returns Accordions */}
+      <ProductAccordions material={product.material} isArabic={locale === "ar"} />
 
       {/* Inventory summary */}
       {productImages.length > 0 ? (
