@@ -68,7 +68,7 @@ export default async function StockAlertsPage() {
                           ? t.inventory.alertNotified
                           : t.inventory.statusCancelled}
                     </span>
-                    <span className="text-xs text-slate-400">{formatDateTime(alert.createdAt)}</span>
+                    <span className="text-xs text-slate-400">{formatDateTime(alert.createdAt.toISOString())}</span>
                   </div>
                   <p className="text-xs text-slate-600">
                     <span className="font-mono">{alert.sku}</span>
