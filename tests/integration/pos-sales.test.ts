@@ -518,3 +518,46 @@ describe("pos invoice detail", () => {
     ).rejects.toMatchObject({ statusCode: 404 });
   });
 });
+
+describe("customer contact at the counter", () => {
+  it("accepts an optional phone and name; blanks mean none", () => {
+    const parsed = parsePosSaleInput(payload({ customerPhone: " 0100 123 4567 ", customerName: "  منى  " }));
+    expect(parsed.customerPhone).toBe("0100 123 4567");
+    expect(parsed.customerName).toBe("منى");
+
+    const blank = parsePosSaleInput(payload({ customerPhone: " ", customerName: "" }));
+    expect(blank.customerPhone).toBeNull();
+    expect(blank.customerName).toBeNull();
+
+    expect(() => parsePosSaleInput(payload({ customerPhone: "hello" }))).toThrowError(/customerPhone/);
+  });
+
+  it("stores the walk-in contact on the order and shows it on the invoice", async () => {
+    const receipt = await createPosSale(
+      distributor,
+      payload({ customerPhone: "+20 100 555 0199", customerName: "أحمد" }),
+    );
+
+    const order = await prisma.order.findUniqueOrThrow({
+      where: { id: receipt.orderId },
+      select: { customerName: true, customerPhone: true },
+    });
+    expect(order.customerPhone).toBe("+20 100 555 0199");
+    expect(order.customerName).toBe("أحمد");
+
+    const invoice = await getPosSaleDetail(distributor, receipt.orderId);
+    expect(invoice.customerPhone).toBe("+20 100 555 0199");
+    expect(invoice.customerName).toBe("أحمد");
+  });
+
+  it("leaves the contact empty for a plain counter sale", async () => {
+    const receipt = await createPosSale(distributor, payload());
+
+    const order = await prisma.order.findUniqueOrThrow({
+      where: { id: receipt.orderId },
+      select: { customerName: true, customerPhone: true },
+    });
+    expect(order.customerPhone).toBeNull();
+    expect(order.customerName).toBeNull();
+  });
+});
