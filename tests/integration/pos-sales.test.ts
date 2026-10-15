@@ -11,6 +11,7 @@ import { Prisma } from "@prisma/client";
 import type { SafeAccount } from "@/modules/auth/infrastructure/session";
 import { getDistributorDashboard } from "@/modules/pos/application/pos-dashboard";
 import { getPosSaleDetail, listPosSales, returnPosSale, voidPosSale } from "@/modules/pos/application/pos-returns";
+import { lookupPosCustomer } from "@/modules/pos/application/pos-customers";
 import { createPosSale, getPosCatalog, parsePosSaleInput } from "@/modules/pos/application/pos-sales";
 import { prisma } from "@/src/lib/db";
 
@@ -165,6 +166,10 @@ beforeEach(async () => {
 
 afterAll(async () => {
   const orders = await prisma.order.findMany({ where: { branchId: { in: created.branchIds } }, select: { id: true } });
+  const counterProfiles = await prisma.customerProfile.findMany({
+    where: { branchId: { in: created.branchIds } },
+    select: { accountId: true },
+  });
   const orderIds = orders.map((order) => order.id);
   await prisma.auditLog.deleteMany({ where: { accountId: { in: created.accountIds } } });
   await prisma.refund.deleteMany({ where: { orderId: { in: orderIds } } });
@@ -180,6 +185,12 @@ afterAll(async () => {
   await prisma.customerProfile.deleteMany({ where: { branchId: { in: created.branchIds } } });
   await prisma.customerProfile.deleteMany({ where: { id: { in: created.profileIds } } });
   await prisma.account.deleteMany({ where: { id: { in: created.accountIds } } });
+  await prisma.account.deleteMany({
+    where: {
+      id: { in: counterProfiles.map((profile) => profile.accountId) },
+      customerProfile: { is: null },
+    },
+  });
   await prisma.warehouse.deleteMany({ where: { id: { in: created.warehouseIds } } });
   await prisma.branch.deleteMany({ where: { id: { in: created.branchIds } } });
 });
@@ -559,5 +570,75 @@ describe("customer contact at the counter", () => {
     });
     expect(order.customerPhone).toBeNull();
     expect(order.customerName).toBeNull();
+  });
+});
+
+describe("counter customer registration", () => {
+  it("registers a new customer and attaches the sale to their record", async () => {
+    const receipt = await createPosSale(
+      distributor,
+      payload({ customerPhone: "0100 999 0001", customerName: "منى عبد الله" }),
+    );
+
+    const order = await prisma.order.findUniqueOrThrow({
+      where: { id: receipt.orderId },
+      select: { customerProfileId: true },
+    });
+    const profile = await prisma.customerProfile.findUniqueOrThrow({
+      where: { id: order.customerProfileId },
+      select: {
+        firstName: true,
+        lastName: true,
+        isWalkIn: true,
+        branchId: true,
+        account: { select: { phone: true, accountType: true } },
+      },
+    });
+
+    expect(profile.isWalkIn).toBe(false);
+    expect(profile.firstName).toBe("منى");
+    expect(profile.lastName).toBe("عبد الله");
+    expect(profile.account.accountType).toBe("CUSTOMER");
+    expect(profile.account.phone).toBe("0100 999 0001");
+    expect(profile.branchId).toBe(branchId);
+
+    const lookup = await lookupPosCustomer(distributor, "+201009990001");
+    expect(lookup.found).toBe(true);
+    expect(lookup.name).toContain("منى");
+  });
+
+  it("reuses the same record next visit even with a differently written number", async () => {
+    const first = await createPosSale(distributor, payload({ customerPhone: "0100 999 0002", customerName: "هدى" }));
+    const second = await createPosSale(
+      distributor,
+      payload({ customerPhone: "+20 100 999 0002", customerName: null }),
+    );
+
+    const [a, b] = await Promise.all([
+      prisma.order.findUniqueOrThrow({ where: { id: first.orderId }, select: { customerProfileId: true } }),
+      prisma.order.findUniqueOrThrow({ where: { id: second.orderId }, select: { customerProfileId: true } }),
+    ]);
+
+    expect(a.customerProfileId).toBe(b.customerProfileId);
+  });
+
+  it("keeps the walk-in buyer when no phone was captured", async () => {
+    const receipt = await createPosSale(distributor, payload({ customerName: "بدون رقم" }));
+
+    const order = await prisma.order.findUniqueOrThrow({
+      where: { id: receipt.orderId },
+      select: { customerProfileId: true },
+    });
+    const profile = await prisma.customerProfile.findUniqueOrThrow({
+      where: { id: order.customerProfileId },
+      select: { isWalkIn: true },
+    });
+
+    expect(profile.isWalkIn).toBe(true);
+  });
+
+  it("reports an unknown number as new", async () => {
+    const lookup = await lookupPosCustomer(distributor, "0111 222 3333");
+    expect(lookup.found).toBe(false);
   });
 });

@@ -63,6 +63,7 @@ export function PosTerminal({
   const [cashGiven, setCashGiven] = useState<string>("");
   const [customerPhone, setCustomerPhone] = useState<string>("");
   const [customerName, setCustomerName] = useState<string>("");
+  const [lookup, setLookup] = useState<{ phone: string; state: "found" | "new"; name: string | null } | null>(null);
   const [isHeldModalOpen, setIsHeldModalOpen] = useState(false);
 
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -442,6 +443,38 @@ export function PosTerminal({
     return () => window.removeEventListener("keydown", handleKeyDown);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lines, isCashModalOpen, isHeldModalOpen, total]);
+
+  // Registered-customer hint: once a full number is typed, quietly ask the
+  // directory — and fill the name in when we already know the person.
+  useEffect(() => {
+    const trimmed = customerPhone.trim();
+    const digits = trimmed.replace(/[\s\-()]/g, "").replace(/^\+/, "");
+
+    if (!/^[0-9]{8,15}$/.test(digits)) {
+      return undefined;
+    }
+
+    const timer = setTimeout(async () => {
+      try {
+        const result = await apiRequest<{ customer: { found: boolean; name: string | null } }>(
+          `/api/pos/customer-lookup?phone=${encodeURIComponent(trimmed)}`,
+        );
+
+        if (result.customer.found) {
+          setLookup({ phone: digits, state: "found", name: result.customer.name });
+          setCustomerName((current) =>
+            current.trim() === "" && result.customer.name !== null ? result.customer.name : current,
+          );
+        } else {
+          setLookup({ phone: digits, state: "new", name: null });
+        }
+      } catch {
+        setLookup(null);
+      }
+    }, 450);
+
+    return () => clearTimeout(timer);
+  }, [customerPhone]);
 
   // Denominations for quick cash buttons
   const denominations = useMemo(() => {
@@ -934,6 +967,33 @@ export function PosTerminal({
                   className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-950/10"
                 />
               </div>
+              {(() => {
+                const digits = customerPhone.trim().replace(/[\s\-()]/g, "").replace(/^\+/, "");
+
+                if (customerPhone.trim() === "" || !/^[0-9]{8,15}$/.test(digits)) {
+                  return null;
+                }
+
+                if (lookup !== null && lookup.phone === digits && lookup.state === "found" && lookup.name !== null) {
+                  return (
+                    <p className="text-[11px] font-semibold text-emerald-700">
+                      {preferEnglish ? `✓ Registered: ${lookup.name}` : `✓ مسجل على النظام: ${lookup.name}`}
+                    </p>
+                  );
+                }
+
+                if (lookup !== null && lookup.phone === digits && lookup.state === "new") {
+                  return (
+                    <p className="text-[11px] font-medium text-slate-500">
+                      {preferEnglish
+                        ? "New customer — completing the sale adds them to the customers list."
+                        : "عميل جديد — إتمام البيع هيسجّله في قايمة العملاء."}
+                    </p>
+                  );
+                }
+
+                return null;
+              })()}
             </div>
 
             {/* Cash Given Input */}

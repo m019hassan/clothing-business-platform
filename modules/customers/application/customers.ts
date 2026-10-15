@@ -71,7 +71,8 @@ function mapCustomerListRow(record: CustomerListRecord): CustomerListView {
 }
 
 function buildCustomerWhere(filters: CustomerListFilters): Prisma.CustomerProfileWhereInput {
-  const where: Prisma.CustomerProfileWhereInput = {};
+  // The directory speaks about people, not the per-branch walk-in shells.
+  const where: Prisma.CustomerProfileWhereInput = { isWalkIn: false };
 
   if (filters.search !== undefined) {
     where.OR = [

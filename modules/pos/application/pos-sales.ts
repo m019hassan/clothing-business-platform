@@ -18,6 +18,7 @@ import {
 import { isUuid } from "@/src/lib/validation";
 import { stockLevel } from "@/src/lib/inventory/stock-level";
 import { discountedAmount, getActiveDiscountMap } from "@/modules/catalog/application/promotions";
+import { findCounterCustomerCandidates, normalizePhoneDigits, registerCounterCustomer } from "@/modules/pos/application/pos-customers";
 
 type AuthenticatedAccount = NonNullable<SafeAccount>;
 
@@ -212,6 +213,32 @@ async function ensureWalkInProfile(
   return profile.id;
 }
 
+/** The buyer of a counter sale: a customer matched by phone, a fresh record, or
+ * the branch walk-in when no number was captured. */
+async function resolveCounterCustomer(
+  branch: { id: string; code: string; name: string },
+  contact: { phone: string | null; name: string | null },
+): Promise<string> {
+  if (contact.phone === null) {
+    return ensureWalkInProfile(prisma, branch);
+  }
+
+  const digits = normalizePhoneDigits(contact.phone);
+
+  if (digits.length < 8) {
+    return ensureWalkInProfile(prisma, branch);
+  }
+
+  const candidates = await findCounterCustomerCandidates(prisma);
+  const match = candidates.find((candidate) => normalizePhoneDigits(candidate.account.phone) === digits);
+
+  if (match !== undefined) {
+    return match.id;
+  }
+
+  return registerCounterCustomer(prisma, branch, { phone: contact.phone, name: contact.name });
+}
+
 /** Branch stock and prices for the point-of-sale screen. */
 export async function getPosCatalog(account: AuthenticatedAccount): Promise<PosCatalogView> {
   const distributor = requireDistributor(account);
@@ -323,6 +350,19 @@ export async function createPosSale(
   const input = parsePosSaleInput(payload);
   const warehouseIds = await resolveWarehouseIds(distributor.branchId);
 
+  // Resolve or register the buyer before the sale transaction: a phone unique
+  // race can then be re-read safely without an aborted database transaction.
+  const counterBranch = await withDatabaseError(() =>
+    prisma.branch.findUniqueOrThrow({
+      where: { id: distributor.branchId },
+      select: { id: true, code: true, name: true },
+    }),
+  );
+  const customerProfileId = await resolveCounterCustomer(counterBranch, {
+    phone: input.customerPhone,
+    name: input.customerName,
+  });
+
   return withDatabaseError(() =>
     prisma.$transaction(async (transaction) => {
       const discountMap = await getActiveDiscountMap(transaction);
@@ -396,12 +436,11 @@ export async function createPosSale(
         });
       }
 
-      const walkInProfileId = await ensureWalkInProfile(transaction, branch);
 
       const order = await transaction.order.create({
         data: {
           orderNumber: `POS-${Date.now().toString(36).toUpperCase()}${Math.floor(Math.random() * 90 + 10)}`,
-          customerProfileId: walkInProfileId,
+          customerProfileId,
           customerName: input.customerName,
           customerPhone: input.customerPhone,
           status: OrderStatus.CONFIRMED,
