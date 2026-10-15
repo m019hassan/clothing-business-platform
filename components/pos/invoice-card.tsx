@@ -21,6 +21,8 @@ interface InvoiceCardProps {
   branchName: string;
   branchCode: string;
   soldBy?: string;
+  customer?: string;
+  customerLabel?: string;
   status: PosInvoiceStatus;
   net: string; // formatted net amount
   total: string; // formatted total amount
@@ -37,6 +39,8 @@ export function InvoiceCard({
   branchName,
   branchCode,
   soldBy,
+  customer,
+  customerLabel,
   status,
   net,
   total,
@@ -102,6 +106,12 @@ export function InvoiceCard({
           <span className="font-normal text-slate-500">({branchCode})</span>
         </p>
         {soldBy && <p className="mt-0.5 text-xs text-slate-500">{soldBy}</p>}
+        {customer && (
+          <p className="mt-0.5 text-xs font-medium text-slate-600 dark:text-slate-300">
+            {customerLabel ? `${customerLabel}: ` : ""}
+            {customer}
+          </p>
+        )}
       </div>
 
       {/* Financial summary */}

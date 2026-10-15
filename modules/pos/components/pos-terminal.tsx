@@ -61,6 +61,8 @@ export function PosTerminal({
   // Cash / Change calculator modal state
   const [isCashModalOpen, setIsCashModalOpen] = useState(false);
   const [cashGiven, setCashGiven] = useState<string>("");
+  const [customerPhone, setCustomerPhone] = useState<string>("");
+  const [customerName, setCustomerName] = useState<string>("");
   const [isHeldModalOpen, setIsHeldModalOpen] = useState(false);
 
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -201,7 +203,8 @@ export function PosTerminal({
       groups.set(item.productId, group);
     }
 
-    return [...groups.values()].slice(0, 25);
+    // Sold-out products disappear: keep only groups with something sellable left.
+    return [...groups.values()].filter((group) => group.some((item) => item.availableQuantity > 0)).slice(0, 25);
   }, [filtered]);
 
   const total = lines.reduce((sum, line) => sum + Number(line.item.unitPrice) * line.quantity, 0);
@@ -363,6 +366,14 @@ export function PosTerminal({
 
   // Execute sale via API
   async function completeSale() {
+    const trimmedPhone = customerPhone.trim();
+    const digits = trimmedPhone.replace(/[\s\-()]/g, "").replace(/^\+/, "");
+
+    if (trimmedPhone !== "" && !/^[0-9]{8,15}$/.test(digits)) {
+      setError(preferEnglish ? "Enter a valid customer phone number." : "اكتب رقم موبايل صحيح للعميل.");
+      return;
+    }
+
     setPending(true);
     setError(null);
 
@@ -371,11 +382,15 @@ export function PosTerminal({
         method: "POST",
         body: JSON.stringify({
           items: lines.map((line) => ({ variantId: line.item.variantId, quantity: line.quantity })),
+          customerPhone: trimmedPhone,
+          customerName: customerName.trim(),
         }),
       });
 
       setReceipt(result.receipt);
       setLines([]);
+      setCustomerPhone("");
+      setCustomerName("");
       setIsCashModalOpen(false);
     } catch (requestError) {
       setError(apiErrorMessage(requestError, errors));
@@ -888,6 +903,30 @@ export function PosTerminal({
               <p className="mt-1 text-3xl font-extrabold text-slate-950">
                 {formatMoney(String(total), currency)}
               </p>
+            </div>
+
+            {/* Customer contact (optional) */}
+            <div className="space-y-2.5 rounded-2xl border border-slate-200 bg-slate-50/60 p-3.5">
+              <p className="text-xs font-bold text-slate-700">
+                {preferEnglish ? "Customer details (optional)" : "بيانات العميل (اختياري)"}
+              </p>
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                <input
+                  type="tel"
+                  value={customerPhone}
+                  onChange={(e) => setCustomerPhone(e.target.value)}
+                  placeholder={preferEnglish ? "Mobile number" : "رقم الموبايل"}
+                  dir="ltr"
+                  className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-950/10"
+                />
+                <input
+                  type="text"
+                  value={customerName}
+                  onChange={(e) => setCustomerName(e.target.value)}
+                  placeholder={preferEnglish ? "Name (optional)" : "الاسم (اختياري)"}
+                  className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-950/10"
+                />
+              </div>
             </div>
 
             {/* Cash Given Input */}

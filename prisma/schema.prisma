@@ -721,6 +721,10 @@ model Order {
   branchId       String? @db.Uuid
   soldByAccountId String? @db.Uuid
 
+  // Walk-in contact captured at the counter; null for registered buyers.
+  customerName  String? @db.VarChar(120)
+  customerPhone String? @db.VarChar(30)
+
   // Immutable copy of the address at checkout time: later edits or deletion of
   // the Address row must not rewrite where an order was shipped.
   deliveryAddress Json?

@@ -101,6 +101,12 @@ export default async function PosInvoicePage({ params }: { params: Promise<{ id:
             branchName={invoice.branchName}
             branchCode={invoice.branchCode}
             soldBy={invoice.soldBy ?? undefined}
+            customer={
+              invoice.customerName || invoice.customerPhone
+                ? [invoice.customerName, invoice.customerPhone].filter(Boolean).join(" · ")
+                : undefined
+            }
+            customerLabel={t.posInvoice.customer}
             status={status}
             net={net}
             total={total}

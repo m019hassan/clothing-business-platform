@@ -64,8 +64,24 @@ export function PosProductCard({
     [items],
   );
 
-  const [color, setColor] = useState<string | null>(colors[0]?.name ?? null);
-  const [size, setSize] = useState<string | null>(null);
+  // Land on a combination that can actually be sold: the first stocked colour and
+  // one of its stocked sizes — never a greyed-out default.
+  const defaultColor = useMemo(() => {
+    const stocked = colors.find((entry) =>
+      items.some((item) => item.color === entry.name && item.availableQuantity > 0),
+    );
+
+    return stocked?.name ?? colors[0]?.name ?? null;
+  }, [colors, items]);
+
+  const [color, setColor] = useState<string | null>(defaultColor);
+  const [size, setSize] = useState<string | null>(() => {
+    const target =
+      items.find((item) => item.color === defaultColor && item.availableQuantity > 0) ??
+      items.find((item) => item.availableQuantity > 0);
+
+    return target?.size ?? null;
+  });
 
   const findItem = (colorName: string | null, sizeName: string | null) =>
     items.find(
@@ -75,11 +91,17 @@ export function PosProductCard({
   const selected = useMemo(() => {
     const exact = findItem(color, size);
 
-    if (exact) {
+    if (exact && exact.availableQuantity > 0) {
       return exact;
     }
 
-    return items.find((item) => item.availableQuantity > 0) ?? items[0];
+    return (
+      items.find((item) => (color === null || item.color === color) && item.availableQuantity > 0) ??
+      items.find((item) => item.availableQuantity > 0) ??
+      exact ??
+      items[0] ??
+      null
+    );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [items, color, size]);
 
@@ -142,6 +164,26 @@ export function PosProductCard({
                       }
 
                       setColor(entry.name);
+                      setSize((currentSize) => {
+                        const kept =
+                          currentSize !== null &&
+                          items.some(
+                            (item) =>
+                              item.color === entry.name &&
+                              item.size === currentSize &&
+                              item.availableQuantity > 0,
+                          )
+                            ? currentSize
+                            : null;
+
+                        if (kept !== null) {
+                          return kept;
+                        }
+
+                        return (
+                          items.find((item) => item.color === entry.name && item.availableQuantity > 0)?.size ?? null
+                        );
+                      });
                     }}
                     disabled={unavailable && !isSelected}
                     aria-pressed={isSelected}

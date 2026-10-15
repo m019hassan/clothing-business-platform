@@ -742,6 +742,7 @@ export const en = {
     stale: "This order is no longer awaiting a payment decision.",
   },
   posInvoice: {
+    customer: "Customer",
     discount: "Discount",
     title: "Sales invoice",
     print: "Print",

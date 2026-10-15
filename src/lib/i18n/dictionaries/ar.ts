@@ -742,6 +742,7 @@ export const ar: Dictionary = {
     stale: "لم يعد هذا الطلب بانتظار قرار دفع.",
   },
   posInvoice: {
+    customer: "العميل",
     discount: "خصم",
     title: "فاتورة بيع",
     print: "طباعة",

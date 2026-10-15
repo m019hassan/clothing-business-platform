@@ -28,7 +28,35 @@ const WALK_IN_PHONE_PREFIX = "WALKIN-";
 
 export type PosSaleInput = {
   items: { variantId: string; quantity: number }[];
+  customerPhone: string | null;
+  customerName: string | null;
 };
+
+/** Reads the optional walk-in contact; blank strings collapse to null. */
+function parseCustomerContact(body: Record<string, unknown>): {
+  customerPhone: string | null;
+  customerName: string | null;
+} {
+  const phone = typeof body.customerPhone === "string" ? body.customerPhone.trim() : "";
+  const name = typeof body.customerName === "string" ? body.customerName.trim() : "";
+
+  if (phone.length > 0) {
+    const digits = phone.replace(/[\s\-()]/g, "").replace(/^\+/, "");
+
+    if (!/^[0-9]{8,15}$/.test(digits)) {
+      throw new ValidationError("customerPhone must be a valid phone number.");
+    }
+  }
+
+  if (name.length > 120) {
+    throw new ValidationError("customerName must be at most 120 characters.");
+  }
+
+  return {
+    customerPhone: phone.length > 0 ? phone : null,
+    customerName: name.length > 0 ? name : null,
+  };
+}
 
 /** Validates a point-of-sale payload. Unknown keys are rejected. */
 export function parsePosSaleInput(payload: unknown): PosSaleInput {
@@ -37,7 +65,9 @@ export function parsePosSaleInput(payload: unknown): PosSaleInput {
   }
 
   const body = payload as Record<string, unknown>;
-  const unknown = Object.keys(body).filter((key) => key !== "items");
+  const unknown = Object.keys(body).filter(
+    (key) => key !== "items" && key !== "customerPhone" && key !== "customerName",
+  );
 
   if (unknown.length > 0) {
     throw new ValidationError(`Unknown field(s): ${unknown.join(", ")}.`);
@@ -81,7 +111,12 @@ export function parsePosSaleInput(payload: unknown): PosSaleInput {
     merged.set(item.variantId, (merged.get(item.variantId) ?? 0) + item.quantity);
   }
 
-  return { items: [...merged.entries()].map(([variantId, quantity]) => ({ variantId, quantity })) };
+  const contact = parseCustomerContact(body);
+
+  return {
+    items: [...merged.entries()].map(([variantId, quantity]) => ({ variantId, quantity })),
+    ...contact,
+  };
 }
 
 export type DistributorContext = { distributorId: string; branchId: string; displayName: string };
@@ -367,6 +402,8 @@ export async function createPosSale(
         data: {
           orderNumber: `POS-${Date.now().toString(36).toUpperCase()}${Math.floor(Math.random() * 90 + 10)}`,
           customerProfileId: walkInProfileId,
+          customerName: input.customerName,
+          customerPhone: input.customerPhone,
           status: OrderStatus.CONFIRMED,
           channel: OrderChannel.POS,
           branchId: branch.id,

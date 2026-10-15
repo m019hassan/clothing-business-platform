@@ -444,6 +444,8 @@ export type PosInvoiceView = {
   branchCode: string;
   branchName: string;
   soldBy: string;
+  customerName: string | null;
+  customerPhone: string | null;
   paymentMethod: string | null;
   paymentStatus: string | null;
   lines: PosInvoiceLine[];
@@ -466,6 +468,8 @@ export async function getPosSaleDetail(
       id: true,
       orderNumber: true,
       createdAt: true,
+      customerName: true,
+      customerPhone: true,
       status: true,
       totalAmount: true,
       currency: true,
@@ -511,6 +515,8 @@ export async function getPosSaleDetail(
     branchCode: order.branch.code,
     branchName: order.branch.name,
     soldBy: order.soldBy?.email ?? order.soldBy?.phone ?? "",
+    customerName: order.customerName,
+    customerPhone: order.customerPhone,
     paymentMethod: payment?.method ?? null,
     paymentStatus: payment?.status ?? null,
     lines: order.items.map((item) => ({
