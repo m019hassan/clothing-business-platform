@@ -177,6 +177,13 @@ export function PosTerminal({
     });
   }, [itemsWithRemaining, query, selectedCategory]);
 
+  // Sold-out rows never render — the list, the counter and the empty state
+  // only ever talk about sellable stock.
+  const stockedItems = useMemo(
+    () => filtered.filter((item) => item.availableQuantity > 0),
+    [filtered],
+  );
+
   const saleGroups = useMemo(() => {
     const groups = new Map<string, { productId: string; productName: string; lines: typeof lines }>();
 
@@ -647,7 +654,7 @@ export function PosTerminal({
           {/* View Toggle and Result Count */}
           <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-3">
             <span className="text-xs font-medium text-slate-500">
-              {filtered.length} {labels.results}
+              {stockedItems.length} {labels.results}
             </span>
             <div className="flex items-center rounded-xl border border-slate-200 bg-slate-50 p-1">
               <button
@@ -702,7 +709,7 @@ export function PosTerminal({
             </ul>
           ) : (
             <ul className="divide-y divide-slate-100 max-h-[580px] overflow-y-auto pe-1">
-              {filtered.slice(0, 30).map((item) => (
+              {stockedItems.slice(0, 30).map((item) => (
                 <li key={item.variantId} className="flex items-center justify-between gap-3 py-3 transition-colors hover:bg-slate-50/60 rounded-xl px-2">
                   <div className="min-w-0">
                     <p className="truncate text-sm font-bold text-slate-900">{item.productName}</p>
@@ -729,11 +736,11 @@ export function PosTerminal({
                   </div>
                 </li>
               ))}
-              {filtered.length === 0 ? <li className="py-12 text-center text-sm text-slate-500">{labels.noMatches}</li> : null}
+              {stockedItems.length === 0 ? <li className="py-12 text-center text-sm text-slate-500">{labels.noMatches}</li> : null}
             </ul>
           )}
 
-          {filtered.length > 30 ? (
+          {stockedItems.length > 30 ? (
             <p className="text-xs text-slate-400 text-center pt-2">{labels.firstMatches}</p>
           ) : null}
         </section>
