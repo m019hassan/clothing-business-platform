@@ -214,8 +214,24 @@ async function ensureWalkInProfile(
 }
 
 /** The buyer of a counter sale: a customer matched by phone, a fresh record, or
- * the branch walk-in when no number was captured. */
+ * the branch walk-in when no number was captured. Two racing terminals may both
+ * try to create the same record; the loser simply reads the winner's row. */
 async function resolveCounterCustomer(
+  branch: { id: string; code: string; name: string },
+  contact: { phone: string | null; name: string | null },
+): Promise<string> {
+  try {
+    return await resolveCounterCustomerOnce(branch, contact);
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      return resolveCounterCustomerOnce(branch, contact);
+    }
+
+    throw error;
+  }
+}
+
+async function resolveCounterCustomerOnce(
   branch: { id: string; code: string; name: string },
   contact: { phone: string | null; name: string | null },
 ): Promise<string> {
