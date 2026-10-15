@@ -61,6 +61,7 @@ const INVENTORY_SUB_ITEMS = [
   { href: "/inventory/movements", key: "inventoryMovements" },
   { href: "/inventory/warehouses", key: "inventoryWarehouses" },
   { href: "/inventory/requests", key: "inventoryRequests" },
+  { href: "/inventory/alerts", key: "inventoryAlerts" },
 ] as const;
 
 /** Links shown indented under the point-of-sale entry. */
