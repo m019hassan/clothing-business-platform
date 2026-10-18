@@ -10,9 +10,11 @@ import { Prisma } from "@prisma/client";
 
 import type { SafeAccount } from "@/modules/auth/infrastructure/session";
 import {
+  exportCustomersCsv,
   getCustomer,
   listCustomers,
   parseCustomerListFilters,
+  toInternationalPhone,
 } from "@/modules/customers/application/customers";
 import { prisma } from "@/src/lib/db";
 
@@ -159,5 +161,68 @@ describe("getCustomer", () => {
       getCustomer(account, "00000000-0000-4000-8000-000000000000"),
     ).rejects.toMatchObject({ statusCode: 404 });
     await expect(getCustomer(account, "not-a-uuid")).rejects.toMatchObject({ statusCode: 404 });
+  });
+});
+
+describe("marketing export", () => {
+  const labels = {
+    code: "Code",
+    name: "Name",
+    phone: "Phone",
+    email: "Email",
+    classification: "Class",
+    orders: "Orders",
+    marketingConsent: "Consent",
+    marketingYes: "Yes",
+    marketingNo: "No",
+    joined: "Joined",
+  };
+
+  it("formats local and international numbers the same way", () => {
+    expect(toInternationalPhone("0100 123 4567")).toBe("+201001234567");
+    expect(toInternationalPhone("+966542205837")).toBe("+966542205837");
+    expect(toInternationalPhone("0020 100 123 4567")).toBe("+201001234567");
+    expect(toInternationalPhone("201001234567")).toBe("+201001234567");
+    expect(toInternationalPhone("")).toBe("");
+  });
+
+  it("reads the marketing flag from the query", () => {
+    expect(parseCustomerListFilters(new URLSearchParams("marketing=1")).marketingOnly).toBe(true);
+    expect(parseCustomerListFilters(new URLSearchParams("marketing=0")).marketingOnly).toBeUndefined();
+    expect(parseCustomerListFilters(new URLSearchParams("")).marketingOnly).toBeUndefined();
+  });
+
+  it("exports only the searched customer, phone normalised", async () => {
+    const classification = await prisma.customerClassification.findFirstOrThrow({ where: { code: "RETAIL" } });
+    const suffix = Date.now().toString(36) + Math.floor(Math.random() * 100000);
+
+    const customer = await prisma.account.create({
+      data: {
+        accountType: "CUSTOMER",
+        status: "ACTIVE",
+        email: null,
+        phone: `0100${Math.floor(1000000 + Math.random() * 8999999)}`,
+        passwordHash: "test-hash",
+        customerProfile: {
+          create: {
+            customerCode: `VITEXP-${suffix.toUpperCase()}`,
+            classificationId: classification.id,
+            firstName: `Marketing ${suffix}`,
+            marketingConsent: true,
+          },
+        },
+      },
+      include: { customerProfile: true },
+    });
+    created.accountIds.push(customer.id);
+    created.profileIds.push(customer.customerProfile!.id);
+
+    const csv = await exportCustomersCsv(account, { search: suffix }, labels);
+
+    expect(csv.startsWith("\uFEFF")).toBe(true);
+    expect(csv).toContain("Code,Name,Phone,Email,Class,Orders,Consent,Joined");
+    expect(csv).toContain(`Marketing ${suffix}`);
+    expect(csv).toContain("+20100");
+    expect(csv.split("\r\n").filter((line) => line !== "")).toHaveLength(2);
   });
 });

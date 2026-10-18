@@ -2,12 +2,14 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { AccountStatusBadge } from "@/components/account/account-status-badge";
+import { CsvDownloadButton } from "@/modules/pos/components/csv-download-button";
 import { getCurrentPermissions } from "@/modules/auth/application/authorization";
 import { PERMISSIONS } from "@/modules/auth/application/permissions";
 import { getCurrentAccount } from "@/modules/auth/infrastructure/session";
 import {
   listCustomers,
   parseCustomerListFilters,
+  toInternationalPhone,
   type CustomerListFilters,
 } from "@/modules/customers/application/customers";
 import type { CustomerListView } from "@/modules/customers/types";
@@ -17,7 +19,7 @@ import { getInterfaceLanguage } from "@/src/lib/i18n/server";
 const PAGE_SIZE = 20;
 
 type CustomersPageProps = {
-  searchParams: Promise<{ offset?: string; limit?: string; q?: string }>;
+  searchParams: Promise<{ offset?: string; limit?: string; q?: string; marketing?: string }>;
 };
 
 function parseOffset(raw: string | undefined): number {
@@ -66,6 +68,10 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
   const query = new URLSearchParams();
   if (typeof params.q === "string" && params.q.length > 0) {
     query.set("q", params.q);
+  }
+  const marketingOnly = params.marketing === "1";
+  if (marketingOnly) {
+    query.set("marketing", "1");
   }
 
   let filters: CustomerListFilters = {};
@@ -133,6 +139,29 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
             ) : null}
           </div>
         </form>
+        <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3">
+          <Link
+            href={`/customers?${new URLSearchParams({
+              ...(params.q && params.q.length > 0 ? { q: params.q } : {}),
+              ...(marketingOnly ? {} : { marketing: "1" }),
+            }).toString()}`}
+            className={[
+              "rounded-full border px-3 py-1 text-xs font-semibold transition-colors",
+              marketingOnly
+                ? "border-emerald-600 bg-emerald-600 text-white hover:bg-emerald-700"
+                : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100",
+            ].join(" ")}
+          >
+            {t.customers.marketingOnly}
+          </Link>
+          <CsvDownloadButton
+            href={`/api/customers/export?${new URLSearchParams({
+              ...(params.q && params.q.length > 0 ? { q: params.q } : {}),
+              ...(marketingOnly ? { marketing: "1" } : {}),
+            }).toString()}`}
+            label={t.customers.exportCsv}
+          />
+        </div>
         {filterError ? (
           <p role="alert" className="mt-3 text-sm text-rose-700">
             The search term was invalid, so the full directory is shown.
@@ -184,6 +213,16 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
                         <td className="px-6 py-4 text-slate-700">
                           <p>{customer.email ?? "—"}</p>
                           <p className="text-xs text-slate-500">{customer.phone}</p>
+                          {customer.phone ? (
+                            <a
+                              href={`https://wa.me/${toInternationalPhone(customer.phone).replace(/\D/g, "")}?text=${encodeURIComponent(t.customers.whatsappMessage.replace("{name}", name))}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="mt-1 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 hover:bg-emerald-100"
+                            >
+                              {t.customers.whatsapp}
+                            </a>
+                          ) : null}
                         </td>
                         <td className="px-6 py-4 text-slate-700">{customer.classificationName ?? "—"}</td>
                         <td className="px-6 py-4">
@@ -209,6 +248,16 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
                     {customer.orderCount === 1 ? t.customers.orderSingular : t.customers.orderPlural}
                   </p>
                   <p className="mt-1 text-sm text-slate-600">{customer.email ?? customer.phone}</p>
+                  {customer.phone ? (
+                    <a
+                      href={`https://wa.me/${toInternationalPhone(customer.phone).replace(/\D/g, "")}?text=${encodeURIComponent(t.customers.whatsappMessage.replace("{name}", customer.firstName))}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mt-1 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 hover:bg-emerald-100"
+                    >
+                      {t.customers.whatsapp}
+                    </a>
+                  ) : null}
                 </li>
               ))}
             </ul>
@@ -223,7 +272,7 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
             <div className="flex items-center gap-2">
               {offset > 0 ? (
                 <Link
-                  href={`/customers?offset=${Math.max(offset - limit, 0)}&limit=${limit}${filters.search ? `&q=${encodeURIComponent(filters.search)}` : ""}`}
+                  href={`/customers?offset=${Math.max(offset - limit, 0)}&limit=${limit}${filters.search ? `&q=${encodeURIComponent(filters.search)}` : ""}${marketingOnly ? "&marketing=1" : ""}`}
                   className="rounded-lg border border-slate-300 px-3 py-1.5 font-medium text-slate-700 transition-colors hover:bg-slate-100"
                 >
                   {t.common.previous}
@@ -233,7 +282,7 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
               )}
               {hasNext ? (
                 <Link
-                  href={`/customers?offset=${offset + limit}&limit=${limit}${filters.search ? `&q=${encodeURIComponent(filters.search)}` : ""}`}
+                  href={`/customers?offset=${offset + limit}&limit=${limit}${filters.search ? `&q=${encodeURIComponent(filters.search)}` : ""}${marketingOnly ? "&marketing=1" : ""}`}
                   className="rounded-lg border border-slate-300 px-3 py-1.5 font-medium text-slate-700 transition-colors hover:bg-slate-100"
                 >
                   {t.common.next}

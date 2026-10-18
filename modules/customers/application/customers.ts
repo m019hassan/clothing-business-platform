@@ -21,11 +21,17 @@ const RECENT_ORDERS_LIMIT = 10;
 
 export type CustomerListFilters = {
   search?: string;
+  marketingOnly?: boolean;
 };
 
 export function parseCustomerListFilters(searchParams: URLSearchParams): CustomerListFilters {
   const filters: CustomerListFilters = {};
   const search = searchParams.get("q");
+  const marketing = searchParams.get("marketing");
+
+  if (marketing === "1" || marketing === "true") {
+    filters.marketingOnly = true;
+  }
 
   if (search !== null) {
     const trimmed = search.trim();
@@ -73,6 +79,10 @@ function mapCustomerListRow(record: CustomerListRecord): CustomerListView {
 function buildCustomerWhere(filters: CustomerListFilters): Prisma.CustomerProfileWhereInput {
   // The directory speaks about people, not the per-branch walk-in shells.
   const where: Prisma.CustomerProfileWhereInput = { isWalkIn: false };
+
+  if (filters.marketingOnly === true) {
+    where.marketingConsent = true;
+  }
 
   if (filters.search !== undefined) {
     where.OR = [
@@ -201,4 +211,109 @@ export async function getCustomer(
       recentOrders: orders,
     };
   });
+}
+
+export type CustomersCsvLabels = {
+  code: string;
+  name: string;
+  phone: string;
+  email: string;
+  classification: string;
+  orders: string;
+  marketingConsent: string;
+  marketingYes: string;
+  marketingNo: string;
+  joined: string;
+};
+
+const CUSTOMER_EXPORT_LIMIT = 5000;
+
+/** Quotes a cell when it holds a comma, quote or line break. */
+function csvCell(value: string | number): string {
+  const text = String(value);
+
+  return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
+}
+
+/** BOM for Excel's Arabic, CRLF for spreadsheet apps. */
+function toCsv(headers: string[], rows: (string | number)[][]): string {
+  const lines = [headers, ...rows].map((row) => row.map(csvCell).join(","));
+
+  return `\uFEFF${lines.join("\r\n")}\r\n`;
+}
+
+/** +20… / +966… shape, so the sheet pastes straight into WhatsApp. */
+export function toInternationalPhone(raw: string): string {
+  const trimmed = raw.trim();
+  const digits = trimmed.replace(/\D/g, "");
+
+  if (digits === "") {
+    return "";
+  }
+
+  if (trimmed.startsWith("+") || digits.startsWith("966") || digits.startsWith("20")) {
+    return `+${digits}`;
+  }
+
+  if (digits.startsWith("00")) {
+    return `+${digits.slice(2)}`;
+  }
+
+  if (digits.startsWith("0")) {
+    return `+20${digits.slice(1)}`;
+  }
+
+  return `+${digits}`;
+}
+
+/** The whole directory as one WhatsApp-ready sheet, honouring the page filters. */
+export async function exportCustomersCsv(
+  account: AuthenticatedAccount,
+  filters: CustomerListFilters,
+  labels: CustomersCsvLabels,
+): Promise<string> {
+  await requirePermission(PERMISSIONS.CUSTOMERS_VIEW);
+
+  const where = buildCustomerWhere(filters);
+
+  const records = await withDatabaseError(() =>
+    prisma.customerProfile.findMany({
+      where,
+      select: {
+        customerCode: true,
+        firstName: true,
+        lastName: true,
+        marketingConsent: true,
+        createdAt: true,
+        classification: { select: { name: true } },
+        account: { select: { email: true, phone: true } },
+        _count: { select: { orders: true } },
+      },
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      take: CUSTOMER_EXPORT_LIMIT,
+    }),
+  );
+
+  return toCsv(
+    [
+      labels.code,
+      labels.name,
+      labels.phone,
+      labels.email,
+      labels.classification,
+      labels.orders,
+      labels.marketingConsent,
+      labels.joined,
+    ],
+    records.map((record) => [
+      record.customerCode,
+      [record.firstName, record.lastName].filter(Boolean).join(" "),
+      toInternationalPhone(record.account.phone),
+      record.account.email ?? "",
+      record.classification.name,
+      record._count.orders,
+      record.marketingConsent ? labels.marketingYes : labels.marketingNo,
+      record.createdAt.toISOString().slice(0, 10),
+    ]),
+  );
 }
