@@ -528,6 +528,12 @@ export const en = {
     cancelDelivery: "Cancel delivery",
   },
   customers: {
+    allInvoices: "All invoices",
+    invoicesTitle: "Customer invoices",
+    invoicesSubtitle: "Every invoice of this customer in one place, newest first.",
+    invoicesEmpty: "No invoices yet.",
+    invoicesCount: "Invoices",
+    invoicesTotalValue: "Invoices value",
     marketingOnly: "Marketing consent only",
     exportCsv: "Export CSV",
     whatsapp: "WhatsApp",

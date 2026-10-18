@@ -317,3 +317,63 @@ export async function exportCustomersCsv(
     ]),
   );
 }
+
+export type CustomerOrdersPage = {
+  customerName: string;
+  orders: CustomerOrderSummaryView[];
+  pagination: { limit: number; offset: number; total: number; totalSpent: string };
+};
+
+/** Every invoice of one customer, newest first, with the running spend. */
+export async function listCustomerOrders(
+  account: AuthenticatedAccount,
+  customerId: string,
+  pagination: Pagination,
+): Promise<CustomerOrdersPage> {
+  await requirePermission(PERMISSIONS.CUSTOMERS_VIEW);
+
+  if (!isUuid(customerId)) {
+    throw new NotFoundError("Customer not found.");
+  }
+
+  return withDatabaseError(async () => {
+    const customer = await prisma.customerProfile.findUnique({
+      where: { id: customerId },
+      select: { firstName: true, lastName: true },
+    });
+
+    if (customer === null) {
+      throw new NotFoundError("Customer not found.");
+    }
+
+    const [records, total, spend] = await prisma.$transaction([
+      prisma.order.findMany({
+        where: { customerProfileId: customerId },
+        select: { id: true, orderNumber: true, status: true, totalAmount: true, currency: true, createdAt: true },
+        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+        take: pagination.limit,
+        skip: pagination.offset,
+      }),
+      prisma.order.count({ where: { customerProfileId: customerId } }),
+      prisma.order.aggregate({ where: { customerProfileId: customerId }, _sum: { totalAmount: true } }),
+    ]);
+
+    return {
+      customerName: [customer.firstName, customer.lastName].filter(Boolean).join(" "),
+      orders: records.map((order) => ({
+        id: order.id,
+        orderNumber: order.orderNumber,
+        status: order.status,
+        totalAmount: order.totalAmount.toFixed(2),
+        currency: order.currency,
+        createdAt: order.createdAt.toISOString(),
+      })),
+      pagination: {
+        limit: pagination.limit,
+        offset: pagination.offset,
+        total,
+        totalSpent: (spend._sum.totalAmount ?? new Prisma.Decimal(0)).toFixed(2),
+      },
+    };
+  });
+}

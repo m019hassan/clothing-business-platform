@@ -110,12 +110,20 @@ export default async function CustomerDetailPage({ params }: CustomerDetailPageP
       </section>
 
       <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="border-b border-slate-200 px-6 py-4">
-          <h3 className="text-base font-semibold text-slate-900">{t.customers.recentOrders}</h3>
-          <p className="text-sm text-slate-500">
-            The {customer.recentOrders.length} most recent order{customer.recentOrders.length === 1 ? "" : "s"} of{" "}
-            {customer.orderCount}.
-          </p>
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-6 py-4">
+          <div>
+            <h3 className="text-base font-semibold text-slate-900">{t.customers.recentOrders}</h3>
+            <p className="text-sm text-slate-500">
+              The {customer.recentOrders.length} most recent order{customer.recentOrders.length === 1 ? "" : "s"} of{" "}
+              {customer.orderCount}.
+            </p>
+          </div>
+          <Link
+            href={`/customers/${customer.id}/orders`}
+            className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+          >
+            {t.customers.allInvoices} ({customer.orderCount})
+          </Link>
         </div>
 
         {customer.recentOrders.length === 0 ? (

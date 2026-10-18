@@ -529,6 +529,12 @@ export const ar: Dictionary = {
     cancelDelivery: "إلغاء التوصيل",
   },
   customers: {
+    allInvoices: "كل الفواتير",
+    invoicesTitle: "فواتير العميل",
+    invoicesSubtitle: "كل فواتير العميل في مكان واحد — الأحدث الأول.",
+    invoicesEmpty: "مفيش فواتير لسه.",
+    invoicesCount: "عدد الفواتير",
+    invoicesTotalValue: "إجمالي قيمة الفواتير",
     marketingOnly: "الموافقون على التسويق",
     exportCsv: "تصدير CSV",
     whatsapp: "واتساب",

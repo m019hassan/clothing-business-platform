@@ -12,6 +12,7 @@ import type { SafeAccount } from "@/modules/auth/infrastructure/session";
 import {
   exportCustomersCsv,
   getCustomer,
+  listCustomerOrders,
   listCustomers,
   parseCustomerListFilters,
   toInternationalPhone,
@@ -23,7 +24,7 @@ type TestAccount = NonNullable<SafeAccount>;
 const account = { id: "00000000-0000-4000-8000-00000000cafe", accountType: "EMPLOYEE" } as TestAccount;
 
 let fixture: { profileId: string; customerCode: string; firstName: string };
-const created = { accountIds: [] as string[], profileIds: [] as string[] };
+const created = { accountIds: [] as string[], profileIds: [] as string[], orderIds: [] as string[] };
 
 beforeEach(async () => {
   const classification =
@@ -224,5 +225,34 @@ describe("marketing export", () => {
     expect(csv).toContain(`Marketing ${suffix}`);
     expect(csv).toContain("+20100");
     expect(csv.split("\r\n").filter((line) => line !== "")).toHaveLength(2);
+  });
+});
+
+describe("customer invoices", () => {
+  it("paginates every order and totals the spend", async () => {
+    for (let index = 0; index < 3; index += 1) {
+      const order = await prisma.order.create({
+        data: {
+          orderNumber: `VITINV-${Date.now().toString(36)}-${Math.floor(Math.random() * 100000)}-${index}`,
+          customerProfileId: fixture.profileId,
+          status: "DELIVERED",
+          subtotalAmount: new Prisma.Decimal("100.00"),
+          totalAmount: new Prisma.Decimal("100.00"),
+          currency: "EGP",
+          channel: "POS",
+        },
+        select: { id: true },
+      });
+      created.orderIds.push(order.id);
+    }
+
+    const first = await listCustomerOrders(account, fixture.profileId, { limit: 2, offset: 0 });
+    expect(first.pagination.total).toBe(3);
+    expect(first.orders).toHaveLength(2);
+    expect(first.pagination.totalSpent).toBe("300.00");
+    expect(first.customerName).toContain("Nour");
+
+    const second = await listCustomerOrders(account, fixture.profileId, { limit: 2, offset: 2 });
+    expect(second.orders).toHaveLength(1);
   });
 });
