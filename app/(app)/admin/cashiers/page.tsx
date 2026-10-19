@@ -56,11 +56,20 @@ export default async function CashiersPage() {
             <li key={cashier.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold text-slate-900">
-                    {cashier.name} <span className="font-mono text-xs text-slate-400">{cashier.code}</span>
-                  </p>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-base font-bold text-slate-900">{cashier.name}</p>
+                  <p className="mt-0.5 text-xs text-slate-500">
+                    <span className="font-mono text-[11px] text-slate-400">{cashier.code}</span>
+                    {" · "}
                     {cashier.branchName} ({cashier.branchCode})
+                  </p>
+                  <p className="mt-1 text-xs text-slate-600">
+                    <span dir="ltr">{cashier.email ?? "—"}</span>
+                    {cashier.phone ? (
+                      <>
+                        {" · "}
+                        <span dir="ltr" className="font-mono">{cashier.phone}</span>
+                      </>
+                    ) : null}
                   </p>
                 </div>
                 <CashierDiscountForm

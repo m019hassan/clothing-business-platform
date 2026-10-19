@@ -17,6 +17,8 @@ export type CashierRowView = {
   code: string;
   branchName: string;
   branchCode: string;
+  email: string | null;
+  phone: string;
   canDiscount: boolean;
   discountCode: string | null;
   discountPercent: string | null;
@@ -28,7 +30,7 @@ export async function listCashiers(_account: AuthenticatedAccount): Promise<Cash
 
   const rows = await withDatabaseError(() =>
     prisma.distributorProfile.findMany({
-      orderBy: { createdAt: "desc" },
+      orderBy: [{ firstName: "asc" }, { lastName: "asc" }],
       select: {
         id: true,
         firstName: true,
@@ -38,6 +40,7 @@ export async function listCashiers(_account: AuthenticatedAccount): Promise<Cash
         discountCode: true,
         discountPercent: true,
         branch: { select: { name: true, code: true } },
+        account: { select: { email: true, phone: true } },
       },
     }),
   );
@@ -48,6 +51,8 @@ export async function listCashiers(_account: AuthenticatedAccount): Promise<Cash
     code: row.distributorCode,
     branchName: row.branch.name,
     branchCode: row.branch.code,
+    email: row.account.email,
+    phone: row.account.phone,
     canDiscount: row.canDiscount,
     discountCode: row.discountCode,
     discountPercent: row.discountPercent?.toFixed(2) ?? null,
