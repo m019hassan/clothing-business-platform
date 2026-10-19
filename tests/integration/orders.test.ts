@@ -4,7 +4,7 @@ import { Prisma } from "@prisma/client";
 
 import type { SafeAccount } from "@/modules/auth/infrastructure/session";
 import { addItem } from "@/modules/cart/application/cart-service";
-import { createOrderFromCart, getOrder } from "@/modules/order/application/orders";
+import { createOrderFromCart, getOrder, listOrders } from "@/modules/order/application/orders";
 import { updateOrderStatus } from "@/modules/order/application/order-status";
 import { simulatePaymentOutcome } from "@/modules/payment/application/payments";
 import { getAccountOverview } from "@/modules/customers/application/account";
@@ -211,5 +211,30 @@ describe("payment outcome simulation (service level)", () => {
 
     const inventory = await prisma.inventoryItem.findFirst({ where: { variantId }, select: { quantityOnHand: true } });
     expect(inventory?.quantityOnHand).toBe(9);
+  });
+});
+
+describe("staff reading orders", () => {
+  it("lets an orders.view staff member read any invoice", async () => {
+    const order = await createOrderFor(customer, 1);
+
+    const seen = await getOrder(employee, order.id, { staffView: true });
+    expect(seen.id).toBe(order.id);
+    expect(seen.orderNumber).toBe(order.orderNumber);
+  });
+
+  it("still refuses staff without the permission-derived flag", async () => {
+    const order = await createOrderFor(customer, 1);
+
+    await expect(getOrder(employee, order.id)).rejects.toMatchObject({ statusCode: 403 });
+  });
+
+  it("lets staff list every order across customers", async () => {
+    const order = await createOrderFor(customer, 1);
+
+    const page = await listOrders(employee, { limit: 50, offset: 0 }, { staffView: true });
+    expect(page.orders.some((entry) => entry.id === order.id)).toBe(true);
+
+    await expect(listOrders(employee, { limit: 50, offset: 0 })).rejects.toMatchObject({ statusCode: 403 });
   });
 });

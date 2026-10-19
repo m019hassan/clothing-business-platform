@@ -2,6 +2,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { OrderStatusBadge } from "@/components/orders/order-status-badge";
+import { getCurrentPermissions } from "@/modules/auth/application/authorization";
+import { PERMISSIONS } from "@/modules/auth/application/permissions";
 import { getCurrentAccount } from "@/modules/auth/infrastructure/session";
 import { listOrders } from "@/modules/order/application/orders";
 import type { OrderSummaryView } from "@/modules/order/types";
@@ -33,6 +35,10 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
     redirect("/login");
   }
 
+  const permissions = await getCurrentPermissions();
+  const isCustomer = account.accountType === "CUSTOMER" && account.customerProfile !== null;
+  const staffView = !isCustomer && permissions.has(PERMISSIONS.ORDERS_VIEW);
+
   const params = await searchParams;
   const offset = parseOffset(params.offset);
   const limit = parseLimit(params.limit);
@@ -43,7 +49,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
   let loadError = false;
 
   try {
-    const page = await listOrders(account, { limit, offset });
+    const page = await listOrders(account, { limit, offset }, { staffView });
     orders = page.orders;
     total = page.pagination.total;
   } catch (error) {

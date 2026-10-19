@@ -180,9 +180,15 @@ function mapOrderSummary(order: OrderSummaryRecord): OrderSummaryView {
 export async function listOrders(
   account: AuthenticatedAccount,
   pagination: Pagination,
+  options: { staffView?: boolean } = {},
 ): Promise<OrderListPage> {
-  const profile = requireCustomerProfile(account);
-  const where: Prisma.OrderWhereInput = { customerProfileId: profile.id };
+  const profile = account.accountType === AccountType.CUSTOMER ? account.customerProfile : null;
+
+  if (profile === null && options.staffView !== true) {
+    throw new AuthorizationError("A customer account is required.");
+  }
+
+  const where: Prisma.OrderWhereInput = profile !== null ? { customerProfileId: profile.id } : {};
 
   const [orders, total] = await withDatabaseError(() =>
     prisma.$transaction([
@@ -210,8 +216,15 @@ export async function listOrders(
 export async function getOrder(
   account: AuthenticatedAccount,
   orderId: string,
+  options: { staffView?: boolean } = {},
 ): Promise<OrderView> {
-  const profile = requireCustomerProfile(account);
+  // Customers only ever see their own orders; staff carrying orders.view may read
+  // any order (the page decides, after checking that permission).
+  const profile = account.accountType === AccountType.CUSTOMER ? account.customerProfile : null;
+
+  if (profile === null && options.staffView !== true) {
+    throw new AuthorizationError("A customer account is required.");
+  }
 
   if (!isUuid(orderId)) {
     throw new NotFoundError("Order not found.");
@@ -219,7 +232,7 @@ export async function getOrder(
 
   const order = await withDatabaseError(() =>
     prisma.order.findFirst({
-      where: { id: orderId, customerProfileId: profile.id },
+      where: profile !== null ? { id: orderId, customerProfileId: profile.id } : { id: orderId },
       select: orderSelection,
     }),
   );

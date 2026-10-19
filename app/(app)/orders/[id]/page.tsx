@@ -4,6 +4,8 @@ import { notFound, redirect } from "next/navigation";
 import { OrderActions } from "@/components/orders/order-actions";
 import { OrderStatusBadge } from "@/components/orders/order-status-badge";
 import { PaymentStatusBadge } from "@/components/orders/payment-status-badge";
+import { getCurrentPermissions } from "@/modules/auth/application/authorization";
+import { PERMISSIONS } from "@/modules/auth/application/permissions";
 import { getCurrentAccount } from "@/modules/auth/infrastructure/session";
 import { getOrder } from "@/modules/order/application/orders";
 import type { OrderView } from "@/modules/order/types";
@@ -37,6 +39,10 @@ export default async function OrderDetailPage({ params }: OrderDetailProps) {
     redirect("/login");
   }
 
+  const permissions = await getCurrentPermissions();
+  const isCustomer = account.accountType === "CUSTOMER" && account.customerProfile !== null;
+  const staffView = !isCustomer && permissions.has(PERMISSIONS.ORDERS_VIEW);
+
   const { id } = await params;
 
   let order: OrderView | null = null;
@@ -45,7 +51,7 @@ export default async function OrderDetailPage({ params }: OrderDetailProps) {
   let loadError = false;
 
   try {
-    order = await getOrder(account, id);
+    order = await getOrder(account, id, { staffView });
     refunds = await listOrderRefunds(id);
   } catch (error) {
     if (error instanceof AuthorizationError) {
@@ -129,8 +135,8 @@ export default async function OrderDetailPage({ params }: OrderDetailProps) {
             orderId={order.id}
             orderNumber={order.orderNumber}
             status={order.status}
-            canSubmit={order.status === "DRAFT"}
-            canCancel={canCustomerCancel(order)}
+            canSubmit={isCustomer && order.status === "DRAFT"}
+            canCancel={isCustomer && canCustomerCancel(order)}
           />
         </div>
       </section>
@@ -355,7 +361,7 @@ export default async function OrderDetailPage({ params }: OrderDetailProps) {
         <p className="mt-3 text-xs text-slate-400">
           {t.orderDetail.methodFootnote}
         </p>
-        {bankTransferAwaiting && order.payment ? (
+        {bankTransferAwaiting && order.payment && isCustomer ? (
           <ProofUpload
             paymentId={order.payment.id}
             existing={
