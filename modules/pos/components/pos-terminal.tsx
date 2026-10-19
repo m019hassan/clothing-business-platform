@@ -43,12 +43,18 @@ export function PosTerminal({
   labels,
   preferEnglish = false,
   errors,
-  tax,}: {
+  tax,
+  canDiscount,
+  ownDiscount,
+}: {
   catalog: PosCatalogView;
   labels: PosLabels;
   preferEnglish?: boolean;
   errors?: ApiErrorLabels;
-  tax: { enabled: boolean; ratePercent: string; inclusive: boolean };}) {
+  tax: { enabled: boolean; ratePercent: string; inclusive: boolean };
+  canDiscount: boolean;
+  ownDiscount: { code: string | null; percent: string | null };
+}) {
   const [query, setQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [lines, setLines] = useState<CartLine[]>([]);
@@ -65,6 +71,12 @@ export function PosTerminal({
   const [customerPhone, setCustomerPhone] = useState<string>("");
   const [customerName, setCustomerName] = useState<string>("");
   const [lookup, setLookup] = useState<{ phone: string; state: "found" | "new"; name: string | null } | null>(null);
+  const [discountOpen, setDiscountOpen] = useState(false);
+  const [discountType, setDiscountType] = useState<"PERCENT" | "AMOUNT">("PERCENT");
+  const [discountValue, setDiscountValue] = useState("");
+  const [discountCode, setDiscountCode] = useState("");
+  const [discountError, setDiscountError] = useState<string | null>(null);
+  const [discount, setDiscount] = useState<{ type: "PERCENT" | "AMOUNT"; value: number } | null>(null);
   const [isHeldModalOpen, setIsHeldModalOpen] = useState(false);
 
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -227,7 +239,14 @@ export function PosTerminal({
       return sum + computeTaxAmount(Number(line.item.unitPrice) * line.quantity, taxRatePercent, tax.inclusive);
     }, 0),
   );
-  const total = roundMoney(tax.inclusive ? subtotal : subtotal + taxTotal);
+  const grossTotal = roundMoney(tax.inclusive ? subtotal : subtotal + taxTotal);
+  const discountAmount =
+    discount === null
+      ? 0
+      : discount.type === "PERCENT"
+        ? roundMoney((grossTotal * discount.value) / 100)
+        : Math.min(discount.value, grossTotal);
+  const total = roundMoney(grossTotal - discountAmount);
   const totalItemCount = lines.reduce((sum, line) => sum + line.quantity, 0);
   const currency = catalog.items[0]?.currency ?? "EGP";
 
@@ -384,6 +403,37 @@ export function PosTerminal({
     setTimeout(() => cashInputRef.current?.select(), 100);
   }
 
+  function applyDiscount() {
+    setDiscountError(null);
+    const code = discountCode.trim().toUpperCase();
+
+    if (code !== "") {
+      if (ownDiscount.code === null || ownDiscount.code.toUpperCase() !== code || ownDiscount.percent === null) {
+        setDiscountError(preferEnglish ? "This code does not belong to your account." : "الكود مش بتاع حسابك.");
+        return;
+      }
+
+      setDiscount({ type: "PERCENT", value: Number(ownDiscount.percent) });
+      setDiscountOpen(false);
+      return;
+    }
+
+    const value = Number(discountValue);
+
+    if (!Number.isFinite(value) || value <= 0) {
+      setDiscountError(preferEnglish ? "Enter a value first." : "اكتب قيمة الخصم الأول.");
+      return;
+    }
+
+    if (discountType === "PERCENT" && value > 100) {
+      setDiscountError(preferEnglish ? "A percent cannot exceed 100." : "النسبة مش ممكن تعدي 100.");
+      return;
+    }
+
+    setDiscount({ type: discountType, value: Math.round(value * 100) / 100 });
+    setDiscountOpen(false);
+  }
+
   // Execute sale via API
   async function completeSale() {
     const trimmedPhone = customerPhone.trim();
@@ -404,6 +454,7 @@ export function PosTerminal({
           items: lines.map((line) => ({ variantId: line.item.variantId, quantity: line.quantity })),
           customerPhone: trimmedPhone,
           customerName: customerName.trim(),
+          ...(discount !== null ? { discount } : {}),
         }),
       });
 
@@ -411,6 +462,9 @@ export function PosTerminal({
       setLines([]);
       setCustomerPhone("");
       setCustomerName("");
+      setDiscount(null);
+      setDiscountValue("");
+      setDiscountCode("");
       setIsCashModalOpen(false);
     } catch (requestError) {
       setError(apiErrorMessage(requestError, errors));
@@ -551,6 +605,13 @@ export function PosTerminal({
               <div className="mt-2 flex items-center justify-between text-xs text-slate-500">
                 <span>{tax.inclusive ? (preferEnglish ? "VAT (included)" : "الضريبة (شاملة)") : preferEnglish ? "VAT" : "الضريبة"}</span>
                 <span>{formatMoney(receipt.taxAmount, receipt.currency)}</span>
+              </div>
+            ) : null}
+
+            {Number(receipt.invoiceDiscountAmount) > 0 ? (
+              <div className="mt-1 flex items-center justify-between text-xs font-semibold text-rose-600">
+                <span>{preferEnglish ? "Invoice discount" : "خصم إضافي"}</span>
+                <span>-{formatMoney(receipt.invoiceDiscountAmount, receipt.currency)}</span>
               </div>
             ) : null}
 
@@ -918,6 +979,24 @@ export function PosTerminal({
                 <span>{formatMoney(String(taxTotal), currency)}</span>
               </div>
             ) : null}
+            {discountAmount > 0 ? (
+              <div className="mb-1 flex items-center justify-between text-xs font-semibold text-rose-600">
+                <span>{preferEnglish ? "Invoice discount" : "خصم إضافي"}</span>
+                <span>-{formatMoney(String(discountAmount), currency)}</span>
+              </div>
+            ) : null}
+            {canDiscount && lines.length > 0 ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setDiscountError(null);
+                  setDiscountOpen(true);
+                }}
+                className="mb-2 w-full rounded-xl border border-dashed border-rose-300 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700 transition-colors hover:bg-rose-100"
+              >
+                {preferEnglish ? "+ Invoice discount" : "+ خصم إضافي على الفاتورة"}
+              </button>
+            ) : null}
             <div className="flex items-center justify-between text-sm">
               <span className="font-semibold text-slate-600">{labels.total}</span>
               <span className="text-2xl font-bold tracking-tight text-slate-950">
@@ -943,6 +1022,101 @@ export function PosTerminal({
           </div>
         </section>
       </div>
+
+      {/* INVOICE DISCOUNT MODAL */}
+      {discountOpen ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-xs">
+          <div className="w-full max-w-sm space-y-4 rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h3 className="text-base font-bold text-slate-900">
+                {preferEnglish ? "Invoice discount" : "خصم إضافي على الفاتورة"}
+              </h3>
+              <button type="button" onClick={() => setDiscountOpen(false)} className="rounded-lg p-1 text-slate-400 hover:bg-slate-100">
+                <XIcon className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="flex rounded-xl border border-slate-200 bg-slate-50 p-0.5 text-xs font-semibold">
+              <button
+                type="button"
+                onClick={() => setDiscountType("PERCENT")}
+                className={["flex-1 rounded-lg py-1.5", discountType === "PERCENT" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500"].join(" ")}
+              >
+                %
+              </button>
+              <button
+                type="button"
+                onClick={() => setDiscountType("AMOUNT")}
+                className={["flex-1 rounded-lg py-1.5", discountType === "AMOUNT" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500"].join(" ")}
+              >
+                {currency}
+              </button>
+            </div>
+
+            <div>
+              <label className="mb-1 block text-xs font-bold text-slate-700">
+                {preferEnglish
+                  ? `Value (${discountType === "PERCENT" ? "%" : currency})`
+                  : `القيمة (${discountType === "PERCENT" ? "%" : currency})`}
+              </label>
+              <input
+                type="number"
+                min={0}
+                step="0.01"
+                value={discountValue}
+                onChange={(event) => {
+                  setDiscountValue(event.target.value);
+                  setDiscountError(null);
+                }}
+                className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-lg font-bold text-slate-900 outline-none focus:border-slate-900"
+              />
+            </div>
+
+            <div>
+              <label className="mb-1 block text-xs font-bold text-slate-700">
+                {preferEnglish ? "Or your personal discount code" : "أو كود الخصم الشخصي"}
+              </label>
+              <input
+                type="text"
+                value={discountCode}
+                onChange={(event) => {
+                  setDiscountCode(event.target.value);
+                  setDiscountError(null);
+                }}
+                placeholder="CODE10"
+                dir="ltr"
+                className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm uppercase outline-none focus:border-slate-900"
+              />
+            </div>
+
+            {discountError ? <p className="text-xs font-semibold text-rose-700">{discountError}</p> : null}
+
+            <div className="flex items-center gap-2 pt-1">
+              {discount !== null ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDiscount(null);
+                    setDiscountValue("");
+                    setDiscountCode("");
+                    setDiscountOpen(false);
+                  }}
+                  className="flex-1 rounded-xl border border-slate-200 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+                >
+                  {preferEnglish ? "Remove" : "إزالة الخصم"}
+                </button>
+              ) : null}
+              <button
+                type="button"
+                onClick={applyDiscount}
+                className="flex-[2] rounded-xl bg-rose-600 py-2.5 text-sm font-bold text-white transition-colors hover:bg-rose-700"
+              >
+                {preferEnglish ? "Apply discount" : "تطبيق الخصم"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {/* QUICK CASH & CHANGE CALCULATOR MODAL */}
       {isCashModalOpen ? (

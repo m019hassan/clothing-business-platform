@@ -127,6 +127,11 @@ export default async function OrderDetailPage({ params }: OrderDetailProps) {
                 {t.orderDetail.tax} {formatMoney(order.taxAmount, order.currency)}
               </p>
             ) : null}
+            {Number(order.invoiceDiscountAmount) > 0 ? (
+              <p className="text-xs font-semibold text-rose-600">
+                {t.orderDetail.invoiceDiscount} -{formatMoney(order.invoiceDiscountAmount, order.currency)}
+              </p>
+            ) : null}
             <p className="text-xs text-slate-500">
               {itemCount} {itemCount === 1 ? t.cart.itemSingular : t.cart.itemPlural}
             </p>

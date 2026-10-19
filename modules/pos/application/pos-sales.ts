@@ -28,10 +28,50 @@ const MAX_LINE_QUANTITY = 999;
 const WALK_IN_PASSWORD_SENTINEL = "walkin-no-login";
 const WALK_IN_PHONE_PREFIX = "WALKIN-";
 
+/** Reads the optional invoice discount: a typed percent/amount or a personal code. */
+function parseInvoiceDiscount(raw: unknown): { type: "PERCENT" | "AMOUNT"; value: number } | { code: string } | null {
+  if (raw === undefined || raw === null) {
+    return null;
+  }
+
+  if (typeof raw !== "object" || Array.isArray(raw)) {
+    throw new ValidationError("discount must be an object.");
+  }
+
+  const body = raw as Record<string, unknown>;
+
+  if (typeof body.code === "string") {
+    const code = body.code.trim();
+
+    if (code.length === 0) {
+      throw new ValidationError("discount.code must not be empty.");
+    }
+
+    return { code };
+  }
+
+  const type = body.type === "AMOUNT" ? "AMOUNT" : body.type === "PERCENT" ? "PERCENT" : null;
+
+  if (type === null) {
+    throw new ValidationError("discount.type must be PERCENT or AMOUNT.");
+  }
+
+  if (typeof body.value !== "number" || !Number.isFinite(body.value) || body.value <= 0) {
+    throw new ValidationError("discount.value must be a positive number.");
+  }
+
+  if (type === "PERCENT" && body.value > 100) {
+    throw new ValidationError("A percentage discount cannot exceed 100.");
+  }
+
+  return { type, value: Math.round(body.value * 100) / 100 };
+}
+
 export type PosSaleInput = {
   items: { variantId: string; quantity: number }[];
   customerPhone: string | null;
   customerName: string | null;
+  discount: { type: "PERCENT" | "AMOUNT"; value: number } | { code: string } | null;
 };
 
 /** Reads the optional walk-in contact; blank strings collapse to null. */
@@ -68,7 +108,8 @@ export function parsePosSaleInput(payload: unknown): PosSaleInput {
 
   const body = payload as Record<string, unknown>;
   const unknown = Object.keys(body).filter(
-    (key) => key !== "items" && key !== "customerPhone" && key !== "customerName",
+    (key) =>
+      key !== "items" && key !== "customerPhone" && key !== "customerName" && key !== "discount",
   );
 
   if (unknown.length > 0) {
@@ -114,14 +155,23 @@ export function parsePosSaleInput(payload: unknown): PosSaleInput {
   }
 
   const contact = parseCustomerContact(body);
+  const discount = parseInvoiceDiscount(body.discount);
 
   return {
     items: [...merged.entries()].map(([variantId, quantity]) => ({ variantId, quantity })),
     ...contact,
+    discount,
   };
 }
 
-export type DistributorContext = { distributorId: string; branchId: string; displayName: string };
+export type DistributorContext = {
+  distributorId: string;
+  branchId: string;
+  displayName: string;
+  canDiscount: boolean;
+  discountCode: string | null;
+  discountPercent: Prisma.Decimal | null;
+};
 
 export function requireDistributor(account: AuthenticatedAccount): DistributorContext {
   const profile = account.distributorProfile;
@@ -134,6 +184,9 @@ export function requireDistributor(account: AuthenticatedAccount): DistributorCo
     distributorId: profile.id,
     branchId: profile.branchId,
     displayName: account.email ?? profile.distributorCode,
+    canDiscount: profile.canDiscount === true,
+    discountCode: profile.discountCode ?? null,
+    discountPercent: profile.discountPercent ?? null,
   };
 }
 
@@ -467,6 +520,48 @@ export async function createPosSale(
       }
 
 
+      let invoiceDiscountType: "PERCENT" | "AMOUNT" | null = null;
+      let invoiceDiscountValue: Prisma.Decimal | null = null;
+      let invoiceDiscountAmount = new Prisma.Decimal(0);
+
+      if (input.discount !== null) {
+        if (!distributor.canDiscount) {
+          throw new AuthorizationError("This account may not discount invoices.");
+        }
+
+        let type: "PERCENT" | "AMOUNT";
+        let value: Prisma.Decimal;
+
+        if ("code" in input.discount) {
+          const code = input.discount.code.trim().toUpperCase();
+
+          if (
+            distributor.discountCode === null ||
+            distributor.discountPercent === null ||
+            distributor.discountCode.trim().toUpperCase() !== code
+          ) {
+            throw new ValidationError("This discount code does not belong to your account.");
+          }
+
+          type = "PERCENT";
+          value = distributor.discountPercent;
+        } else {
+          type = input.discount.type;
+          value = new Prisma.Decimal(input.discount.value);
+        }
+
+        invoiceDiscountType = type;
+        invoiceDiscountValue = value;
+        invoiceDiscountAmount =
+          type === "PERCENT"
+            ? total.mul(value).div(100).toDecimalPlaces(2)
+            : value.gt(total)
+              ? total
+              : value.toDecimalPlaces(2);
+      }
+
+      const finalTotal = total.sub(invoiceDiscountAmount);
+
       const order = await transaction.order.create({
         data: {
           orderNumber: `POS-${Date.now().toString(36).toUpperCase()}${Math.floor(Math.random() * 90 + 10)}`,
@@ -478,8 +573,11 @@ export async function createPosSale(
           branchId: branch.id,
           soldByAccountId: account.id,
           subtotalAmount: total.sub(taxTotal),
-          totalAmount: total,
+          totalAmount: finalTotal,
           taxAmount: taxTotal,
+          invoiceDiscountType,
+          invoiceDiscountValue,
+          invoiceDiscountAmount,
           currency,
           items: {
             create: input.items.map((item, index) => ({
@@ -499,7 +597,7 @@ export async function createPosSale(
               {
                 status: PaymentStatus.APPROVED,
                 method: PaymentMethod.CASH,
-                amount: total,
+                amount: finalTotal,
                 currency,
               },
             ],
@@ -562,7 +660,7 @@ export async function createPosSale(
           action: "POS_SALE",
           entity: "Order",
           entityId: order.id,
-          newValue: `${total.toString()} ${currency}`,
+          newValue: `${finalTotal.toString()} ${currency}`,
         },
       });
 
@@ -571,8 +669,11 @@ export async function createPosSale(
         orderNumber: order.orderNumber,
         status: order.status,
         currency,
-        totalAmount: total.toString(),
+        totalAmount: finalTotal.toString(),
         taxAmount: taxTotal.toString(),
+        invoiceDiscountType,
+        invoiceDiscountValue: invoiceDiscountValue?.toString() ?? null,
+        invoiceDiscountAmount: invoiceDiscountAmount.toString(),
         itemCount: input.items.reduce((sum, item) => sum + item.quantity, 0),
         branchCode: branch.code,
         soldBy: distributor.displayName,

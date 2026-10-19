@@ -145,6 +145,9 @@ beforeEach(async () => {
       id: distributorAccount.distributorProfile!.id,
       branchId: branch.id,
       distributorCode: distributorAccount.distributorProfile!.distributorCode,
+      canDiscount: true,
+      discountCode: "VIT10",
+      discountPercent: new Prisma.Decimal("10"),
     },
   } as unknown as TestAccount;
 
@@ -705,5 +708,73 @@ describe("vat at the counter", () => {
 
     expect(order.taxAmount.toFixed(2)).toBe("0.00");
     expect(order.totalAmount.toFixed(2)).toBe("70.00");
+  });
+});
+
+describe("invoice discount", () => {
+  it("applies a percent discount to the whole invoice", async () => {
+    const receipt = await createPosSale(distributor, payload({ discount: { type: "PERCENT", value: 10 } }));
+
+    const order = await prisma.order.findUniqueOrThrow({
+      where: { id: receipt.orderId },
+      select: {
+        totalAmount: true,
+        invoiceDiscountType: true,
+        invoiceDiscountValue: true,
+        invoiceDiscountAmount: true,
+      },
+    });
+
+    expect(order.invoiceDiscountType).toBe("PERCENT");
+    expect(order.invoiceDiscountValue?.toFixed(2)).toBe("10.00");
+    expect(order.invoiceDiscountAmount.toFixed(2)).toBe("7.00");
+    expect(order.totalAmount.toFixed(2)).toBe("63.00");
+    expect(Number(receipt.invoiceDiscountAmount).toFixed(2)).toBe("7.00");
+  });
+
+  it("applies a flat amount and never goes below zero", async () => {
+    const receipt = await createPosSale(distributor, payload({ discount: { type: "AMOUNT", value: 1000 } }));
+
+    const order = await prisma.order.findUniqueOrThrow({
+      where: { id: receipt.orderId },
+      select: { totalAmount: true, invoiceDiscountAmount: true, invoiceDiscountType: true },
+    });
+
+    expect(order.invoiceDiscountType).toBe("AMOUNT");
+    expect(order.invoiceDiscountAmount.toFixed(2)).toBe("70.00");
+    expect(order.totalAmount.toFixed(2)).toBe("0.00");
+  });
+
+  it("accepts the cashier's own code and refuses someone else's", async () => {
+    const receipt = await createPosSale(distributor, payload({ discount: { code: "vit10" } }));
+
+    const order = await prisma.order.findUniqueOrThrow({
+      where: { id: receipt.orderId },
+      select: { invoiceDiscountType: true, invoiceDiscountValue: true, invoiceDiscountAmount: true },
+    });
+
+    expect(order.invoiceDiscountType).toBe("PERCENT");
+    expect(order.invoiceDiscountValue?.toFixed(2)).toBe("10.00");
+    expect(order.invoiceDiscountAmount.toFixed(2)).toBe("7.00");
+
+    const other = {
+      ...distributor,
+      distributorProfile: { ...distributor.distributorProfile!, discountCode: "OTHER1" },
+    };
+
+    await expect(
+      createPosSale(other, payload({ discount: { code: "VIT10" } })),
+    ).rejects.toMatchObject({ statusCode: 400 });
+  });
+
+  it("refuses any discount when the cashier is not allowed", async () => {
+    const blocked = {
+      ...distributor,
+      distributorProfile: { ...distributor.distributorProfile!, canDiscount: false },
+    };
+
+    await expect(
+      createPosSale(blocked, payload({ discount: { type: "AMOUNT", value: 5 } })),
+    ).rejects.toMatchObject({ statusCode: 403 });
   });
 });

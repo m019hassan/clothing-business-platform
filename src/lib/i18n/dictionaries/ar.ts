@@ -29,6 +29,7 @@ export const ar: Dictionary = {
     productCategories: "التصنيفات",
     adminAccounts: "الحسابات",
     adminBranches: "الفروع",
+    adminCashiers: "الكاشيرين",
     deliveries: "التوصيلات",
     customers: "العملاء",
     employees: "الموظفون",
@@ -763,6 +764,7 @@ export const ar: Dictionary = {
     stale: "لم يعد هذا الطلب بانتظار قرار دفع.",
   },
   posInvoice: {
+    invoiceDiscount: "خصم إضافي",
     tax: "الضريبة",
     customer: "العميل",
     discount: "خصم",
@@ -1042,6 +1044,7 @@ export const ar: Dictionary = {
     emptyHint: "ستظهر هنا الطلبات التي تنشئها.",
   },
   orderDetail: {
+    invoiceDiscount: "خصم إضافي:",
     tax: "الضريبة ضمناً:",
     discount: "خصم",
     refundLine: "استرداد بقيمة {amount} سُجّل بتاريخ {date}.",
@@ -1185,6 +1188,19 @@ export const ar: Dictionary = {
     markExempt: "خاضع للضريبة — اجعله معفى",
     markTaxable: "معفى — اجعله خاضعًا",
     savingShort: "بيحفظ…",
+  },
+
+  cashiers: {
+    permissionTitle: "إدارة الكاشيرين تحتاج صلاحية users.manage",
+    title: "الكاشيرين",
+    subtitle: "حدد مين مسموح له يعمل خصم إضافي على الفاتورة، وكود الخصم الشخصي لكل واحد.",
+    canDiscount: "مسموح له يعمل خصم",
+    code: "كود الخصم",
+    percent: "النسبة %",
+    save: "حفظ",
+    saving: "بيحفظ…",
+    saved: "محفوظ ✓",
+    empty: "مفيش كاشيرين مسجلين لسه.",
   },
 
   discounts: {

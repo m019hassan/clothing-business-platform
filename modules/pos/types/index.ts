@@ -50,6 +50,9 @@ export type PosReceiptView = {
   totalAmount: string;
   /** VAT included in the receipt, zero when VAT is off. */
   taxAmount: string;
+  invoiceDiscountType: "PERCENT" | "AMOUNT" | null;
+  invoiceDiscountValue: string | null;
+  invoiceDiscountAmount: string;
   itemCount: number;
   branchCode: string;
   soldBy: string;

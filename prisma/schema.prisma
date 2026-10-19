@@ -515,6 +515,12 @@ model DistributorProfile {
 
   isActive Boolean @default(true)
 
+  /// May this cashier add an extra discount on the whole invoice?
+  canDiscount Boolean @default(false)
+  /// Their personal discount code; typed at the counter to apply the percent.
+  discountCode String? @unique @db.VarChar(40)
+  discountPercent Decimal? @db.Decimal(5, 2)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -717,6 +723,11 @@ model Order {
   totalAmount    Decimal @db.Decimal(12, 2)
   taxAmount      Decimal @default(0) @db.Decimal(12, 2)
   currency       String  @db.VarChar(10)
+
+  /// Extra discount on the whole invoice, snapshotted per sale.
+  invoiceDiscountType   InvoiceDiscountType?
+  invoiceDiscountValue  Decimal?            @db.Decimal(12, 2)
+  invoiceDiscountAmount Decimal             @default(0) @db.Decimal(12, 2)
 
   addressId String? @db.Uuid
 
@@ -1057,4 +1068,9 @@ model TaxSetting {
   inclusive   Boolean @default(true)
 
   updatedAt DateTime @updatedAt
+}
+
+enum InvoiceDiscountType {
+  PERCENT
+  AMOUNT
 }

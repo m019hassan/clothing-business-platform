@@ -439,6 +439,9 @@ export type PosInvoiceView = {
   currency: string;
   totalAmount: string;
   taxAmount: string;
+  invoiceDiscountType: "PERCENT" | "AMOUNT" | null;
+  invoiceDiscountValue: string | null;
+  invoiceDiscountAmount: string;
   refundedAmount: string;
   soldUnits: number;
   returnedUnits: number;
@@ -474,6 +477,9 @@ export async function getPosSaleDetail(
       status: true,
       totalAmount: true,
       taxAmount: true,
+      invoiceDiscountType: true,
+      invoiceDiscountValue: true,
+      invoiceDiscountAmount: true,
       currency: true,
       branchId: true,
       branch: { select: { code: true, name: true } },
@@ -512,6 +518,9 @@ export async function getPosSaleDetail(
     currency: order.currency,
     totalAmount: order.totalAmount.toFixed(2),
     taxAmount: order.taxAmount.toFixed(2),
+    invoiceDiscountType: order.invoiceDiscountType,
+    invoiceDiscountValue: order.invoiceDiscountValue?.toFixed(2) ?? null,
+    invoiceDiscountAmount: order.invoiceDiscountAmount.toFixed(2),
     refundedAmount: refunded.toFixed(2),
     soldUnits,
     returnedUnits,

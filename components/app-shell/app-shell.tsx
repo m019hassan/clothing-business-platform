@@ -73,6 +73,7 @@ const REPORTS_SUB_ITEMS = [{ href: "/reports/profit", key: "reportsProfit" }] as
 const ADMIN_SUB_ITEMS = [
   { href: "/admin", key: "adminAccounts", requiresUsers: true },
   { href: "/admin/branches", key: "adminBranches", requiresBranches: true },
+  { href: "/admin/cashiers", key: "adminCashiers" },
   { href: "/audit", key: "audit", requiresAudit: true },
 ] as const;
 

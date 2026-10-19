@@ -129,6 +129,11 @@ export default async function PosPage() {
         }}
         preferEnglish={locale === "en"}
         tax={taxSetting}
+        canDiscount={account.distributorProfile.canDiscount === true}
+        ownDiscount={{
+          code: account.distributorProfile.discountCode,
+          percent: account.distributorProfile.discountPercent?.toString() ?? null,
+        }}
         errors={t.errors}
       />
     </div>

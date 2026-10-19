@@ -112,6 +112,12 @@ export default async function PosInvoicePage({ params }: { params: Promise<{ id:
             total={total}
             taxAmount={Number(invoice.taxAmount) > 0 ? formatMoney(invoice.taxAmount, invoice.currency) : undefined}
             taxLabel={t.posInvoice.tax}
+            discountAmount={
+              Number(invoice.invoiceDiscountAmount) > 0
+                ? formatMoney(invoice.invoiceDiscountAmount, invoice.currency)
+                : undefined
+            }
+            discountLabel={t.posInvoice.invoiceDiscount}
             refunded={refunded}
             paymentMethod={paymentMethodLabel}
             soldUnits={invoice.soldUnits}

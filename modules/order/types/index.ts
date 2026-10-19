@@ -67,6 +67,9 @@ export type OrderView = {
   subtotalAmount: string;
   totalAmount: string;
   taxAmount: string;
+  invoiceDiscountType: "PERCENT" | "AMOUNT" | null;
+  invoiceDiscountValue: string | null;
+  invoiceDiscountAmount: string;
   createdAt: string;
   addressId: string | null;
   deliveryAddress: OrderDeliveryAddressView | null;

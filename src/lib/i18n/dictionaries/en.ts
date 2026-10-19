@@ -28,6 +28,7 @@ export const en = {
     productCategories: "Categories",
     adminAccounts: "Accounts",
     adminBranches: "Branches",
+    adminCashiers: "Cashiers",
     deliveries: "Deliveries",
     customers: "Customers",
     employees: "Employees",
@@ -763,6 +764,7 @@ export const en = {
     stale: "This order is no longer awaiting a payment decision.",
   },
   posInvoice: {
+    invoiceDiscount: "Invoice discount",
     tax: "VAT",
     customer: "Customer",
     discount: "Discount",
@@ -1043,6 +1045,7 @@ export const en = {
     emptyHint: "Orders you place will appear here.",
   },
   orderDetail: {
+    invoiceDiscount: "Invoice discount:",
     tax: "VAT included:",
     discount: "Discount",
     refundLine: "Refund of {amount} recorded on {date}.",
@@ -1189,6 +1192,19 @@ export const en = {
     markExempt: "Taxable — mark exempt",
     markTaxable: "Exempt — make taxable",
     savingShort: "Saving...",
+  },
+
+  cashiers: {
+    permissionTitle: "Managing cashiers needs the users.manage permission",
+    title: "Cashiers",
+    subtitle: "Choose who may discount an invoice, and their personal discount code.",
+    canDiscount: "May discount",
+    code: "Code",
+    percent: "Percent %",
+    save: "Save",
+    saving: "Saving...",
+    saved: "Saved ✓",
+    empty: "No cashiers yet.",
   },
 
   discounts: {

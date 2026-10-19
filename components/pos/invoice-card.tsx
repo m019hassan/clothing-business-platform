@@ -28,6 +28,8 @@ interface InvoiceCardProps {
   total: string; // formatted total amount
   taxAmount?: string; // formatted VAT amount, when the sale carried tax
   taxLabel?: string;
+  discountAmount?: string; // formatted invoice discount
+  discountLabel?: string;
   refunded: string; // formatted refunded amount
   paymentMethod: string;
   soldUnits: number;
@@ -48,6 +50,8 @@ export function InvoiceCard({
   total,
   taxAmount,
   taxLabel,
+  discountAmount,
+  discountLabel,
   refunded,
   paymentMethod,
   soldUnits,
@@ -130,6 +134,12 @@ export function InvoiceCard({
           <div className="flex items-center justify-between">
             <dt className="text-slate-500 dark:text-slate-400">{taxLabel ?? "الضريبة"}</dt>
             <dd className="text-slate-700 dark:text-slate-300">{taxAmount}</dd>
+          </div>
+        ) : null}
+        {discountAmount ? (
+          <div className="flex items-center justify-between">
+            <dt className="text-slate-500 dark:text-slate-400">{discountLabel ?? "خصم إضافي"}</dt>
+            <dd className="text-rose-600">-{discountAmount}</dd>
           </div>
         ) : null}
         <div className="flex items-center justify-between">
