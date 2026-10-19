@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Fragment, useState, type ReactNode } from "react";
+import { Fragment, useEffect, useState, type ReactNode } from "react";
 
 import { logoutAction } from "@/modules/auth/application/actions";
 import { NotificationBell } from "@/modules/notification/components/notification-bell";
@@ -133,6 +133,36 @@ function SidebarContent({
   canViewProducts: boolean;
   onNavigate?: () => void;
 }) {
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
+
+  // Restore the panel's open/closed sections from the last visit.
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem("sidebar:collapsed");
+
+      if (raw !== null) {
+        setCollapsedSections(JSON.parse(raw) as Record<string, boolean>);
+      }
+    } catch {
+      // Ignore a broken stored value; sections just stay open.
+    }
+  }, []);
+
+  function toggleSection(key: string) {
+    setCollapsedSections((current) => {
+      const next = { ...current, [key]: current[key] !== true };
+
+      try {
+        window.localStorage.setItem("sidebar:collapsed", JSON.stringify(next));
+      } catch {
+        // Ignore storage failures.
+      }
+
+      return next;
+    });
+  }
+
+  const isSectionCollapsed = (key: string) => collapsedSections[key] === true;
   const adminSubItems = ADMIN_SUB_ITEMS.filter((sub) => {
     if ("requiresUsers" in sub && sub.requiresUsers) return canViewUsers;
     if ("requiresBranches" in sub && sub.requiresBranches) return canViewBranches;
@@ -302,33 +332,61 @@ function SidebarContent({
           const isPosEntry = item.href === "/pos";
           const isInventoryEntry = item.href === "/inventory";
 
+          const hasSection =
+            isAdminEntry ||
+            (isProductEntry && canViewProducts) ||
+            (item.href === "/reports" && canViewReports) ||
+            (isPosEntry && isDistributor) ||
+            (isInventoryEntry && canViewInventory);
+          const sectionCollapsed = hasSection ? isSectionCollapsed(item.href) : false;
+
           return (
             <Fragment key={item.href}>
-              <Link
-                href={item.href}
-                onClick={onNavigate}
-                aria-current={isActive ? "page" : undefined}
-                className={[
-                  "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-150",
-                  isActive
-                    ? "bg-slate-900 text-white shadow-sm"
-                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-950",
-                ].join(" ")}
-              >
-                <NavIcon
+              <div className="flex items-stretch gap-1">
+                <Link
                   href={item.href}
-                  className={`h-5 w-5 shrink-0 transition-colors ${
-                    isActive ? "text-white" : "text-slate-400 group-hover:text-slate-700"
-                  }`}
-                />
-                <span className="truncate">{navLabels[item.key]}</span>
-              </Link>
+                  onClick={onNavigate}
+                  aria-current={isActive ? "page" : undefined}
+                  className={[
+                    "group flex flex-1 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-150",
+                    isActive
+                      ? "bg-slate-900 text-white shadow-sm"
+                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-950",
+                  ].join(" ")}
+                >
+                  <NavIcon
+                    href={item.href}
+                    className={`h-5 w-5 shrink-0 transition-colors ${
+                      isActive ? "text-white" : "text-slate-400 group-hover:text-slate-700"
+                    }`}
+                  />
+                  <span className="truncate">{navLabels[item.key]}</span>
+                </Link>
+                {hasSection ? (
+                  <button
+                    type="button"
+                    onClick={() => toggleSection(item.href)}
+                    aria-expanded={!sectionCollapsed}
+                    aria-label={`${navLabels[item.key]} — ${sectionCollapsed ? "expand" : "collapse"}`}
+                    className="flex w-8 shrink-0 items-center justify-center rounded-xl text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
+                  >
+                    <span
+                      className={[
+                        "inline-block text-[10px] leading-none transition-transform",
+                        sectionCollapsed ? "-rotate-90" : "",
+                      ].join(" ")}
+                    >
+                      ▼
+                    </span>
+                  </button>
+                ) : null}
+              </div>
 
-              {isAdminEntry ? renderAdminSubItems() : null}
-              {isProductEntry && canViewProducts ? renderProductSubItems() : null}
-              {item.href === "/reports" && canViewReports ? renderReportsSubItems() : null}
-              {isPosEntry && isDistributor ? renderPosSubItems() : null}
-              {isInventoryEntry && canViewInventory ? renderInventorySubItems() : null}
+              {isAdminEntry && !sectionCollapsed ? renderAdminSubItems() : null}
+              {isProductEntry && canViewProducts && !sectionCollapsed ? renderProductSubItems() : null}
+              {item.href === "/reports" && canViewReports && !sectionCollapsed ? renderReportsSubItems() : null}
+              {isPosEntry && isDistributor && !sectionCollapsed ? renderPosSubItems() : null}
+              {isInventoryEntry && canViewInventory && !sectionCollapsed ? renderInventorySubItems() : null}
             </Fragment>
           );
         })}
