@@ -230,6 +230,15 @@ describe("marketing export", () => {
 
 describe("customer invoices", () => {
   it("paginates every order and totals the spend", async () => {
+    const baseline = await prisma.order.findMany({
+      where: { customerProfileId: fixture.profileId },
+      select: { totalAmount: true },
+    });
+    const baselineTotal = baseline.reduce(
+      (sum, order) => sum.add(order.totalAmount),
+      new Prisma.Decimal(0),
+    );
+
     for (let index = 0; index < 3; index += 1) {
       const order = await prisma.order.create({
         data: {
@@ -246,13 +255,16 @@ describe("customer invoices", () => {
       created.orderIds.push(order.id);
     }
 
+    const expectedTotal = baseline.length + 3;
+    const expectedSpent = baselineTotal.add(new Prisma.Decimal("300.00")).toFixed(2);
+
     const first = await listCustomerOrders(account, fixture.profileId, { limit: 2, offset: 0 });
-    expect(first.pagination.total).toBe(3);
-    expect(first.orders).toHaveLength(2);
-    expect(first.pagination.totalSpent).toBe("300.00");
+    expect(first.pagination.total).toBe(expectedTotal);
+    expect(first.orders).toHaveLength(Math.min(2, expectedTotal));
+    expect(first.pagination.totalSpent).toBe(expectedSpent);
     expect(first.customerName).toContain("Nour");
 
     const second = await listCustomerOrders(account, fixture.profileId, { limit: 2, offset: 2 });
-    expect(second.orders).toHaveLength(1);
+    expect(second.orders).toHaveLength(Math.min(2, expectedTotal - 2));
   });
 });
