@@ -32,6 +32,7 @@ import {
   withDatabaseError,
 } from "@/src/lib/errors";
 import { isUuid, type Pagination } from "@/src/lib/validation";
+import { computeLineTax, getTaxSetting } from "@/modules/catalog/application/taxes";
 
 type AuthenticatedAccount = NonNullable<SafeAccount>;
 const ORDER_NUMBER_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -44,6 +45,7 @@ export const orderSelection = {
   currency: true,
   subtotalAmount: true,
   totalAmount: true,
+  taxAmount: true,
   createdAt: true,
   addressId: true,
   deliveryAddress: true,
@@ -124,6 +126,7 @@ export function mapOrder(order: OrderRecord): OrderView {
     currency: order.currency,
     subtotalAmount: order.subtotalAmount.toString(),
     totalAmount: order.totalAmount.toString(),
+    taxAmount: order.taxAmount.toString(),
     createdAt: order.createdAt.toISOString(),
     addressId: order.addressId,
     deliveryAddress: order.deliveryAddress as OrderDeliveryAddressView | null,
@@ -281,6 +284,7 @@ export async function createOrderFromCart(
     ? await resolveDeliveryAddress(account, input.addressId)
     : null;
   const paymentMethod = parseCustomerPaymentMethod(input.paymentMethod);
+  const taxSetting = await getTaxSetting();
 
   return withDatabaseError(() =>
     runOrderTransaction(() =>
@@ -360,10 +364,30 @@ export async function createOrderFromCart(
           throw new ConflictError("The cart can no longer be converted into an order.");
         }
 
+        const taxRate = new Prisma.Decimal(taxSetting.ratePercent);
+        const taxOn = taxSetting.enabled && taxRate.gt(0);
+        const exemptProducts = taxOn
+          ? await transaction.product.findMany({ where: { taxExempt: true }, select: { id: true } })
+          : [];
+        const exemptIds = new Set(exemptProducts.map((product) => product.id));
+
+        let subtotalAmount = new Prisma.Decimal(0);
+        let taxTotal = new Prisma.Decimal(0);
+
         const orderItems = cart.items.map((item) => {
           const catalogPrice = item.variant.priceOverride ?? item.variant.product.basePrice;
           const discountPercent = discountMap.get(item.variant.product.id) ?? null;
           const unitPrice = discountPercent ? discountedAmount(catalogPrice, discountPercent) : catalogPrice;
+          const lineTotal = unitPrice.mul(item.quantity);
+          const taxable = taxOn && !exemptIds.has(item.variant.product.id);
+          const lineTax = computeLineTax(
+            lineTotal,
+            taxable ? taxRate : new Prisma.Decimal(0),
+            taxSetting.inclusive,
+          );
+
+          subtotalAmount = subtotalAmount.add(lineTotal);
+          taxTotal = taxTotal.add(lineTax.taxAmount);
 
           return {
             variantId: item.variant.id,
@@ -373,13 +397,12 @@ export async function createOrderFromCart(
             discountPercent,
             unitCost: item.variant.product.cost ?? null,
             discountAmount: new Prisma.Decimal(0),
+            taxAmount: lineTax.taxAmount,
+            taxPercent: taxable ? taxRate : null,
           };
         });
 
-        const subtotalAmount = orderItems.reduce(
-          (sum, item) => sum.add(item.unitPrice.mul(item.quantity)),
-          new Prisma.Decimal(0),
-        );
+        const totalAmount = taxSetting.inclusive ? subtotalAmount : subtotalAmount.add(taxTotal);
 
         const order = await transaction.order.create({
           data: {
@@ -393,7 +416,8 @@ export async function createOrderFromCart(
                 }
               : {}),
             subtotalAmount,
-            totalAmount: subtotalAmount,
+            totalAmount,
+            taxAmount: taxTotal,
             currency: cart.items[0].variant.product.currency,
             items: { create: orderItems },
             payments: {
@@ -401,7 +425,7 @@ export async function createOrderFromCart(
                 {
                   status: PaymentStatus.PENDING,
                   method: paymentMethod,
-                  amount: subtotalAmount,
+                  amount: totalAmount,
                   currency: cart.items[0].variant.product.currency,
                 },
               ],

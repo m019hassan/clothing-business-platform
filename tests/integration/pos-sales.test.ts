@@ -642,3 +642,68 @@ describe("counter customer registration", () => {
     expect(lookup.found).toBe(false);
   });
 });
+
+describe("vat at the counter", () => {
+  beforeEach(async () => {
+    await prisma.taxSetting.deleteMany();
+  });
+
+  afterAll(async () => {
+    await prisma.taxSetting.deleteMany();
+  });
+
+  it("keeps inclusive prices untouched and records the tax part", async () => {
+    await prisma.taxSetting.create({
+      data: { id: "default", enabled: true, ratePercent: new Prisma.Decimal("14"), inclusive: true },
+    });
+
+    const receipt = await createPosSale(distributor, payload());
+    const order = await prisma.order.findUniqueOrThrow({
+      where: { id: receipt.orderId },
+      select: { subtotalAmount: true, totalAmount: true, taxAmount: true },
+    });
+
+    expect(order.totalAmount.toFixed(2)).toBe("70.00");
+    expect(Number(order.taxAmount.toFixed(2))).toBeGreaterThan(0);
+    expect(order.subtotalAmount.add(order.taxAmount).toFixed(2)).toBe("70.00");
+    expect(Number(receipt.taxAmount).toFixed(2)).toBe(order.taxAmount.toFixed(2));
+  });
+
+  it("adds the tax on top when prices exclude it", async () => {
+    await prisma.taxSetting.create({
+      data: { id: "default", enabled: true, ratePercent: new Prisma.Decimal("14"), inclusive: false },
+    });
+
+    const receipt = await createPosSale(distributor, payload());
+    const order = await prisma.order.findUniqueOrThrow({
+      where: { id: receipt.orderId },
+      select: { subtotalAmount: true, totalAmount: true, taxAmount: true },
+    });
+
+    expect(order.subtotalAmount.toFixed(2)).toBe("70.00");
+    expect(order.totalAmount.add(order.taxAmount.neg()).toFixed(2)).toBe("70.00");
+
+    const payment = await prisma.payment.findFirstOrThrow({ where: { orderId: receipt.orderId } });
+    expect(payment.amount.toFixed(2)).toBe(order.totalAmount.toFixed(2));
+  });
+
+  it("charges nothing on exempt products", async () => {
+    await prisma.taxSetting.create({
+      data: { id: "default", enabled: true, ratePercent: new Prisma.Decimal("14"), inclusive: false },
+    });
+    const variant = await prisma.productVariant.findUniqueOrThrow({
+      where: { id: variantA },
+      select: { productId: true },
+    });
+    await prisma.product.update({ where: { id: variant.productId }, data: { taxExempt: true } });
+
+    const receipt = await createPosSale(distributor, payload());
+    const order = await prisma.order.findUniqueOrThrow({
+      where: { id: receipt.orderId },
+      select: { totalAmount: true, taxAmount: true },
+    });
+
+    expect(order.taxAmount.toFixed(2)).toBe("0.00");
+    expect(order.totalAmount.toFixed(2)).toBe("70.00");
+  });
+});

@@ -11,6 +11,7 @@ import { CashierModeToggle } from "@/modules/pos/components/cashier-mode-toggle"
 import { PosTerminal } from "@/modules/pos/components/pos-terminal";
 import { AuthorizationError } from "@/src/lib/errors";
 import { getInterfaceLanguage } from "@/src/lib/i18n/server";
+import { getTaxSetting } from "@/modules/catalog/application/taxes";
 
 export default async function PosPage() {
   const { t, locale } = await getInterfaceLanguage();
@@ -55,6 +56,7 @@ export default async function PosPage() {
   }
 
   requestables = await listRequestableVariants().catch(() => []);
+  const taxSetting = await getTaxSetting().catch(() => ({ enabled: false, ratePercent: "0.00", inclusive: true }));
 
   return (
     <div className="space-y-6">
@@ -126,6 +128,7 @@ export default async function PosPage() {
           photoNext: t.common.next,
         }}
         preferEnglish={locale === "en"}
+        tax={taxSetting}
         errors={t.errors}
       />
     </div>

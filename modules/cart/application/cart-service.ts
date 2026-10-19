@@ -20,6 +20,7 @@ import {
   type TransactionClient,
 } from "@/modules/inventory/application/reservations";
 import { isUuid, normalizeDigits } from "@/src/lib/validation";
+import { computeLineTax, getTaxSetting, type TaxSettingView } from "@/modules/catalog/application/taxes";
 
 const MAX_LINE_QUANTITY = 999;
 
@@ -43,7 +44,7 @@ const cartSelection = {
             select: { quantityOnHand: true, quantityReserved: true },
           },
           product: {
-            select: { id: true, name: true, basePrice: true, currency: true },
+            select: { id: true, name: true, basePrice: true, currency: true, taxExempt: true },
           },
         },
       },
@@ -82,10 +83,10 @@ function validateQuantity(quantity: number): void {
 }
 
 function toEmptyCart(): CartView {
-  return { id: null, status: CartStatus.ACTIVE, items: [], total: "0" };
+  return { id: null, status: CartStatus.ACTIVE, items: [], subtotal: "0", taxAmount: "0", total: "0" };
 }
 
-function mapCart(cart: CartRecord, discountMap: Map<string, number>): CartView {
+function mapCart(cart: CartRecord, discountMap: Map<string, number>, tax: TaxSettingView): CartView {
   const items = cart.items.map((item) => {
     const catalogPrice = item.variant.priceOverride ?? item.variant.product.basePrice;
     const discountPercent = discountMap.get(item.variant.product.id) ?? null;
@@ -113,15 +114,32 @@ function mapCart(cart: CartRecord, discountMap: Map<string, number>): CartView {
     };
   });
 
-  const total = cart.items.reduce((sum, item) => {
+  const taxRate = new Prisma.Decimal(tax.ratePercent);
+  let subtotal = new Prisma.Decimal(0);
+  let taxTotal = new Prisma.Decimal(0);
+
+  for (const item of cart.items) {
     const catalogPrice = item.variant.priceOverride ?? item.variant.product.basePrice;
     const discountPercent = discountMap.get(item.variant.product.id) ?? null;
     const unitPrice = discountPercent ? discountedAmount(catalogPrice, discountPercent) : catalogPrice;
+    const lineTotal = unitPrice.mul(item.quantity);
+    subtotal = subtotal.add(lineTotal);
 
-    return sum.add(unitPrice.mul(item.quantity));
-  }, new Prisma.Decimal(0));
+    if (tax.enabled && taxRate.gt(0) && item.variant.product.taxExempt === false) {
+      taxTotal = taxTotal.add(computeLineTax(lineTotal, taxRate, tax.inclusive).taxAmount);
+    }
+  }
 
-  return { id: cart.id, status: cart.status, items, total: total.toString() };
+  const total = tax.inclusive ? subtotal : subtotal.add(taxTotal);
+
+  return {
+    id: cart.id,
+    status: cart.status,
+    items,
+    subtotal: subtotal.toString(),
+    taxAmount: taxTotal.toString(),
+    total: total.toString(),
+  };
 }
 
 async function loadCart(customerProfileId: string): Promise<CartView> {
@@ -130,7 +148,7 @@ async function loadCart(customerProfileId: string): Promise<CartView> {
     select: cartSelection,
   });
 
-  return cart ? mapCart(cart, await getActiveDiscountMap()) : toEmptyCart();
+  return cart ? mapCart(cart, await getActiveDiscountMap(), await getTaxSetting()) : toEmptyCart();
 }
 
 async function findOrCreateActiveCart(customerProfileId: string): Promise<{ id: string }> {

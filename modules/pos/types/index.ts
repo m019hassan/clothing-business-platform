@@ -17,6 +17,8 @@ export type PosCatalogItemView = {
   /** The English name of the matched library colour, when one exists. */
   colorNameEn: string | null;
   unitPrice: string;
+  /** Exempt goods stay untaxed even when VAT is on. */
+  taxExempt: boolean;
   /** Set while an active discount applies to this product. */
   discountPercent?: number | null;
   originalUnitPrice?: string | null;
@@ -46,6 +48,8 @@ export type PosReceiptView = {
   status: string;
   currency: string;
   totalAmount: string;
+  /** VAT included in the receipt, zero when VAT is off. */
+  taxAmount: string;
   itemCount: number;
   branchCode: string;
   soldBy: string;

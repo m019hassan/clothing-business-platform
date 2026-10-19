@@ -8,6 +8,8 @@ import { StockAdjustForm } from "@/modules/inventory/components/stock-adjust-for
 import { getCurrentPermissions } from "@/modules/auth/application/authorization";
 import { PERMISSIONS } from "@/modules/auth/application/permissions";
 import { getCurrentAccount } from "@/modules/auth/infrastructure/session";
+import { getProductTaxExemption } from "@/modules/catalog/application/taxes";
+import { ProductTaxToggle } from "@/modules/catalog/components/product-tax-toggle";
 import {
   getProductBranchStock,
   getProductInventory,
@@ -51,11 +53,13 @@ export default async function ProductDetailPage({ params }: ProductDetailProps) 
 
   let product: ProductInventoryView | null = null;
   let branchStock: ProductBranchStockView | null = null;
+  let taxExempt = false;
   let loadError = false;
 
   try {
     product = await getProductInventory(id);
     branchStock = await getProductBranchStock(id);
+    taxExempt = await getProductTaxExemption(id).catch(() => false);
   } catch (error) {
     if (error instanceof NotFoundError) {
       notFound();
@@ -152,6 +156,21 @@ export default async function ProductDetailPage({ params }: ProductDetailProps) 
           <InfoRow label={t.catalog.detail.created} value={formatDate(product.createdAt)} />
           <InfoRow label={t.catalog.detail.updated} value={formatDate(product.updatedAt)} />
         </dl>
+
+        {canUpdateProduct ? (
+          <div className="mt-4 flex items-center justify-between gap-3 rounded-xl bg-slate-50 px-4 py-3">
+            <div>
+              <p className="text-sm font-semibold text-slate-800">{t.tax.productLabel}</p>
+              <p className="text-xs text-slate-500">{taxExempt ? t.tax.exemptionNote : t.tax.taxableNote}</p>
+            </div>
+            <ProductTaxToggle
+              productId={product.id}
+              initialExempt={taxExempt}
+              labels={{ exempt: t.tax.markExempt, taxable: t.tax.markTaxable, saving: t.tax.savingShort }}
+              errors={t.errors}
+            />
+          </div>
+        ) : null}
       </section>
 
       {/* Add to cart — customer accounts only */}

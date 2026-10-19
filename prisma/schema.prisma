@@ -375,6 +375,9 @@ model Product {
   /// The per-unit buying cost; hidden from accounts without products.cost.view.
   cost Decimal? @db.Decimal(12, 2)
 
+  /// Exempt goods stay untaxed even when the shop's VAT switch is on.
+  taxExempt Boolean @default(false)
+
   currency  String        @default("EGP") @db.VarChar(10)
 
   categoryId String @db.Uuid
@@ -712,6 +715,7 @@ model Order {
 
   subtotalAmount Decimal @db.Decimal(12, 2)
   totalAmount    Decimal @db.Decimal(12, 2)
+  taxAmount      Decimal @default(0) @db.Decimal(12, 2)
   currency       String  @db.VarChar(10)
 
   addressId String? @db.Uuid
@@ -766,6 +770,9 @@ model OrderItem {
   /// The campaign percent live at sale time; null when none applied.
   discountPercent Int?
   discountAmount Decimal @default(0) @db.Decimal(12, 2)
+  /// VAT charged on this line; zero when the product is exempt or VAT is off.
+  taxAmount  Decimal  @default(0) @db.Decimal(12, 2)
+  taxPercent Decimal? @db.Decimal(5, 2)
   /// Cost snapshot at sale time, so profit is not rewritten when costs change later.
   unitCost Decimal? @db.Decimal(12, 2)
 
@@ -1039,4 +1046,15 @@ model StockAlert {
   @@unique([variantId, contact])
   @@index([variantId, status])
   @@index([status, createdAt])
+}
+
+/** One row per shop: the VAT switch, the rate, and whether shelf prices include it. */
+model TaxSetting {
+  id String @id @default("default") @db.VarChar(20)
+
+  enabled     Boolean @default(false)
+  ratePercent Decimal @default(0) @db.Decimal(5, 2)
+  inclusive   Boolean @default(true)
+
+  updatedAt DateTime @updatedAt
 }

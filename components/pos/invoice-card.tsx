@@ -26,6 +26,8 @@ interface InvoiceCardProps {
   status: PosInvoiceStatus;
   net: string; // formatted net amount
   total: string; // formatted total amount
+  taxAmount?: string; // formatted VAT amount, when the sale carried tax
+  taxLabel?: string;
   refunded: string; // formatted refunded amount
   paymentMethod: string;
   soldUnits: number;
@@ -44,6 +46,8 @@ export function InvoiceCard({
   status,
   net,
   total,
+  taxAmount,
+  taxLabel,
   refunded,
   paymentMethod,
   soldUnits,
@@ -122,6 +126,12 @@ export function InvoiceCard({
             {total}
           </dd>
         </div>
+        {taxAmount ? (
+          <div className="flex items-center justify-between">
+            <dt className="text-slate-500 dark:text-slate-400">{taxLabel ?? "الضريبة"}</dt>
+            <dd className="text-slate-700 dark:text-slate-300">{taxAmount}</dd>
+          </div>
+        ) : null}
         <div className="flex items-center justify-between">
           <dt className="text-slate-500 dark:text-slate-400">المسترد</dt>
           <dd className="text-slate-700 dark:text-slate-300">{refunded}</dd>

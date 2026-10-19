@@ -66,6 +66,7 @@ export type OrderView = {
   currency: string;
   subtotalAmount: string;
   totalAmount: string;
+  taxAmount: string;
   createdAt: string;
   addressId: string | null;
   deliveryAddress: OrderDeliveryAddressView | null;

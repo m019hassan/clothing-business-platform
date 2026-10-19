@@ -122,6 +122,11 @@ export default async function OrderDetailPage({ params }: OrderDetailProps) {
             <p className="text-2xl font-semibold tracking-tight text-slate-900">
               {formatMoney(order.totalAmount, order.currency)}
             </p>
+            {Number(order.taxAmount) > 0 ? (
+              <p className="text-xs text-slate-500">
+                {t.orderDetail.tax} {formatMoney(order.taxAmount, order.currency)}
+              </p>
+            ) : null}
             <p className="text-xs text-slate-500">
               {itemCount} {itemCount === 1 ? t.cart.itemSingular : t.cart.itemPlural}
             </p>

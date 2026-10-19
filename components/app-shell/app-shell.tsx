@@ -54,6 +54,7 @@ const PRODUCT_SUB_ITEMS = [
   { href: "/products/materials", key: "productMaterials" },
   { href: "/products/barcodes", key: "productBarcodes" },
   { href: "/products/discounts", key: "productDiscounts" },
+  { href: "/products/tax", key: "productTax" },
 ] as const;
 
 /** Links shown indented under the inventory entry. */

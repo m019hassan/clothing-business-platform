@@ -185,6 +185,14 @@ export default async function CartPage() {
               </dd>
             </div>
             <div className="flex items-center justify-between border-t border-slate-100 pt-3">
+              {Number(cart.taxAmount) > 0 ? (
+                <div className="flex items-center justify-between">
+                  <dt className="text-sm text-slate-500">{t.cart.tax}</dt>
+                  <dd className="text-sm text-slate-700">
+                    {formatMoney(cart.taxAmount, cart.items[0]?.currency ?? "")}
+                  </dd>
+                </div>
+              ) : null}
               <dt className="text-base font-bold text-slate-900">{t.common.total}</dt>
               <dd className="text-xl font-bold text-slate-950">
                 {formatMoney(cart.total, cart.items[0]?.currency ?? "")}

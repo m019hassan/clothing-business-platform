@@ -19,6 +19,7 @@ import { isUuid } from "@/src/lib/validation";
 import { stockLevel } from "@/src/lib/inventory/stock-level";
 import { discountedAmount, getActiveDiscountMap } from "@/modules/catalog/application/promotions";
 import { findCounterCustomerCandidates, normalizePhoneDigits, registerCounterCustomer } from "@/modules/pos/application/pos-customers";
+import { computeLineTax, getTaxSetting } from "@/modules/catalog/application/taxes";
 
 type AuthenticatedAccount = NonNullable<SafeAccount>;
 
@@ -290,6 +291,7 @@ export async function getPosCatalog(account: AuthenticatedAccount): Promise<PosC
                 basePrice: true,
                 currency: true,
                 category: { select: { id: true, name: true } },
+                taxExempt: true,
                 images: { orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }], select: { id: true } },
               },
             },
@@ -343,6 +345,7 @@ export async function getPosCatalog(account: AuthenticatedAccount): Promise<PosC
       availableQuantity: available,
       categoryId: item.variant.product.category?.id ?? null,
       categoryName: item.variant.product.category?.name ?? null,
+      taxExempt: item.variant.product.taxExempt,
     });
   }
 
@@ -365,6 +368,9 @@ export async function createPosSale(
   const distributor = requireDistributor(account);
   const input = parsePosSaleInput(payload);
   const warehouseIds = await resolveWarehouseIds(distributor.branchId);
+  const taxSetting = await getTaxSetting();
+  const taxRate = new Prisma.Decimal(taxSetting.ratePercent);
+  const taxEnabled = taxSetting.enabled && taxRate.gt(0);
 
   // Resolve or register the buyer before the sale transaction: a phone unique
   // race can then be re-read safely without an aborted database transaction.
@@ -392,7 +398,10 @@ export async function createPosSale(
       const itemCosts: (Prisma.Decimal | null)[] = [];
       const itemDiscounts: (number | null)[] = [];
       const itemOriginals: (string | null)[] = [];
+      const itemTaxes: Prisma.Decimal[] = [];
+      const itemTaxPercents: (Prisma.Decimal | null)[] = [];
       let total = new Prisma.Decimal(0);
+      let taxTotal = new Prisma.Decimal(0);
       let currency = "EGP";
 
       for (const item of input.items) {
@@ -404,7 +413,7 @@ export async function createPosSale(
             size: true,
             color: true,
             priceOverride: true,
-            product: { select: { id: true, name: true, basePrice: true, cost: true, currency: true, status: true, deletedAt: true } },
+            product: { select: { id: true, name: true, basePrice: true, cost: true, currency: true, status: true, deletedAt: true, taxExempt: true } },
           },
         });
 
@@ -416,6 +425,11 @@ export async function createPosSale(
         const discountPercent = discountMap.get(variant.product.id) ?? null;
         const unitPrice = discountPercent ? discountedAmount(catalogPrice, discountPercent) : catalogPrice;
         const lineTotal = unitPrice.mul(item.quantity);
+        const taxable = taxEnabled && variant.product.taxExempt === false;
+        const lineTax = computeLineTax(lineTotal, taxable ? taxRate : new Prisma.Decimal(0), taxSetting.inclusive);
+        itemTaxes.push(lineTax.taxAmount);
+        itemTaxPercents.push(taxable ? taxRate : null);
+        taxTotal = taxTotal.add(lineTax.taxAmount);
         itemCosts.push(variant.product.cost ?? null);
         itemDiscounts.push(discountPercent);
         itemOriginals.push(discountPercent ? catalogPrice.toString() : null);
@@ -440,7 +454,7 @@ export async function createPosSale(
           throw error;
         }
 
-        total = total.add(lineTotal);
+        total = total.add(lineTax.payable);
 
         lines.push({
           variantId: variant.id,
@@ -463,8 +477,9 @@ export async function createPosSale(
           channel: OrderChannel.POS,
           branchId: branch.id,
           soldByAccountId: account.id,
-          subtotalAmount: total,
+          subtotalAmount: total.sub(taxTotal),
           totalAmount: total,
+          taxAmount: taxTotal,
           currency,
           items: {
             create: input.items.map((item, index) => ({
@@ -473,6 +488,8 @@ export async function createPosSale(
               unitPrice: new Prisma.Decimal(lines[index].unitPrice),
               originalUnitPrice: itemOriginals[index] ? new Prisma.Decimal(itemOriginals[index]) : null,
               discountPercent: itemDiscounts[index] ?? null,
+              taxAmount: itemTaxes[index],
+              taxPercent: itemTaxPercents[index],
               unitCost: itemCosts[index] ?? null,
               discountAmount: new Prisma.Decimal(0),
             })),
@@ -555,6 +572,7 @@ export async function createPosSale(
         status: order.status,
         currency,
         totalAmount: total.toString(),
+        taxAmount: taxTotal.toString(),
         itemCount: input.items.reduce((sum, item) => sum + item.quantity, 0),
         branchCode: branch.code,
         soldBy: distributor.displayName,

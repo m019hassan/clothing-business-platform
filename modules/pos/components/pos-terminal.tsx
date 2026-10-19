@@ -25,6 +25,7 @@ import {
   VolumeXIcon,
   XIcon,
 } from "@/components/ui/icons";
+import { computeTaxAmount, roundMoney } from "@/src/lib/money/tax";
 
 type CartLine = { item: PosCatalogItemView; quantity: number };
 
@@ -42,12 +43,12 @@ export function PosTerminal({
   labels,
   preferEnglish = false,
   errors,
-}: {
+  tax,}: {
   catalog: PosCatalogView;
   labels: PosLabels;
   preferEnglish?: boolean;
   errors?: ApiErrorLabels;
-}) {
+  tax: { enabled: boolean; ratePercent: string; inclusive: boolean };}) {
   const [query, setQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [lines, setLines] = useState<CartLine[]>([]);
@@ -215,7 +216,18 @@ export function PosTerminal({
     return [...groups.values()].filter((group) => group.some((item) => item.availableQuantity > 0)).slice(0, 25);
   }, [filtered]);
 
-  const total = lines.reduce((sum, line) => sum + Number(line.item.unitPrice) * line.quantity, 0);
+  const taxRatePercent = tax.enabled ? Number(tax.ratePercent) : 0;
+  const subtotal = lines.reduce((sum, line) => sum + Number(line.item.unitPrice) * line.quantity, 0);
+  const taxTotal = roundMoney(
+    lines.reduce((sum, line) => {
+      if (!tax.enabled || line.item.taxExempt) {
+        return sum;
+      }
+
+      return sum + computeTaxAmount(Number(line.item.unitPrice) * line.quantity, taxRatePercent, tax.inclusive);
+    }, 0),
+  );
+  const total = roundMoney(tax.inclusive ? subtotal : subtotal + taxTotal);
   const totalItemCount = lines.reduce((sum, line) => sum + line.quantity, 0);
   const currency = catalog.items[0]?.currency ?? "EGP";
 
@@ -534,6 +546,13 @@ export function PosTerminal({
                 </li>
               ))}
             </ul>
+
+            {Number(receipt.taxAmount) > 0 ? (
+              <div className="mt-2 flex items-center justify-between text-xs text-slate-500">
+                <span>{tax.inclusive ? (preferEnglish ? "VAT (included)" : "الضريبة (شاملة)") : preferEnglish ? "VAT" : "الضريبة"}</span>
+                <span>{formatMoney(receipt.taxAmount, receipt.currency)}</span>
+              </div>
+            ) : null}
 
             <div className="mt-4 flex items-center justify-between border-t border-emerald-100 pt-3 text-sm">
               <span className="font-bold text-slate-700">{labels.total}</span>
@@ -893,6 +912,12 @@ export function PosTerminal({
 
           {/* Register Bottom Summary & Pay Trigger */}
           <div className="border-t border-slate-100 pt-3">
+            {taxTotal > 0 ? (
+              <div className="mb-1 flex items-center justify-between text-xs text-slate-500">
+                <span>{preferEnglish ? "VAT" : "الضريبة"}</span>
+                <span>{formatMoney(String(taxTotal), currency)}</span>
+              </div>
+            ) : null}
             <div className="flex items-center justify-between text-sm">
               <span className="font-semibold text-slate-600">{labels.total}</span>
               <span className="text-2xl font-bold tracking-tight text-slate-950">

@@ -22,6 +22,10 @@ export type CartView = {
   id: string | null;
   status: CartStatus;
   items: CartItemView[];
+  /** Net of VAT; equals total when prices already include it. */
+  subtotal: string;
+  taxAmount: string;
+  /** What the customer actually pays. */
   total: string;
 };
 
