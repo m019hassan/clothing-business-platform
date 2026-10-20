@@ -67,6 +67,7 @@ export function PosTerminal({
 
   // Cash / Change calculator modal state
   const [isCashModalOpen, setIsCashModalOpen] = useState(false);
+  const [cartSheetOpen, setCartSheetOpen] = useState(false);
   const [cashGiven, setCashGiven] = useState<string>("");
   const [customerPhone, setCustomerPhone] = useState<string>("");
   const [customerName, setCustomerName] = useState<string>("");
@@ -859,6 +860,25 @@ export function PosTerminal({
         </section>
 
         {/* Right: Active Ticket / Cart Register */}
+        <div
+          className={
+            cartSheetOpen
+              ? "fixed inset-0 z-50 flex flex-col justify-end bg-slate-950/50 backdrop-blur-xs lg:static lg:z-auto lg:bg-transparent lg:backdrop-blur-none"
+              : "hidden lg:block"
+          }
+          onClick={() => setCartSheetOpen(false)}
+          role={cartSheetOpen ? "dialog" : undefined}
+          aria-modal={cartSheetOpen ? true : undefined}
+          aria-label={cartSheetOpen ? "سلة البيع" : undefined}
+        >
+          <div
+            className={
+              cartSheetOpen
+                ? "max-h-[88vh] overflow-y-auto rounded-t-3xl bg-slate-50 p-3 pb-20 lg:max-h-none lg:overflow-visible lg:rounded-none lg:bg-transparent lg:p-0 lg:pb-0"
+                : ""
+            }
+            onClick={(event) => event.stopPropagation()}
+          >
         <section className="h-fit rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm lg:sticky lg:top-24 space-y-4">
           <div className="flex items-center justify-between border-b border-slate-100 pb-3">
             <div>
@@ -1021,7 +1041,33 @@ export function PosTerminal({
             ) : null}
           </div>
         </section>
+          </div>
+        </div>
       </div>
+
+      {lines.length > 0 && !cartSheetOpen ? (
+        <button
+          type="button"
+          onClick={() => setCartSheetOpen(true)}
+          className="fixed inset-x-4 bottom-20 z-40 flex items-center justify-between rounded-2xl bg-slate-950 px-4 py-3 text-white shadow-lg lg:hidden"
+        >
+          <span className="flex items-center gap-2 text-sm font-semibold">
+            <ShoppingBagIcon className="h-4 w-4" />
+            السلة ({totalItemCount})
+          </span>
+          <span className="text-sm font-bold">{formatMoney(String(total), currency)}</span>
+        </button>
+      ) : null}
+
+      {cartSheetOpen ? (
+        <button
+          type="button"
+          onClick={() => setCartSheetOpen(false)}
+          className="fixed inset-x-4 bottom-4 z-[60] rounded-xl border border-slate-200 bg-white py-2.5 text-sm font-semibold text-slate-700 shadow-lg lg:hidden"
+        >
+          إغلاق السلة
+        </button>
+      ) : null}
 
       {/* INVOICE DISCOUNT MODAL */}
       {discountOpen ? (
