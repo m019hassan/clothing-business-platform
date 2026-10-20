@@ -5,6 +5,7 @@ import { ProductPhotoGrid } from "@/components/products/product-photo-grid";
 import { ProductStatusBadge } from "@/components/products/product-status-badge";
 import { StockBadge } from "@/components/products/stock-badge";
 import { getCurrentPermissions } from "@/modules/auth/application/authorization";
+import { getCurrentAccount } from "@/modules/auth/infrastructure/session";
 import { PERMISSIONS } from "@/modules/auth/application/permissions";
 import { listCategories } from "@/modules/catalog/application/categories";
 import {
@@ -92,7 +93,7 @@ function totalAvailable(product: ProductView): number {
 }
 
 export default async function ProductsPage({ searchParams }: ProductsPageProps) {
-  const { t } = await getInterfaceLanguage();
+  const { t, locale } = await getInterfaceLanguage();
   const sortOptions = [
     { value: "name", label: t.catalog.sortOptions.name },
     { value: "name_desc", label: t.catalog.sortOptions.nameDesc },
@@ -107,6 +108,8 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
     { value: "ARCHIVED", label: t.catalog.statusOptions.archived },
   ] as const;
   const permissions = await getCurrentPermissions();
+  const account = await getCurrentAccount();
+  const isCustomer = account?.accountType === "CUSTOMER";
   const canManageCatalog = permissions.has(PERMISSIONS.PRODUCTS_VIEW);
   const canCreate = permissions.has(PERMISSIONS.PRODUCTS_CREATE);
   const canUpdate = permissions.has(PERMISSIONS.PRODUCTS_UPDATE);
@@ -484,7 +487,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                 className="group relative flex flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-md"
               >
                 {/* Image / Thumbnail Container */}
-                <div className="relative aspect-4/3 w-full overflow-hidden bg-slate-100">
+                <div className={`relative w-full overflow-hidden bg-slate-100 ${isCustomer ? "aspect-3/4" : "aspect-4/3"}`}>
                   {product.imageIds.length > 1 ? (
                     <ProductPhotoGrid
                       imageIds={product.imageIds}
@@ -523,9 +526,11 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                     ) : null}
                   </div>
 
-                  <div className="absolute end-3 top-3">
-                    <ProductStatusBadge status={product.status} />
-                  </div>
+                  {isCustomer ? null : (
+                    <div className="absolute end-3 top-3">
+                      <ProductStatusBadge status={product.status} />
+                    </div>
+                  )}
                 </div>
 
                 {/* Card Content */}
@@ -594,9 +599,11 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                   {/* Price & Stock Row */}
                   <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3">
                     <div>
-                      <p className="text-[10px] uppercase font-semibold text-slate-400">
-                        {t.catalog.basePrice}
-                      </p>
+                      {isCustomer ? null : (
+                        <p className="text-[10px] uppercase font-semibold text-slate-400">
+                          {t.catalog.basePrice}
+                        </p>
+                      )}
                       <p className="text-base font-bold text-slate-900">
                         {formatMoney(product.salePrice ?? product.basePrice, product.currency)}
                         {product.salePrice ? (
@@ -612,7 +619,15 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                       ) : null}
                     </div>
 
-                    <StockBadge availableQuantity={availableUnits} />
+                    {isCustomer ? (
+                      availableUnits === 0 ? (
+                        <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-500">
+                          {locale === "ar" ? "نفد" : "Sold out"}
+                        </span>
+                      ) : null
+                    ) : (
+                      <StockBadge availableQuantity={availableUnits} />
+                    )}
                   </div>
 
                   {/* Bottom Action */}
