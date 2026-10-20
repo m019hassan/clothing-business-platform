@@ -154,6 +154,25 @@ describe("cart reservation", () => {
     expect(inventory?.quantityReserved).toBe(0);
   });
 
+  it("removes a line whose hold was already released", async () => {
+    const cart = await addItem(account, { variantId: variantA.id, quantity: 2 });
+    const item = cart.items[0];
+
+    // A hold can expire or be released elsewhere while the line stays in the cart.
+    await prisma.inventoryItem.updateMany({
+      where: { variantId: variantA.id },
+      data: { quantityReserved: 0 },
+    });
+
+    const after = await removeItem(account, item.id);
+
+    expect(after.items).toHaveLength(0);
+
+    const inventory = await prisma.inventoryItem.findFirst({ where: { variantId: variantA.id } });
+    expect(inventory?.quantityReserved).toBe(0);
+    expect(inventory?.quantityOnHand).toBe(5);
+  });
+
   it("never drives available negative", async () => {
     await addItem(account, { variantId: variantB.id, quantity: 2 });
 

@@ -342,7 +342,7 @@ export async function updateItem(
         await releaseStock(transaction, item.variantId, -difference, {
           actorAccountId: account.id,
           reason: "Cart quantity reduced",
-        });
+        }, { tolerateShortfall: true });
       }
 
       await transaction.cartItem.update({
@@ -389,7 +389,7 @@ export async function removeItem(
       await releaseStock(transaction, item.variantId, item.quantity, {
         actorAccountId: account.id,
         reason: "Cart item removed",
-      });
+      }, { tolerateShortfall: true });
     }),
   );
 

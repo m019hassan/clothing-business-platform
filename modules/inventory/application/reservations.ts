@@ -101,6 +101,7 @@ export async function releaseStock(
   variantId: string,
   quantity: number,
   context?: MovementContext,
+  options?: { tolerateShortfall?: boolean },
 ): Promise<void> {
   if (quantity <= 0) {
     return;
@@ -115,7 +116,17 @@ export async function releaseStock(
   const reservedTotal = rows.reduce((sum, row) => sum + row.quantityReserved, 0);
 
   if (reservedTotal < quantity) {
-    throw new ConflictError("Unable to release more stock than reserved.");
+    if (!options?.tolerateShortfall) {
+      throw new ConflictError("Unable to release more stock than reserved.");
+    }
+
+    // The hold was already released or expired elsewhere; release what is left so a
+    // cart line can still be dropped instead of being stuck forever.
+    quantity = reservedTotal;
+
+    if (quantity === 0) {
+      return;
+    }
   }
 
   let remaining = quantity;
