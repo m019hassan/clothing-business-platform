@@ -526,7 +526,23 @@ export async function listRelatedProducts(productId: string, take = 4): Promise<
       getActiveDiscountMap(),
     ]);
 
-    return products.map((product) => {
+    const picks =
+      products.length > 0
+        ? products
+        : await prisma.product.findMany({
+            where: { id: { not: productId }, status: ProductStatus.ACTIVE, deletedAt: null },
+            orderBy: { createdAt: "desc" },
+            take,
+            select: {
+              id: true,
+              name: true,
+              basePrice: true,
+              currency: true,
+              images: { orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }], take: 1, select: { id: true } },
+            },
+          });
+
+    return picks.map((product) => {
       const discountPercent = discountMap.get(product.id) ?? null;
 
       return {
