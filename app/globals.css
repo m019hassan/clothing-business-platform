@@ -87,3 +87,41 @@ html[data-cashier="1"] .pos-screen {
     break-inside: avoid;
   }
 }
+
+/* --- Mobile feel ------------------------------------------------------- */
+
+/* iOS zooms into any focused control under 16px; keep taps calm instead. */
+@media (max-width: 640px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button,
+a,
+[role="button"] {
+  touch-action: manipulation;
+}
+
+/* A visible keyboard focus that does not ring every mouse click. */
+:focus-visible {
+  outline: 2px solid rgb(59 130 246 / 0.6);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
