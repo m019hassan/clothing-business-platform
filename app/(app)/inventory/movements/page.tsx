@@ -52,7 +52,7 @@ export default async function StockMovementsPage({ searchParams }: MovementsPage
         {ledger.movements.length === 0 ? (
           <p className="px-6 py-8 text-sm text-slate-500">{t.inventory.noMovements}</p>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="hidden overflow-x-auto lg:block">
             <table className="min-w-full divide-y divide-slate-200 text-sm">
               <thead className="bg-slate-50 text-start text-xs font-semibold uppercase tracking-wide text-slate-500">
                 <tr>
@@ -96,6 +96,50 @@ export default async function StockMovementsPage({ searchParams }: MovementsPage
               </tbody>
             </table>
           </div>
+        )}
+
+        {ledger.movements.length === 0 ? null : (
+          <ul className="divide-y divide-slate-100 lg:hidden">
+            {ledger.movements.map((movement) => (
+              <li key={`card-${movement.id}`} className="space-y-2 p-4">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-slate-900">{movement.productName}</p>
+                    <p className="mt-0.5 text-xs text-slate-500">
+                      {[movement.size, movement.color].filter(Boolean).join(" · ") || "—"} · {movement.warehouseCode}
+                    </p>
+                    <p className="font-mono text-[11px] text-slate-400">{movement.sku}</p>
+                  </div>
+                  <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-slate-600">
+                    {(t.movementTypes as Record<string, string>)[movement.type] ?? movement.type}
+                  </span>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-600">
+                  <span>
+                    {t.inventory.onHandChange}:{" "}
+                    <strong className={movement.quantityChange > 0 ? "text-emerald-700" : "text-rose-700"}>
+                      {movement.quantityChange > 0 ? `+${movement.quantityChange}` : movement.quantityChange}
+                    </strong>
+                  </span>
+                  <span>
+                    {t.inventory.onHandAfter}: <strong className="text-slate-900">{movement.quantityOnHandAfter}</strong>
+                  </span>
+                  <span>
+                    {t.inventory.reservedAfter}: <strong className="text-slate-900">{movement.quantityReservedAfter}</strong>
+                  </span>
+                </div>
+
+                <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500">
+                  <span className="min-w-0 truncate">
+                    {movement.reason ?? "—"}
+                    {movement.orderId ? ` · ${t.inventory.orderTag}` : ""}
+                  </span>
+                  <span className="shrink-0">{formatDateTime(movement.createdAt)}</span>
+                </div>
+              </li>
+            ))}
+          </ul>
         )}
       </section>
 
