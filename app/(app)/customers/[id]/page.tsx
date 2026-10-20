@@ -7,6 +7,7 @@ import { getCurrentPermissions } from "@/modules/auth/application/authorization"
 import { PERMISSIONS } from "@/modules/auth/application/permissions";
 import { getCurrentAccount } from "@/modules/auth/infrastructure/session";
 import { getCustomer } from "@/modules/customers/application/customers";
+import { MarketingConsentToggle } from "@/modules/customers/components/marketing-consent-toggle";
 import type { CustomerDetailView } from "@/modules/customers/types";
 import { NotFoundError } from "@/src/lib/errors";
 import { formatDate, formatMoney } from "@/src/lib/format";
@@ -99,7 +100,20 @@ export default async function CustomerDetailPage({ params }: CustomerDetailPageP
             label={t.customers.birthDate}
             value={customer.birthDate ? formatDate(customer.birthDate) : t.customers.notSpecified}
           />
-          <InfoRow label={t.customers.marketingConsent} value={customer.marketingConsent ? t.customers.granted : t.customers.notGranted} />
+          <div>
+            <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">{t.customers.marketingConsent}</dt>
+            <dd className="mt-1">
+              <MarketingConsentToggle
+                customerId={customer.id}
+                initial={customer.marketingConsent}
+                labels={{
+                  granted: t.customers.granted,
+                  notGranted: t.customers.notGranted,
+                  saving: t.customers.savingConsent,
+                }}
+              />
+            </dd>
+          </div>
           <InfoRow label={t.customers.joined} value={formatDate(customer.createdAt)} />
           <InfoRow
             label={t.customers.lastLogin}

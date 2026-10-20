@@ -15,6 +15,7 @@ import {
   listCustomerOrders,
   listCustomers,
   parseCustomerListFilters,
+  setCustomerMarketingConsent,
   toInternationalPhone,
 } from "@/modules/customers/application/customers";
 import { prisma } from "@/src/lib/db";
@@ -266,5 +267,22 @@ describe("customer invoices", () => {
 
     const second = await listCustomerOrders(account, fixture.profileId, { limit: 2, offset: 2 });
     expect(second.orders).toHaveLength(Math.min(2, expectedTotal - 2));
+  });
+});
+
+describe("marketing consent", () => {
+  it("records and withdraws consent", async () => {
+    const first = await setCustomerMarketingConsent(account, fixture.profileId, true);
+    expect(first.marketingConsent).toBe(true);
+
+    const detail = await getCustomer(account, fixture.profileId);
+    expect(detail.marketingConsent).toBe(true);
+
+    const back = await setCustomerMarketingConsent(account, fixture.profileId, false);
+    expect(back.marketingConsent).toBe(false);
+
+    await expect(
+      setCustomerMarketingConsent(account, "00000000-0000-4000-8000-000000000000", true),
+    ).rejects.toMatchObject({ statusCode: 404 });
   });
 });

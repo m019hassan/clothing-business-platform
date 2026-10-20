@@ -377,3 +377,32 @@ export async function listCustomerOrders(
     };
   });
 }
+
+/** Record (or withdraw) a customer's consent for marketing messages. */
+export async function setCustomerMarketingConsent(
+  account: AuthenticatedAccount,
+  customerId: string,
+  marketingConsent: boolean,
+): Promise<{ id: string; marketingConsent: boolean }> {
+  await requirePermission(PERMISSIONS.CUSTOMERS_UPDATE);
+
+  if (!isUuid(customerId)) {
+    throw new NotFoundError("Customer not found.");
+  }
+
+  return withDatabaseError(async () => {
+    try {
+      return await prisma.customerProfile.update({
+        where: { id: customerId },
+        data: { marketingConsent },
+        select: { id: true, marketingConsent: true },
+      });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
+        throw new NotFoundError("Customer not found.");
+      }
+
+      throw error;
+    }
+  });
+}

@@ -531,6 +531,7 @@ export const ar: Dictionary = {
     cancelDelivery: "إلغاء التوصيل",
   },
   customers: {
+    savingConsent: "بيحفظ…",
     allInvoices: "كل الفواتير",
     invoicesTitle: "فواتير العميل",
     invoicesSubtitle: "كل فواتير العميل في مكان واحد — الأحدث الأول.",

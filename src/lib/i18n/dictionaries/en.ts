@@ -530,6 +530,7 @@ export const en = {
     cancelDelivery: "Cancel delivery",
   },
   customers: {
+    savingConsent: "Saving...",
     allInvoices: "All invoices",
     invoicesTitle: "Customer invoices",
     invoicesSubtitle: "Every invoice of this customer in one place, newest first.",
