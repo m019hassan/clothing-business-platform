@@ -478,3 +478,66 @@ export async function getProductBranchStock(productId: string): Promise<ProductB
     };
   });
 }
+
+export type RelatedProductView = {
+  id: string;
+  name: string;
+  basePrice: string;
+  salePrice: string | null;
+  discountPercent: number | null;
+  currency: string;
+  imageId: string | null;
+};
+
+/** Same-category picks for the "you may also like" shelf. */
+export async function listRelatedProducts(productId: string, take = 4): Promise<RelatedProductView[]> {
+  if (!isUuid(productId)) {
+    return [];
+  }
+
+  return withDatabaseError(async () => {
+    const base = await prisma.product.findUnique({
+      where: { id: productId },
+      select: { categoryId: true },
+    });
+
+    if (base === null) {
+      return [];
+    }
+
+    const [products, discountMap] = await Promise.all([
+      prisma.product.findMany({
+        where: {
+          id: { not: productId },
+          categoryId: base.categoryId,
+          status: ProductStatus.ACTIVE,
+          deletedAt: null,
+        },
+        orderBy: { createdAt: "desc" },
+        take,
+        select: {
+          id: true,
+          name: true,
+          basePrice: true,
+          currency: true,
+          images: { orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }], take: 1, select: { id: true } },
+        },
+      }),
+      getActiveDiscountMap(),
+    ]);
+
+    return products.map((product) => {
+      const discountPercent = discountMap.get(product.id) ?? null;
+
+      return {
+        id: product.id,
+        name: product.name,
+        basePrice: product.basePrice.toString(),
+        salePrice: discountPercent ? discountedAmount(product.basePrice, discountPercent).toString() : null,
+        discountPercent,
+        currency: product.currency,
+        imageId: product.images[0]?.id ?? null,
+      };
+    });
+  });
+}

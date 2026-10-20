@@ -2,6 +2,9 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import { AddToCart } from "@/components/cart/add-to-cart";
+import { ProductGallery } from "@/components/products/product-gallery";
+import { ProductTabs } from "@/components/products/product-tabs";
+import { RelatedProducts } from "@/components/products/related-products";
 import { ProductStatusBadge } from "@/components/products/product-status-badge";
 import { StockBadge } from "@/components/products/stock-badge";
 import { StockAdjustForm } from "@/modules/inventory/components/stock-adjust-form";
@@ -13,13 +16,14 @@ import { ProductTaxToggle } from "@/modules/catalog/components/product-tax-toggl
 import {
   getProductBranchStock,
   getProductInventory,
+  listRelatedProducts,
+  type RelatedProductView,
   type ProductBranchStockView,
 } from "@/modules/catalog/application/products";
 import type { ProductInventoryView } from "@/modules/catalog/types";
 import { NotFoundError } from "@/src/lib/errors";
 import { formatDate, formatMoney, variantLabel } from "@/src/lib/format";
 import { ImageViewer } from "@/components/products/image-viewer";
-import { ProductAccordions } from "@/components/products/product-accordions";
 import { listProductImages } from "@/modules/catalog/application/product-images";
 import { getInterfaceLanguage } from "@/src/lib/i18n/server";
 
@@ -46,6 +50,8 @@ export default async function ProductDetailPage({ params }: ProductDetailProps) 
   const permissionSet = await getCurrentPermissions();
   const canUpdateProduct = permissionSet.has(PERMISSIONS.PRODUCTS_UPDATE);
   const canAdjustInventory = permissionSet.has(PERMISSIONS.INVENTORY_ADJUST);
+  const canViewInventory = permissionSet.has(PERMISSIONS.INVENTORY_VIEW);
+  const showStaff = canUpdateProduct || canAdjustInventory || canViewInventory;
   const canPurchase = account.accountType === "CUSTOMER" && account.customerProfile !== null;
   const { t, locale } = await getInterfaceLanguage();
 
@@ -54,12 +60,14 @@ export default async function ProductDetailPage({ params }: ProductDetailProps) 
   let product: ProductInventoryView | null = null;
   let branchStock: ProductBranchStockView | null = null;
   let taxExempt = false;
+  let related: RelatedProductView[] = [];
   let loadError = false;
 
   try {
     product = await getProductInventory(id);
     branchStock = await getProductBranchStock(id);
     taxExempt = await getProductTaxExemption(id).catch(() => false);
+    related = await listRelatedProducts(id).catch(() => []);
   } catch (error) {
     if (error instanceof NotFoundError) {
       notFound();
@@ -98,6 +106,8 @@ export default async function ProductDetailPage({ params }: ProductDetailProps) 
         <span className="truncate text-slate-800">{product.name}</span>
       </div>
 
+      {showStaff ? (
+        <>
       {/* Product information */}
       <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -172,7 +182,62 @@ export default async function ProductDetailPage({ params }: ProductDetailProps) 
           </div>
         ) : null}
       </section>
+        </>
+      ) : null}
 
+      {/* Storefront hero */}
+      <section className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-10">
+        <ProductGallery
+          imageIds={product.imageIds}
+          alt={product.name}
+          labels={{
+            view: t.productImages.view,
+            close: t.productImages.close,
+            previous: t.common.previous,
+            next: t.common.next,
+          }}
+        />
+
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            {new Date(product.createdAt).getTime() > Date.now() - 30 * 24 * 60 * 60 * 1000 ? (
+              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+                {locale === "ar" ? "جديد" : "New"}
+              </span>
+            ) : null}
+            {product.discountPercent ? (
+              <span className="rounded-full bg-rose-600 px-3 py-1 text-xs font-bold text-white">
+                {locale === "ar" ? `خصم ${product.discountPercent}%` : `${product.discountPercent}% OFF`}
+              </span>
+            ) : null}
+            <ProductStatusBadge status={product.status} />
+          </div>
+
+          <h1 className="mt-3 text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">{product.name}</h1>
+          <p className="mt-1 text-sm text-slate-500">{product.categoryName ?? "—"}</p>
+
+          <div className="mt-4 flex flex-wrap items-baseline gap-3">
+            {product.salePrice ? (
+              <>
+                <span className="text-2xl font-bold text-slate-950">
+                  {formatMoney(product.salePrice, product.currency)}
+                </span>
+                <span className="text-lg text-slate-400 line-through">
+                  {formatMoney(product.basePrice, product.currency)}
+                </span>
+              </>
+            ) : (
+              <span className="text-2xl font-bold text-slate-950">
+                {formatMoney(product.basePrice, product.currency)}
+              </span>
+            )}
+          </div>
+
+          <p className="mt-4 text-sm leading-7 text-slate-600">
+            {product.description ?? (locale === "ar" ? "قطعة من مجموعة المتجر." : "A piece from the store collection.")}
+          </p>
+
+          <div className="mt-5">
       {/* Add to cart — customer accounts only */}
       {canPurchase ? (
       <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6 dark:border-slate-800 dark:bg-slate-900">
@@ -205,11 +270,45 @@ export default async function ProductDetailPage({ params }: ProductDetailProps) 
         />
       </section>
       ) : null}
+          </div>
+        </div>
+      </section>
 
-      {/* Product Care, Shipping & Returns Accordions */}
-      <ProductAccordions material={product.material} isArabic={locale === "ar"} />
+      <ProductTabs
+        tabs={{
+          details: locale === "ar" ? "التفاصيل" : "Details",
+          material: locale === "ar" ? "الخامة والعناية" : "Material & Care",
+          shipping: locale === "ar" ? "الشحن والاستبدال" : "Shipping & Returns",
+        }}
+        content={{
+          details: product.description ?? (locale === "ar" ? "قطعة مختارة بعناية من مجموعتنا." : "A carefully picked piece from our collection."),
+          material: product.material,
+          care: locale === "ar"
+            ? ["غسيل آلي بماء بارد (30° كحد أقصى)", "مع ألوان مشابهة وقلب القطعة للداخل", "بدون مبيضات أو تنظيف جاف", "كي متوسط وتجنّب الطبعات"]
+            : ["Machine wash cold (max 30°C)", "Wash inside out with similar colors", "No bleach or dry cleaning", "Medium iron, away from prints"],
+          shipping: locale === "ar"
+            ? "توصيل لكل المحافظات خلال 2–4 أيام عمل مع تتبع مباشر."
+            : "Delivery to all regions within 2–4 business days with live tracking.",
+          returns: locale === "ar"
+            ? "استبدال أو إرجاع خلال 14 يومًا من الاستلام بشرط الحالة الأصلية للقطعة."
+            : "Exchange or return within 14 days of delivery, item in original condition.",
+        }}
+        imageId={product.imageIds[1] ?? product.imageIds[0] ?? null}
+        isArabic={locale === "ar"}
+      />
 
-      {/* Inventory summary */}
+      <RelatedProducts
+        products={related}
+        labels={{
+          title: locale === "ar" ? "ممكن يعجبك كمان" : "You may also like",
+          viewAll: locale === "ar" ? "عرض الكل" : "View all",
+          off: locale === "ar" ? "خصم" : "OFF",
+        }}
+      />
+
+
+      {showStaff ? (
+        <>
       {productImages.length > 0 ? (
         <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
           <h3 className="text-base font-semibold text-slate-900">{t.productImages.gallery}</h3>
@@ -233,6 +332,7 @@ export default async function ProductDetailPage({ params }: ProductDetailProps) 
           </ul>
         </section>
       ) : null}
+      {/* Inventory summary */}
 
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -437,6 +537,8 @@ export default async function ProductDetailPage({ params }: ProductDetailProps) 
           </p>
         </div>
       </section>
+        </>
+      ) : null}
     </div>
   );
 }
