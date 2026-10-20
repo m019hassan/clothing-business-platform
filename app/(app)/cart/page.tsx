@@ -115,8 +115,20 @@ export default async function CartPage() {
               <li key={item.id} className="p-5 transition-colors hover:bg-slate-50/50">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                   <div className="flex items-start gap-4 min-w-0">
-                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-400">
-                      <ShoppingBagIcon className="h-6 w-6" />
+                    <div className="h-16 w-14 shrink-0 overflow-hidden rounded-xl bg-slate-100">
+                      {item.imageId ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={`/api/products/images/${item.imageId}`}
+                          alt={item.productName}
+                          loading="lazy"
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-slate-400">
+                          <ShoppingBagIcon className="h-5 w-5" />
+                        </div>
+                      )}
                     </div>
 
                     <div className="min-w-0">
@@ -132,8 +144,14 @@ export default async function CartPage() {
                           ? ` · ${formatVariantAttributes(item.size, item.color)}`
                           : ""}
                       </p>
-                      <p className="mt-2 text-sm font-semibold text-slate-700">
-                        {formatMoney(item.unitPrice, item.currency)} <span className="text-xs font-normal text-slate-400">{t.cart.each}</span>
+                      <p className="mt-2 flex flex-wrap items-baseline gap-2 text-sm font-semibold text-slate-700">
+                        <span>{formatMoney(item.unitPrice, item.currency)}</span>
+                        {item.originalUnitPrice ? (
+                          <span className="text-xs font-normal text-slate-400 line-through">
+                            {formatMoney(item.originalUnitPrice, item.currency)}
+                          </span>
+                        ) : null}
+                        <span className="text-xs font-normal text-slate-400">{t.cart.each}</span>
                       </p>
                       {item.availableQuantity <= 0 ? (
                         <p className="mt-1 text-xs font-semibold text-rose-600">
@@ -181,18 +199,18 @@ export default async function CartPage() {
             <div className="flex items-center justify-between text-slate-600">
               <dt>{t.common.subtotal}</dt>
               <dd className="font-semibold text-slate-900">
-                {formatMoney(cart.total, cart.items[0]?.currency ?? "")}
+                {formatMoney(cart.subtotal, cart.items[0]?.currency ?? "")}
               </dd>
             </div>
+            {Number(cart.taxAmount) > 0 ? (
+              <div className="flex items-center justify-between text-slate-600">
+                <dt>{t.cart.tax}</dt>
+                <dd className="font-semibold text-slate-900">
+                  {formatMoney(cart.taxAmount, cart.items[0]?.currency ?? "")}
+                </dd>
+              </div>
+            ) : null}
             <div className="flex items-center justify-between border-t border-slate-100 pt-3">
-              {Number(cart.taxAmount) > 0 ? (
-                <div className="flex items-center justify-between">
-                  <dt className="text-sm text-slate-500">{t.cart.tax}</dt>
-                  <dd className="text-sm text-slate-700">
-                    {formatMoney(cart.taxAmount, cart.items[0]?.currency ?? "")}
-                  </dd>
-                </div>
-              ) : null}
               <dt className="text-base font-bold text-slate-900">{t.common.total}</dt>
               <dd className="text-xl font-bold text-slate-950">
                 {formatMoney(cart.total, cart.items[0]?.currency ?? "")}

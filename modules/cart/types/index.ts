@@ -8,6 +8,8 @@ export type CartItemView = {
   color: string | null;
   productId: string;
   productName: string;
+  /** First product photo, for the cart row thumbnail. */
+  imageId?: string | null;
   quantity: number;
   unitPrice: string;
   /** Set while an active discount applies to this product. */

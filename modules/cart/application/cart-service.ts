@@ -44,7 +44,18 @@ const cartSelection = {
             select: { quantityOnHand: true, quantityReserved: true },
           },
           product: {
-            select: { id: true, name: true, basePrice: true, currency: true, taxExempt: true },
+            select: {
+              id: true,
+              name: true,
+              basePrice: true,
+              currency: true,
+              taxExempt: true,
+              images: {
+                orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+                take: 1,
+                select: { id: true },
+              },
+            },
           },
         },
       },
@@ -100,6 +111,7 @@ function mapCart(cart: CartRecord, discountMap: Map<string, number>, tax: TaxSet
       color: item.variant.color,
       productId: item.variant.product.id,
       productName: item.variant.product.name,
+      imageId: item.variant.product.images[0]?.id ?? null,
       quantity: item.quantity,
       unitPrice: unitPrice.toString(),
       ...(discountPercent
