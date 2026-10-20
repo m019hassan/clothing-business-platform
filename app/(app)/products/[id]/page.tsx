@@ -275,36 +275,22 @@ export default async function ProductDetailPage({ params }: ProductDetailProps) 
       </section>
 
       <ProductTabs
-        tabs={{
-          details: locale === "ar" ? "التفاصيل" : "Details",
-          material: locale === "ar" ? "الخامة والعناية" : "Material & Care",
-          shipping: locale === "ar" ? "الشحن والاستبدال" : "Shipping & Returns",
-        }}
-        content={{
-          details: product.description ?? (locale === "ar" ? "قطعة مختارة بعناية من مجموعتنا." : "A carefully picked piece from our collection."),
-          material: product.material,
-          care: locale === "ar"
-            ? ["غسيل آلي بماء بارد (30° كحد أقصى)", "مع ألوان مشابهة وقلب القطعة للداخل", "بدون مبيضات أو تنظيف جاف", "كي متوسط وتجنّب الطبعات"]
-            : ["Machine wash cold (max 30°C)", "Wash inside out with similar colors", "No bleach or dry cleaning", "Medium iron, away from prints"],
-          shipping: locale === "ar"
-            ? "توصيل لكل المحافظات خلال 2–4 أيام عمل مع تتبع مباشر."
-            : "Delivery to all regions within 2–4 business days with live tracking.",
-          returns: locale === "ar"
-            ? "استبدال أو إرجاع خلال 14 يومًا من الاستلام بشرط الحالة الأصلية للقطعة."
-            : "Exchange or return within 14 days of delivery, item in original condition.",
-        }}
+        description={product.description}
+        material={product.material}
         imageId={product.imageIds[1] ?? product.imageIds[0] ?? null}
         isArabic={locale === "ar"}
       />
 
-      <RelatedProducts
-        products={related}
-        labels={{
-          title: locale === "ar" ? "ممكن يعجبك كمان" : "You may also like",
-          viewAll: locale === "ar" ? "عرض الكل" : "View all",
-          off: locale === "ar" ? "خصم" : "OFF",
-        }}
-      />
+      {canPurchase ? (
+        <RelatedProducts
+          products={related}
+          labels={{
+            title: locale === "ar" ? "ممكن يعجبك كمان" : "You may also like",
+            viewAll: locale === "ar" ? "عرض الكل" : "View all",
+            off: locale === "ar" ? "خصم" : "OFF",
+          }}
+        />
+      ) : null}
 
 
       {showStaff ? (
