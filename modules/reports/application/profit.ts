@@ -45,7 +45,8 @@ export function computeProfitReport(lines: ProfitLine[]): ProfitComputation {
 
     currency = line.currency || currency;
 
-    const lineRevenue = new Prisma.Decimal(line.unitPrice).mul(line.netUnits);
+    const factor = line.paidFactor ? new Prisma.Decimal(line.paidFactor) : new Prisma.Decimal(1);
+    const lineRevenue = new Prisma.Decimal(line.unitPrice).mul(line.netUnits).mul(factor).toDecimalPlaces(2);
     const lineCost =
       line.unitCost === null ? new Prisma.Decimal(0) : new Prisma.Decimal(line.unitCost).mul(line.netUnits);
 
@@ -134,10 +135,33 @@ export async function getProfitReport(
         returnedQuantity: true,
         unitPrice: true,
         unitCost: true,
-        order: { select: { currency: true } },
+        order: { select: { id: true, currency: true, totalAmount: true } },
         variant: { select: { productId: true, product: { select: { name: true } } } },
       },
     });
+
+    // Revenue must match what buyers actually paid: one factor per order,
+    // folding in tax and any invoice-level discount.
+    const rawByOrder = new Map<string, Prisma.Decimal>();
+    const totalsByOrder = new Map<string, Prisma.Decimal>();
+
+    for (const item of items) {
+      rawByOrder.set(
+        item.order.id,
+        (rawByOrder.get(item.order.id) ?? new Prisma.Decimal(0)).add(item.unitPrice.mul(item.quantity)),
+      );
+
+      if (!totalsByOrder.has(item.order.id)) {
+        totalsByOrder.set(item.order.id, item.order.totalAmount);
+      }
+    }
+
+    const factorByOrder = new Map<string, string>();
+
+    for (const [orderId, raw] of rawByOrder.entries()) {
+      const total = totalsByOrder.get(orderId) ?? raw;
+      factorByOrder.set(orderId, raw.gt(0) ? total.div(raw).toFixed(6) : "1");
+    }
 
     const lines: ProfitLine[] = items.map((item) => ({
       productId: item.variant.productId,
@@ -146,6 +170,7 @@ export async function getProfitReport(
       unitPrice: item.unitPrice.toString(),
       unitCost: item.unitCost?.toString() ?? null,
       currency: item.order.currency,
+      paidFactor: factorByOrder.get(item.order.id) ?? "1",
     }));
 
     const computed = computeProfitReport(lines);

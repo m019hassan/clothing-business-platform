@@ -83,4 +83,6 @@ export type ProfitLine = {
   unitPrice: string;
   unitCost: string | null;
   currency: string;
+  /** What the paid total divided by the shelf lines; folds in tax and invoice discounts. */
+  paidFactor?: string;
 };

@@ -778,3 +778,17 @@ describe("invoice discount", () => {
     ).rejects.toMatchObject({ statusCode: 403 });
   });
 });
+
+  it("refunds exactly what was paid when a discounted sale is fully returned", async () => {
+    const receipt = await createPosSale(distributor, payload({ discount: { type: "PERCENT", value: 10 } }));
+    const invoice = await getPosSaleDetail(distributor, receipt.orderId);
+
+    expect(invoice.totalAmount).toBe("63.00");
+
+    const result = await returnPosSale(distributor, receipt.orderId, {
+      lines: invoice.lines.map((line) => ({ orderItemId: line.orderItemId, quantity: line.quantity })),
+    });
+
+    expect(result.fullyReturned).toBe(true);
+    expect(result.refundedAmount).toBe("63.00");
+  });

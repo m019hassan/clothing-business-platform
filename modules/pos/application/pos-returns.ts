@@ -235,6 +235,17 @@ export async function returnPosSale(
       const order = await loadSaleForReturn(transaction, orderId, distributor.branchId);
       const itemsById = new Map(order.items.map((item) => [item.id, item]));
 
+      const amounts = await transaction.order.findUniqueOrThrow({
+        where: { id: order.id },
+        select: { totalAmount: true, refunds: { select: { amount: true } } },
+      });
+      const rawLines = order.items.reduce(
+        (sum, item) => sum.add(item.unitPrice.mul(item.quantity)),
+        new Prisma.Decimal(0),
+      );
+      // What one "shelf unit" actually earned: factors in tax and any invoice discount.
+      const paidFactor = rawLines.gt(0) ? amounts.totalAmount.div(rawLines) : new Prisma.Decimal(1);
+
       let refunded = new Prisma.Decimal(0);
       let returnedUnits = 0;
 
@@ -253,7 +264,7 @@ export async function returnPosSale(
           );
         }
 
-        refunded = refunded.add(item.unitPrice.mul(line.quantity));
+        refunded = refunded.add(item.unitPrice.mul(line.quantity).mul(paidFactor).toDecimalPlaces(2));
         returnedUnits += line.quantity;
 
         await transaction.orderItem.update({
@@ -267,6 +278,21 @@ export async function returnPosSale(
         });
       }
 
+      const after = await transaction.orderItem.findMany({
+        where: { orderId: order.id },
+        select: { quantity: true, returnedQuantity: true },
+      });
+      const fullyReturned = after.every((item) => item.returnedQuantity >= item.quantity);
+
+      if (fullyReturned) {
+        // A full return hands back exactly what was paid — never more, never less.
+        const alreadyRefunded = amounts.refunds.reduce(
+          (sum, refund) => sum.add(refund.amount),
+          new Prisma.Decimal(0),
+        );
+        refunded = Prisma.Decimal.max(amounts.totalAmount.sub(alreadyRefunded), new Prisma.Decimal(0));
+      }
+
       await transaction.refund.create({
         data: {
           orderId: order.id,
@@ -277,12 +303,6 @@ export async function returnPosSale(
           refundedByAccountId: account.id,
         },
       });
-
-      const after = await transaction.orderItem.findMany({
-        where: { orderId: order.id },
-        select: { quantity: true, returnedQuantity: true },
-      });
-      const fullyReturned = after.every((item) => item.returnedQuantity >= item.quantity);
 
       const updated = await transaction.order.update({
         where: { id: order.id },
