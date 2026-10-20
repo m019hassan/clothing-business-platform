@@ -40,7 +40,7 @@ export default async function StockAlertsPage() {
         <Link href="/inventory" className="text-sm text-blue-700 hover:underline">
           ← {t.inventory.title}
         </Link>
-        <h1 className="mt-1 text-xl font-semibold text-slate-900">{t.inventory.alertsTitle}</h1>
+        <h1 className="mt-1 text-lg font-semibold text-slate-900 sm:text-xl">{t.inventory.alertsTitle}</h1>
         <p className="text-sm text-slate-600">{t.inventory.alertsSubtitle}</p>
       </div>
 

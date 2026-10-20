@@ -84,11 +84,11 @@ export default async function EmployeeDetailPage({ params }: EmployeeDetailProps
         <span className="truncate text-slate-800">{fullName}</span>
       </div>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
             <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">{t.employees.kickerOne}</p>
-            <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-950">{fullName}</h2>
+            <h2 className="mt-1 text-xl font-bold tracking-tight text-slate-950 sm:text-2xl">{fullName}</h2>
             <div className="mt-3 flex flex-wrap items-center gap-3">
               <AccountStatusBadge status={employee.accountStatus} labels={t.accountStatus} />
               <span className="text-sm text-slate-500">{employee.employeeNumber}</span>
@@ -117,7 +117,7 @@ export default async function EmployeeDetailPage({ params }: EmployeeDetailProps
       </section>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
           <h3 className="text-base font-semibold text-slate-900">{t.employees.accountInfo}</h3>
           <dl className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
             <InfoRow label={t.customers.email} value={employee.email ?? t.customers.notProvided} />
@@ -130,7 +130,7 @@ export default async function EmployeeDetailPage({ params }: EmployeeDetailProps
           </dl>
         </section>
 
-        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
           <h3 className="text-base font-semibold text-slate-900">{t.employees.assignedRoles}</h3>
           {employee.roles.length > 0 ? (
             <ul className="mt-5 space-y-2 text-sm text-slate-700">

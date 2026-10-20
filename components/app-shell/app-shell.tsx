@@ -486,6 +486,12 @@ export function AppShell({
   const [mobileOpen, setMobileOpen] = useState(false);
   const activeItem = NAV_ITEMS.find((item) => pathname === item.href || pathname.startsWith(`${item.href}/`));
   const title = labels.nav[activeItem?.key ?? "dashboard"];
+  const bottomItems: { href: string; key: keyof Dictionary["nav"] }[] = [
+    { href: "/dashboard", key: "dashboard" },
+    ...(canViewProducts ? [{ href: "/products", key: "products" as const }] : []),
+    ...(isDistributor ? [{ href: "/pos", key: "pos" as const }] : []),
+    ...(canViewCustomers ? [{ href: "/customers", key: "customers" as const }] : []),
+  ];
 
   return (
     <div className="min-h-screen bg-slate-100/70 lg:flex">
@@ -602,7 +608,46 @@ export function AppShell({
           </div>
         </header>
 
-        <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">{children}</main>
+        <main className="flex-1 px-4 py-6 pb-24 sm:px-6 lg:px-8 lg:pb-6">{children}</main>
+
+        {/* Mobile bottom navigation */}
+        <nav
+          aria-label="Mobile navigation"
+          className="fixed inset-x-0 bottom-0 z-30 border-t border-slate-200 bg-white/95 backdrop-blur-md print:hidden lg:hidden"
+          style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+        >
+          <div className="grid grid-flow-col auto-cols-fr">
+            {bottomItems.map((item) => {
+              const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  aria-current={active ? "page" : undefined}
+                  className={[
+                    "relative flex flex-col items-center gap-0.5 py-2.5 transition-colors",
+                    active ? "text-slate-950" : "text-slate-400 hover:text-slate-700",
+                  ].join(" ")}
+                >
+                  {active ? (
+                    <span aria-hidden className="absolute top-0 h-0.5 w-8 rounded-full bg-slate-900" />
+                  ) : null}
+                  <NavIcon href={item.href} className="h-5 w-5" />
+                  <span className="text-[10px] font-semibold">{labels.nav[item.key]}</span>
+                </Link>
+              );
+            })}
+            <button
+              type="button"
+              onClick={() => setMobileOpen(true)}
+              className="flex flex-col items-center gap-0.5 py-2.5 text-slate-400 transition-colors hover:text-slate-700"
+            >
+              <ListIcon className="h-5 w-5" />
+              <span className="text-[10px] font-semibold">{labels.shell.more}</span>
+            </button>
+          </div>
+        </nav>
       </div>
     </div>
   );

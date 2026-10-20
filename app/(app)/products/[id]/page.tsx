@@ -99,11 +99,11 @@ export default async function ProductDetailPage({ params }: ProductDetailProps) 
       </div>
 
       {/* Product information */}
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
             <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">{t.catalog.product}</p>
-            <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-950">{product.name}</h2>
+            <h2 className="mt-1 text-xl font-bold tracking-tight text-slate-950 sm:text-2xl">{product.name}</h2>
             {product.description ? (
               <p className="mt-3 max-w-3xl text-sm text-slate-600">{product.description}</p>
             ) : (
@@ -175,7 +175,7 @@ export default async function ProductDetailPage({ params }: ProductDetailProps) 
 
       {/* Add to cart — customer accounts only */}
       {canPurchase ? (
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6 dark:border-slate-800 dark:bg-slate-900">
         <AddToCart
           labels={t.catalog.addToCart}
           errors={t.errors}
@@ -211,7 +211,7 @@ export default async function ProductDetailPage({ params }: ProductDetailProps) 
 
       {/* Inventory summary */}
       {productImages.length > 0 ? (
-        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
           <h3 className="text-base font-semibold text-slate-900">{t.productImages.gallery}</h3>
           <ul className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
             {productImages.map((image, position) => (
@@ -251,7 +251,7 @@ export default async function ProductDetailPage({ params }: ProductDetailProps) 
       </section>
 
       {branchStock ? (
-        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
           <h3 className="text-base font-semibold text-slate-900">{t.catalog.detail.branchStockTitle}</h3>
           <p className="mt-1 text-sm text-slate-600">{t.catalog.detail.branchStockHint}</p>
 

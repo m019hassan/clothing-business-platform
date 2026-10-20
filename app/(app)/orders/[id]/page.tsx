@@ -106,11 +106,11 @@ export default async function OrderDetailPage({ params }: OrderDetailProps) {
       </div>
 
       {/* Header */}
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
             <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">{t.orderDetail.kicker}</p>
-            <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-950">{order.orderNumber}</h2>
+            <h2 className="mt-1 text-xl font-bold tracking-tight text-slate-950 sm:text-2xl">{order.orderNumber}</h2>
             <div className="mt-3 flex flex-wrap items-center gap-3">
               <OrderStatusBadge status={order.status} labels={t.orderStatus} />
               <span className="text-sm text-slate-500">{t.orderDetail.placed} {formatDate(order.createdAt)}</span>
@@ -235,10 +235,10 @@ export default async function OrderDetailPage({ params }: OrderDetailProps) {
       </section>
 
       {/* Payment */}
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
         <h3 className="text-base font-semibold text-slate-900">{t.common.payment}</h3>
         {order.delivery ? (
-          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <h3 className="text-base font-semibold text-slate-900">{t.orderDetail.delivery}</h3>
               <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-600">
@@ -281,7 +281,7 @@ export default async function OrderDetailPage({ params }: OrderDetailProps) {
         )}
 
         {order.deliveryAddress ? (
-          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
             <h3 className="text-base font-semibold text-slate-900">{t.orderDetail.deliveryAddress}</h3>
             <dl className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <div>
@@ -383,7 +383,7 @@ export default async function OrderDetailPage({ params }: OrderDetailProps) {
       </section>
 
       {/* Summary */}
-      <section className="ms-auto w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <section className="ms-auto w-full max-w-md rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
         <h3 className="text-base font-semibold text-slate-900">{t.orderDetail.summaryTitle}</h3>
         <dl className="mt-4 space-y-3 text-sm">
           <div className="flex items-center justify-between">

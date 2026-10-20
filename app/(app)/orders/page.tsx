@@ -88,9 +88,9 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
         <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">{t.orders.kicker}</p>
-        <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-950">{t.orders.title}</h2>
+        <h2 className="mt-1 text-xl font-bold tracking-tight text-slate-950 sm:text-2xl">{t.orders.title}</h2>
         <p className="mt-1 text-sm text-slate-600">
           {total} order{total === 1 ? "" : "s"} placed with this account.
         </p>

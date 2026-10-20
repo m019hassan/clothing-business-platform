@@ -63,7 +63,7 @@ export default async function ProductBarcodesPage({ params }: { params: Promise<
           <Link href={`/products/${product.id}`} className="text-sm text-blue-700 hover:underline">
             ← {product.name}
           </Link>
-          <h1 className="mt-1 text-xl font-semibold text-slate-900">{t.barcodes.title}</h1>
+          <h1 className="mt-1 text-lg font-semibold text-slate-900 sm:text-xl">{t.barcodes.title}</h1>
           <p className="text-sm text-slate-600">{t.barcodes.hint}</p>
         </div>
         <PrintButton label={t.barcodes.print} />

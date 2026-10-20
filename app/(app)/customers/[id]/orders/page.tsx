@@ -68,7 +68,7 @@ export default async function CustomerOrdersPage({ params, searchParams }: Custo
         <Link href={`/customers/${id}`} className="text-sm text-blue-700 hover:underline">
           ← {t.customers.title}
         </Link>
-        <h1 className="mt-1 text-xl font-semibold text-slate-900">
+        <h1 className="mt-1 text-lg font-semibold text-slate-900 sm:text-xl">
           {t.customers.invoicesTitle} — {page.customerName}
         </h1>
         <p className="text-sm text-slate-600">{t.customers.invoicesSubtitle}</p>

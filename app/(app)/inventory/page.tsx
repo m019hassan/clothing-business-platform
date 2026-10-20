@@ -96,10 +96,10 @@ export default async function InventoryPage({ searchParams }: InventoryPageProps
 
   return (
     <div className="space-y-6">
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
         <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">{t.inventory.kicker}</p>
         <div className="mt-1 flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-2xl font-bold tracking-tight text-slate-950">{t.inventory.title}</h2>
+          <h2 className="text-xl font-bold tracking-tight text-slate-950 sm:text-2xl">{t.inventory.title}</h2>
           {canAdjustInventory ? (
             <StockTransferLauncher
               balances={transferBalances}
@@ -158,7 +158,7 @@ export default async function InventoryPage({ searchParams }: InventoryPageProps
       </section>
 
       {canAdjustInventory ? (
-        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
           <h3 className="text-base font-semibold text-slate-900">{t.inventory.noBalanceTitle}</h3>
           <p className="mt-1 text-sm text-slate-500">{t.inventory.noBalanceHint}</p>
 

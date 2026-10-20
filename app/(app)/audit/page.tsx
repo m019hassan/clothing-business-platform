@@ -84,10 +84,10 @@ export default async function AuditPage({ searchParams }: AuditPageProps) {
 
   return (
     <div className="space-y-6">
-      <section className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+      <section className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">{t.audit.kicker}</p>
-          <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-950">{t.audit.title}</h2>
+          <h2 className="mt-1 text-xl font-bold tracking-tight text-slate-950 sm:text-2xl">{t.audit.title}</h2>
           <p className="mt-1 text-sm text-slate-600">{t.audit.subtitle}</p>
         </div>
         <form method="get" className="flex flex-wrap items-end gap-2">

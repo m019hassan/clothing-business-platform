@@ -132,7 +132,7 @@ export default async function PosInvoicePage({ params }: { params: Promise<{ id:
       </div>
 
       {/* Items table (detail + print) */}
-      <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm print:break-inside-avoid print:border-0 print:shadow-none">
+      <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6 print:break-inside-avoid print:border-0 print:shadow-none">
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">
           {t.posInvoice.item}
         </h2>

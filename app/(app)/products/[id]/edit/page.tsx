@@ -72,10 +72,10 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
-      <section className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:flex-row sm:items-start sm:justify-between">
+      <section className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">{t.catalog.kicker}</p>
-          <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-950">{product.name}</h2>
+          <h2 className="mt-1 text-xl font-bold tracking-tight text-slate-950 sm:text-2xl">{product.name}</h2>
           <p className="mt-1 text-sm text-slate-600">
             {product.slug} · {product.status}
           </p>
@@ -96,7 +96,7 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
         </div>
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
         <h3 className="text-base font-semibold text-slate-900">{t.catalog.editPage.productDetails}</h3>
         <div className="mt-5">
           <ProductForm
@@ -123,7 +123,7 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
         </div>
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
         <h3 className="text-base font-semibold text-slate-900">{t.catalog.detail.variants}</h3>
         <p className="mt-1 text-sm text-slate-500">
           {t.catalog.editPage.variantsSubtitle}

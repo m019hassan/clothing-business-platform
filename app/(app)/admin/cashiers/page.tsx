@@ -42,7 +42,7 @@ export default async function CashiersPage() {
         <Link href="/admin" className="text-sm text-blue-700 hover:underline">
           ← {t.nav.adminAccounts}
         </Link>
-        <h1 className="mt-1 text-xl font-semibold text-slate-900">{t.cashiers.title}</h1>
+        <h1 className="mt-1 text-lg font-semibold text-slate-900 sm:text-xl">{t.cashiers.title}</h1>
         <p className="text-sm text-slate-600">{t.cashiers.subtitle}</p>
       </div>
 

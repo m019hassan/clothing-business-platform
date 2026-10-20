@@ -83,10 +83,10 @@ export default async function RolesPage() {
 
   return (
     <div className="space-y-6">
-      <section className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+      <section className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">{t.roles.kicker}</p>
-          <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-950">{t.roles.title}</h2>
+          <h2 className="mt-1 text-xl font-bold tracking-tight text-slate-950 sm:text-2xl">{t.roles.title}</h2>
           <p className="mt-1 text-sm text-slate-600">
             {t.roles.summaryRoles.replace("{count}", String(roles.length))} ·{" "}
             {t.roles.summaryPermissions.replace(
@@ -98,7 +98,7 @@ export default async function RolesPage() {
       </section>
 
       {canEditRoles ? (
-        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
           <h3 className="text-base font-semibold text-slate-900">{t.roles.createTitle}</h3>
           <RoleCreateForm labels={t.roles.create} />
         </section>
@@ -188,7 +188,7 @@ export default async function RolesPage() {
         </>
       )}
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
         <h3 className="text-base font-semibold text-slate-900">{t.roles.editTitle}</h3>
         <p className="mt-1 text-sm text-slate-500">
           {canEditRoles

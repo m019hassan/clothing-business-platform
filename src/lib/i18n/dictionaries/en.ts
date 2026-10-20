@@ -36,6 +36,7 @@ export const en = {
     audit: "Audit trail",
   },
   shell: {
+    more: "More",
     signOut: "Sign out",
     notifications: "Notifications",
     unread: "unread",

@@ -53,7 +53,7 @@ export default async function DiscountsPage() {
         <Link href="/products" className="text-sm text-blue-700 hover:underline">
           ← {t.nav.products}
         </Link>
-        <h1 className="mt-1 text-xl font-semibold text-slate-900">{t.discounts.title}</h1>
+        <h1 className="mt-1 text-lg font-semibold text-slate-900 sm:text-xl">{t.discounts.title}</h1>
         <p className="text-sm text-slate-600">{t.discounts.subtitle}</p>
       </div>
 

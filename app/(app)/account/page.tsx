@@ -111,11 +111,11 @@ export default async function AccountPage() {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
             <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">{t.account.kicker}</p>
-            <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-950">{displayName}</h2>
+            <h2 className="mt-1 text-xl font-bold tracking-tight text-slate-950 sm:text-2xl">{displayName}</h2>
             <div className="mt-3 flex flex-wrap items-center gap-3">
               <AccountStatusBadge status={overview.status} />
               <span className="text-sm text-slate-500">
@@ -146,7 +146,7 @@ export default async function AccountPage() {
       </section>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
           <h3 className="text-base font-semibold text-slate-900">{t.account.infoTitle}</h3>
           <dl className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
             <InfoRow label={t.customers.email} value={overview.email ?? t.customers.notProvided} />
@@ -170,7 +170,7 @@ export default async function AccountPage() {
         </section>
 
         {overview.customer ? (
-          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
             <h3 className="text-base font-semibold text-slate-900">{t.account.customerProfileTitle}</h3>
             <dl className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
               <InfoRow label={t.account.customerCode} value={overview.customer.customerCode} />
@@ -190,7 +190,7 @@ export default async function AccountPage() {
             </dl>
           </section>
         ) : (
-          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
             <h3 className="text-base font-semibold text-slate-900">{t.account.employeeProfileTitle}</h3>
             <dl className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
               <InfoRow label={t.account.employeeNumber} value={overview.employee?.employeeNumber ?? "—"} />
@@ -205,7 +205,7 @@ export default async function AccountPage() {
       </div>
 
       {customerProfile ? (
-        <section id="profile" className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <section id="profile" className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
           <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
             <h3 className="text-base font-semibold text-slate-900">{t.account.profileTitle}</h3>
             <p className="text-xs text-slate-500">Customer code {customerProfile.customerCode}</p>
@@ -229,7 +229,7 @@ export default async function AccountPage() {
       ) : null}
 
       {accountPreferences ? (
-        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
           <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
             <h3 className="text-base font-semibold text-slate-900">{t.account.preferencesTitle}</h3>
             <p className="text-xs text-slate-500">
@@ -285,7 +285,7 @@ export default async function AccountPage() {
       ) : null}
 
       {overview.customer ? (
-        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
           <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
             <h3 className="text-base font-semibold text-slate-900">Delivery addresses</h3>
             <p className="text-xs text-slate-500">

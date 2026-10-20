@@ -91,7 +91,7 @@ export function DiscountsCreateForm({
   }
 
   return (
-    <form onSubmit={submit} className="space-y-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+    <form onSubmit={submit} className="space-y-5 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
       <h3 className="text-base font-semibold text-slate-900">{labels.create}</h3>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

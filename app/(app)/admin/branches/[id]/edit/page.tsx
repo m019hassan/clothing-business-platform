@@ -57,7 +57,7 @@ export default async function BranchEditPage({ params }: { params: Promise<{ id:
         <p className="text-sm text-slate-600">{t.branches.editPageHint}</p>
       </header>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
         <BranchForm
           mode="edit"
           branch={branch}

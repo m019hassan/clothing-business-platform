@@ -363,7 +363,7 @@ export function CheckoutFlow({
       </div>
 
       {/* Step one: the delivery address. */}
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
         <div className="flex items-center gap-2">
           <MapPinIcon className="h-4 w-4 text-blue-700" />
           <h3 className="text-base font-bold text-slate-900">{flow.stepAddress}</h3>
@@ -530,7 +530,7 @@ export function CheckoutFlow({
       </section>
 
       {/* Step two: how they pay. */}
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
         <h3 className="text-base font-bold text-slate-900">{flow.stepPayment}</h3>
         <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
           {(
@@ -560,7 +560,7 @@ export function CheckoutFlow({
       </section>
 
       {/* Step three: review and place the order. */}
-      <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
         <h3 className="text-base font-bold text-slate-900">{flow.reviewTitle}</h3>
         <dl className="space-y-2 text-sm">
           <div className="flex items-center justify-between border-t border-slate-100 pt-3">

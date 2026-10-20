@@ -43,7 +43,7 @@ export default async function BulkBarcodesPage({ searchParams }: BulkBarcodesPag
             <Link href={`/products/barcodes?q=${encodeURIComponent(q)}`} className="text-sm text-blue-700 hover:underline">
               ← {t.barcodes.bulkBack}
             </Link>
-            <h1 className="mt-1 text-xl font-semibold text-slate-900">{t.barcodes.bulkTitle}</h1>
+            <h1 className="mt-1 text-lg font-semibold text-slate-900 sm:text-xl">{t.barcodes.bulkTitle}</h1>
           </div>
           <PrintButton label={t.barcodes.print} />
         </div>
@@ -89,7 +89,7 @@ export default async function BulkBarcodesPage({ searchParams }: BulkBarcodesPag
         <Link href="/products" className="text-sm text-blue-700 hover:underline">
           ← {t.nav.products}
         </Link>
-        <h1 className="mt-1 text-xl font-semibold text-slate-900">{t.barcodes.bulkTitle}</h1>
+        <h1 className="mt-1 text-lg font-semibold text-slate-900 sm:text-xl">{t.barcodes.bulkTitle}</h1>
         <p className="text-sm text-slate-600">{t.barcodes.bulkHint}</p>
       </div>
 

@@ -81,10 +81,10 @@ export default async function EmployeesPage({ searchParams }: EmployeesPageProps
 
   return (
     <div className="space-y-6">
-      <section className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+      <section className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">{t.employees.kicker}</p>
-          <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-950">{t.employees.title}</h2>
+          <h2 className="mt-1 text-xl font-bold tracking-tight text-slate-950 sm:text-2xl">{t.employees.title}</h2>
           <p className="mt-1 text-sm text-slate-600">
             {t.employees.summary.replace("{count}", String(pagination.total))}
           </p>
@@ -93,7 +93,7 @@ export default async function EmployeesPage({ searchParams }: EmployeesPageProps
       </section>
 
       {canManageEmployees ? (
-        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
           <h3 className="text-base font-semibold text-slate-900">{t.employees.createTitle}</h3>
           <p className="mt-1 text-sm text-slate-500">{t.employees.createHint}</p>
           <EmployeeCreateForm

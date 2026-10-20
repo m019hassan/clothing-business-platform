@@ -74,7 +74,7 @@ export default async function CartPage() {
       <div className="space-y-6">
         <section className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm">
           <p className="text-xs font-semibold uppercase tracking-wider text-blue-600">{t.cart.kicker}</p>
-          <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-950">{t.cart.title}</h2>
+          <h2 className="mt-1 text-xl font-bold tracking-tight text-slate-950 sm:text-2xl">{t.cart.title}</h2>
         </section>
 
         <section className="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-20 text-center shadow-sm">
@@ -101,7 +101,7 @@ export default async function CartPage() {
     <div className="space-y-6">
       <section className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm">
         <p className="text-xs font-semibold uppercase tracking-wider text-blue-600">{t.cart.kicker}</p>
-        <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-950">{t.cart.title}</h2>
+        <h2 className="mt-1 text-xl font-bold tracking-tight text-slate-950 sm:text-2xl">{t.cart.title}</h2>
         <p className="mt-1 text-sm text-slate-500">
           {itemCount} {itemCount === 1 ? t.cart.itemSingular : t.cart.itemPlural} {t.cart.countHintTail}
         </p>

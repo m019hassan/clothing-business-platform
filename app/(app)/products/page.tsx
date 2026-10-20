@@ -182,7 +182,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
       <section className="flex flex-col gap-4 rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wider text-blue-600">{t.catalog.kicker}</p>
-          <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-950">{t.catalog.title}</h2>
+          <h2 className="mt-1 text-xl font-bold tracking-tight text-slate-950 sm:text-2xl">{t.catalog.title}</h2>
           <p className="mt-1 text-sm text-slate-500">
             {t.catalog.subtitle}
           </p>

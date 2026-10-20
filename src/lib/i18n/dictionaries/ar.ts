@@ -37,6 +37,7 @@ export const ar: Dictionary = {
     audit: "سجلّ التدقيق",
   },
   shell: {
+    more: "المزيد",
     signOut: "تسجيل الخروج",
     notifications: "الإشعارات",
     unread: "غير مقروء",

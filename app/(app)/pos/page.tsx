@@ -60,11 +60,11 @@ export default async function PosPage() {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">{t.pos.kicker}</p>
-            <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-950">
+            <h2 className="mt-1 text-xl font-bold tracking-tight text-slate-950 sm:text-2xl">
               {catalog.branchName} ({catalog.branchCode})
             </h2>
           </div>

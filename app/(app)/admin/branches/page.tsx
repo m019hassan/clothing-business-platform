@@ -50,10 +50,10 @@ export default async function AdminBranchesPage() {
 
   return (
     <div className="space-y-6">
-      <section className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:flex-row sm:items-start sm:justify-between">
+      <section className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">{t.branches.kicker}</p>
-          <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-950">{t.branches.title}</h2>
+          <h2 className="mt-1 text-xl font-bold tracking-tight text-slate-950 sm:text-2xl">{t.branches.title}</h2>
           <p className="mt-1 text-sm text-slate-600">
             {t.branches.description}
           </p>
@@ -73,7 +73,7 @@ export default async function AdminBranchesPage() {
         </section>
       ) : (
         branches.map((branch) => (
-          <section key={branch.id} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <section key={branch.id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
             <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
               <h3 className="text-base font-semibold text-slate-900">
                 <Link href={`/admin/branches/${branch.id}`} className="hover:text-blue-700 hover:underline">
@@ -162,7 +162,7 @@ export default async function AdminBranchesPage() {
       )}
 
       {canManage ? (
-        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
           <h3 className="text-base font-semibold text-slate-900">{t.branches.newTitle}</h3>
           <div className="mt-5">
             <BranchForm mode="create" warehouses={warehouses} labels={{ ...t.branches, saving: t.branches.saving }} />

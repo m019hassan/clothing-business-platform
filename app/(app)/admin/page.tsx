@@ -123,9 +123,9 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
         <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">{t.adminUsers.kicker}</p>
-        <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-950">{t.adminUsers.title}</h2>
+        <h2 className="mt-1 text-xl font-bold tracking-tight text-slate-950 sm:text-2xl">{t.adminUsers.title}</h2>
         <p className="mt-1 text-sm text-slate-600">
           Create employees, customers and distributors, assign roles and branches, suspend accounts and reset
           passwords.
@@ -209,7 +209,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
       </section>
 
       {canManage ? (
-        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
           <h3 className="text-base font-semibold text-slate-900">{t.adminUsers.newAccountTitle}</h3>
           <p className="mt-1 text-sm text-slate-500">
             The password is hashed on the server; share it with the person and ask them to change it.
