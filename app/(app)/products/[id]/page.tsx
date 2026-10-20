@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import { AddToCart } from "@/components/cart/add-to-cart";
+import { colorLibraryIndex, normalizeColorKey } from "@/modules/catalog/application/colors";
 import { ProductGallery } from "@/components/products/product-gallery";
 import { ProductTabs } from "@/components/products/product-tabs";
 import { RelatedProducts } from "@/components/products/related-products";
@@ -74,6 +75,18 @@ export default async function ProductDetailPage({ params }: ProductDetailProps) 
     }
 
     loadError = true;
+  }
+
+  const libraryIndex = await colorLibraryIndex().catch(() => new Map<string, { hex: string; nameEn: string | null }>());
+  const colorHex: Record<string, string> = {};
+
+  if (product !== null) {
+    for (const variant of product.variants) {
+      const name = variant.color?.trim();
+      if (name && colorHex[name] === undefined) {
+        colorHex[name] = libraryIndex.get(normalizeColorKey(name))?.hex ?? "#cbd5e1";
+      }
+    }
   }
 
   if (loadError || product === null) {
@@ -244,6 +257,7 @@ export default async function ProductDetailPage({ params }: ProductDetailProps) 
         <AddToCart
           labels={t.catalog.addToCart}
           errors={t.errors}
+          colorHex={colorHex}
           currency={product.currency}
           isArabic={locale === "ar"}
           canPurchase={canPurchase}

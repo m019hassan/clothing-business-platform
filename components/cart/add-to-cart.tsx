@@ -41,6 +41,7 @@ export function AddToCart({
   canPurchase,
   labels,
   errors,
+  colorHex,
   isArabic = true,
 }: {
   variants: AddToCartVariant[];
@@ -48,12 +49,16 @@ export function AddToCart({
   canPurchase: boolean;
   labels: AddToCartLabels;
   errors?: ApiErrorLabels;
+  colorHex?: Record<string, string>;
   isArabic?: boolean;
 }) {
   const router = useRouter();
   const sellableVariants = variants.filter((variant) => variant.sellable);
   const orderableVariants = variants.filter((variant) => variant.sellable || variant.outOfStock);
   const [variantId, setVariantId] = useState(sellableVariants[0]?.id ?? orderableVariants[0]?.id ?? "");
+  const [colorName, setColorName] = useState<string | null>(
+    sellableVariants[0]?.color?.trim() ?? orderableVariants[0]?.color?.trim() ?? null
+  );
   const [quantity, setQuantity] = useState(1);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -140,6 +145,39 @@ export function AddToCart({
   // Scarcity threshold
   const isLowStock = selected && selected.availableQuantity > 0 && selected.availableQuantity <= 3;
 
+  // One swatch per distinct colour, flagged when every size of it is gone.
+  const colors = Array.from(
+    orderableVariants.reduce((map, variant) => {
+      const name = variant.color?.trim();
+      if (name && !map.has(name)) {
+        map.set(name, { name, hex: colorHex?.[name] ?? null, sellable: false });
+      }
+      const entry = name ? map.get(name) : undefined;
+      if (entry && variant.sellable) {
+        entry.sellable = true;
+      }
+      return map;
+    }, new Map<string, { name: string; hex: string | null; sellable: boolean }>())
+  ).map(([, value]) => value);
+
+  const colorVariants =
+    colorName === null
+      ? orderableVariants.filter((variant) => !variant.color?.trim())
+      : orderableVariants.filter((variant) => variant.color?.trim() === colorName);
+  const sizeVariants = colorVariants.length > 0 ? colorVariants : orderableVariants;
+
+  function selectColor(name: string) {
+    setColorName(name);
+    const candidates = orderableVariants.filter((variant) => variant.color?.trim() === name);
+    const next = candidates.find((variant) => variant.sellable) ?? candidates[0];
+    if (next) {
+      setVariantId(next.id);
+    }
+    setError(null);
+    setNotifyDone(false);
+    setNotifyError(null);
+  }
+
   return (
     <>
       <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-5 dark:border-slate-800 dark:bg-slate-900/60">
@@ -156,46 +194,86 @@ export function AddToCart({
           </button>
         </div>
 
-        {/* Variant selection cards/chips */}
-        <div className="mt-3">
-          <span className="mb-2 block text-xs font-medium text-slate-600 dark:text-slate-400">
-            {labels.variant}
-          </span>
-          <div className="flex flex-wrap gap-2">
-            {orderableVariants.map((variant) => {
-              const isSelected = variant.id === variantId;
-              const displayLabel = variant.size ? `${variant.size}${variant.color ? ` - ${variant.color}` : ""}` : variant.label;
-              return (
-                <button
-                  key={variant.id}
-                  type="button"
-                  onClick={() => {
-                    setVariantId(variant.id);
-                    setError(null);
-                    setNotifyDone(false);
-                    setNotifyError(null);
-                  }}
-                  className={`relative flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-xs font-semibold transition-all ${
-                    isSelected
-                      ? "border-slate-950 bg-slate-950 text-white shadow-sm dark:border-white dark:bg-white dark:text-slate-900"
-                      : variant.sellable
-                        ? "border-slate-200 bg-white text-slate-800 hover:border-slate-400 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                        : "border-dashed border-slate-300 bg-slate-50 text-slate-500 hover:border-amber-400 hover:bg-amber-50/60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400"
-                  }`}
-                >
-                  {isSelected && variant.sellable ? <CheckIcon className="h-3.5 w-3.5 shrink-0" /> : null}
-                  <span className={variant.sellable ? "" : "line-through decoration-rose-400/70"}>{displayLabel}</span>
-                  {!variant.sellable ? (
-                    <span className="rounded-full bg-rose-100 px-1.5 py-0.5 text-[9px] font-bold text-rose-700 dark:bg-rose-950/60 dark:text-rose-300">
-                      {isArabic ? "نفد" : "Out"}
+        {/* Colours and the sizes that belong to the chosen one */}
+        <div className="mt-3 space-y-3">
+          {colors.length > 1 ? (
+            <div>
+              <span className="mb-2 flex items-center gap-1 text-xs font-medium text-slate-600 dark:text-slate-400">
+                {isArabic ? "اللون:" : "Colour:"}
+                <span className="font-bold text-slate-900 dark:text-slate-100">{colorName ?? "—"}</span>
+              </span>
+              <div className="flex flex-wrap gap-2">
+                {colors.map((color) => {
+                  const isPicked = color.name === colorName;
+                  return (
+                    <button
+                      key={color.name}
+                      type="button"
+                      onClick={() => selectColor(color.name)}
+                      aria-pressed={isPicked}
+                      aria-label={color.name}
+                      title={color.name}
+                      className={`flex h-9 w-9 items-center justify-center rounded-full border-2 transition ${
+                        isPicked
+                          ? "border-slate-950 p-0.5 dark:border-white"
+                          : "border-slate-200 hover:border-slate-400 dark:border-slate-700"
+                      } ${color.sellable ? "" : "opacity-40"}`}
+                    >
+                      <span
+                        className="h-full w-full rounded-full border border-black/10"
+                        style={{ backgroundColor: color.hex ?? "#cbd5e1" }}
+                      />
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ) : null}
+
+          <div>
+            <span className="mb-2 block text-xs font-medium text-slate-600 dark:text-slate-400">
+              {isArabic ? "المقاس" : "Size"}
+            </span>
+            <div className="flex flex-wrap gap-2">
+              {sizeVariants.map((variant) => {
+                const isSelected = variant.id === variantId;
+                return (
+                  <button
+                    key={variant.id}
+                    type="button"
+                    onClick={() => {
+                      setVariantId(variant.id);
+                      setError(null);
+                      setNotifyDone(false);
+                      setNotifyError(null);
+                    }}
+                    aria-pressed={isSelected}
+                    aria-label={variant.sku}
+                    className={`relative flex h-11 min-w-12 items-center justify-center rounded-lg border px-3 text-sm font-semibold transition-all ${
+                      isSelected
+                        ? "border-slate-950 bg-slate-950 text-white shadow-sm dark:border-white dark:bg-white dark:text-slate-900"
+                        : variant.sellable
+                          ? "border-slate-200 bg-white text-slate-800 hover:border-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                          : "border-dashed border-slate-300 bg-slate-50 text-slate-400 dark:border-slate-700 dark:bg-slate-900"
+                    }`}
+                  >
+                    <span className={variant.sellable ? "" : "line-through decoration-rose-400/70"}>
+                      {variant.size ?? variant.label}
                     </span>
-                  ) : null}
-                  <span className={`text-[10px] font-normal ${isSelected ? "text-slate-300 dark:text-slate-600" : "text-slate-400"}`}>
-                    ({variant.unitPrice} {currency})
-                  </span>
-                </button>
-              );
-            })}
+                    {!variant.sellable ? (
+                      <span className="absolute -top-1.5 -end-1.5 rounded-full bg-rose-600 px-1.5 py-0.5 text-[9px] font-bold text-white">
+                        {isArabic ? "نفد" : "Out"}
+                      </span>
+                    ) : null}
+                  </button>
+                );
+              })}
+            </div>
+            {selected ? (
+              <p className="mt-2 text-[11px] text-slate-500">
+                {selected.sku} · {selected.unitPrice} {currency}
+              </p>
+            ) : null}
           </div>
         </div>
 
