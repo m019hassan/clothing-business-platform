@@ -4,16 +4,12 @@ import { redirect } from "next/navigation";
 import { getCurrentPermissions } from "@/modules/auth/application/authorization";
 import { PERMISSIONS } from "@/modules/auth/application/permissions";
 import { getCurrentAccount } from "@/modules/auth/infrastructure/session";
-import { listBranches } from "@/modules/branches/application/branches";
-import { UserCreateForm } from "@/modules/users/components/user-create-form";
-import { UserRowActions } from "@/modules/users/components/user-row-actions";
 import {
   listUsers,
   parseUserListFilters,
   type UserListFilters,
 } from "@/modules/users/application/users";
 import type { UserListItemView } from "@/modules/users/types";
-import { prisma } from "@/src/lib/db";
 import { formatDate } from "@/src/lib/format";
 import { getInterfaceLanguage } from "@/src/lib/i18n/server";
 
@@ -110,13 +106,6 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
     loadError = true;
   }
 
-  const branches = canManage ? await listBranches(account, { includeInactive: true }).catch(() => []) : [];
-  const roles = canManage
-    ? await prisma.role
-        .findMany({ where: { isActive: true }, select: { id: true, name: true, code: true }, orderBy: { name: "asc" } })
-        .catch(() => [])
-    : [];
-
   const rangeStart = users.length === 0 ? offset : offset + 1;
   const rangeEnd = offset + users.length;
   const hasNext = offset + users.length < total;
@@ -136,6 +125,17 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
         >
           Manage branches
         </Link>
+
+        <div className="mt-4 flex flex-wrap gap-2">
+          {canManage ? (
+            <Link
+              href="/admin/users/new"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-slate-950 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
+            >
+              + {t.adminUsers.newAccountTitle}
+            </Link>
+          ) : null}
+        </div>
       </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
@@ -208,20 +208,6 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
         </form>
       </section>
 
-      {canManage ? (
-        <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
-          <h3 className="text-base font-semibold text-slate-900">{t.adminUsers.newAccountTitle}</h3>
-          <p className="mt-1 text-sm text-slate-500">
-            The password is hashed on the server; share it with the person and ask them to change it.
-          </p>
-          <UserCreateForm
-              branches={branches}
-              roles={roles}
-              labels={{ ...t.usersAdmin, phonePlaceholder: t.addresses.phonePlaceholder }}
-            />
-        </section>
-      ) : null}
-
       {loadError ? (
         <section className="rounded-2xl border border-rose-200 bg-rose-50 p-6">
           <h3 className="text-sm font-semibold text-rose-800">{t.adminUsers.loadErrorTitle}</h3>
@@ -270,16 +256,12 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                     <td className="px-6 py-4 text-slate-600">{formatDate(user.createdAt)}</td>
                     {canManage ? (
                       <td className="px-6 py-4">
-                        <UserRowActions
-                        labels={{ ...t.usersAdmin, saving: t.catalog.form.saving, statusLabels: t.accountStatus as Record<string, string> }}
-                          accountId={user.id}
-                          firstName={user.displayName.split(" ")[0] ?? ""}
-                          lastName={user.displayName.split(" ").slice(1).join(" ")}
-                          email={user.email ?? ""}
-                          phone={user.phone}
-                          status={user.status}
-                          branchId={user.branchId}
-                        />
+                        <Link
+                          href={`/admin/users/${user.id}`}
+                          className="inline-flex rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+                        >
+                          {t.adminUsers.manage}
+                        </Link>
                       </td>
                     ) : null}
                   </tr>
