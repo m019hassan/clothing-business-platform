@@ -118,7 +118,7 @@ export default async function AccountPage() {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
             <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">{t.account.kicker}</p>
-            <h2 className="mt-1 text-xl font-bold tracking-tight text-slate-950 sm:text-2xl">{displayName}</h2>
+            <h2 className="mt-1 text-xl font-bold tracking-tight text-slate-950 sm:text-2xl">{selfProfile?.name ?? displayName}</h2>
             <div className="mt-3 flex flex-wrap items-center gap-3">
               <AccountStatusBadge status={overview.status} />
               <span className="text-sm text-slate-500">
@@ -171,14 +171,6 @@ export default async function AccountPage() {
             />
           </dl>
         </section>
-
-        {selfProfile ? (
-          <AccountAccess
-            profile={selfProfile}
-            isArabic={locale === "ar"}
-            accountType={overview.accountType}
-          />
-        ) : null}
 
         {overview.customer ? (
           <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
@@ -308,6 +300,14 @@ export default async function AccountPage() {
           </div>
         </section>
       ) : null}
+
+        {selfProfile ? (
+          <AccountAccess
+            profile={selfProfile}
+            isArabic={locale === "ar"}
+            accountType={overview.accountType}
+          />
+        ) : null}
     </div>
   );
 }

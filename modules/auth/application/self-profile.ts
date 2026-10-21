@@ -13,6 +13,8 @@ export type SelfRoleView = {
 };
 
 export type SelfProfileView = {
+  /** First + last name from whichever profile this account owns. */
+  name: string | null;
   roles: SelfRoleView[];
   /** Effective permission codes granted through active roles. */
   permissions: string[];
@@ -69,7 +71,10 @@ export async function getSelfProfile(account: NonNullable<SafeAccount>): Promise
       ? await prisma.branch.findUnique({ where: { id: branchId }, select: { name: true, code: true } })
       : null;
 
+    const name = await resolveName(account);
+
     return {
+      name,
       roles,
       permissions,
       branch,
@@ -84,3 +89,40 @@ export async function getSelfProfile(account: NonNullable<SafeAccount>): Promise
     };
   });
 }
+
+function joinName(firstName?: string | null, lastName?: string | null): string | null {
+  const joined = [firstName, lastName].filter(Boolean).join(" ").trim();
+  return joined === "" ? null : joined;
+}
+
+async function resolveName(account: NonNullable<SafeAccount>): Promise<string | null> {
+  if (account.employeeProfile) {
+    const employee = await prisma.employeeProfile.findUnique({
+      where: { id: account.employeeProfile.id },
+      select: { firstName: true, lastName: true },
+    });
+
+    return joinName(employee?.firstName, employee?.lastName);
+  }
+
+  if (account.distributorProfile) {
+    const distributor = await prisma.distributorProfile.findUnique({
+      where: { accountId: account.id },
+      select: { firstName: true, lastName: true },
+    });
+
+    return joinName(distributor?.firstName, distributor?.lastName);
+  }
+
+  if (account.customerProfile) {
+    const customer = await prisma.customerProfile.findUnique({
+      where: { id: account.customerProfile.id },
+      select: { firstName: true, lastName: true },
+    });
+
+    return joinName(customer?.firstName, customer?.lastName);
+  }
+
+  return null;
+}
+

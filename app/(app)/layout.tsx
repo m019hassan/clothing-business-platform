@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { AppShell } from "@/components/app-shell/app-shell";
+import { getSelfProfile } from "@/modules/auth/application/self-profile";
 import { getCurrentPermissions } from "@/modules/auth/application/authorization";
 import { PERMISSIONS } from "@/modules/auth/application/permissions";
 import { getCurrentAccount } from "@/modules/auth/infrastructure/session";
@@ -22,11 +23,13 @@ export default async function AppLayout({
     getInterfaceLanguage(),
   ]);
 
+  const selfProfile = await getSelfProfile(account).catch(() => null);
+
   return (
     <AppShell
       locale={language.locale}
       labels={{ nav: language.t.nav, shell: language.t.shell }}
-      userLabel={account.email ?? account.phone}
+      userLabel={selfProfile?.name ?? account.email ?? account.phone}
       unreadNotificationCount={unreadNotificationCount}
       isCustomer={account.accountType === "CUSTOMER"}
       canViewInventory={permissions.has(PERMISSIONS.INVENTORY_VIEW)}

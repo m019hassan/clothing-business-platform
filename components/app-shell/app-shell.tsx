@@ -13,6 +13,7 @@ import {
   CreditCardIcon,
   FileTextIcon,
   LayoutDashboardIcon,
+  ChevronDownIcon,
   ListIcon,
   LogOutIcon,
   ShieldCheckIcon,
@@ -588,22 +589,39 @@ export function AppShell({
                 labels={{ notifications: labels.shell.notifications, unread: labels.shell.unread }}
               />
               <LocaleSwitcher locale={locale} label={labels.shell.language} />
-              <div className="hidden items-center gap-2 border-s border-slate-200 ps-3 sm:flex">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-xs font-bold text-slate-700">
-                  {userLabel.charAt(0).toUpperCase()}
-                </div>
-                <span className="max-w-[180px] truncate text-xs font-medium text-slate-700">
-                  {userLabel}
-                </span>
-              </div>
-              <form action={logoutAction} className="hidden sm:block">
-                <button
-                  type="submit"
-                  className="rounded-xl border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 hover:text-slate-900"
+              <details className="group relative">
+                <summary
+                  aria-label={labels.nav.account}
+                  className="flex cursor-pointer list-none items-center gap-1.5 rounded-xl border border-slate-200 px-2 py-1.5 transition-colors hover:bg-slate-50 [&::-webkit-details-marker]:hidden"
                 >
-                  {labels.shell.signOut}
-                </button>
-              </form>
+                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 text-xs font-bold text-slate-700">
+                    {userLabel.charAt(0).toUpperCase()}
+                  </span>
+                  <ChevronDownIcon className="h-3.5 w-3.5 text-slate-400 transition-transform group-open:rotate-180" />
+                </summary>
+
+                <div className="absolute end-0 top-full z-50 mt-2 w-48 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg">
+                  <p className="truncate border-b border-slate-100 px-3 py-2 text-[11px] font-medium text-slate-500">
+                    {userLabel}
+                  </p>
+                  <Link
+                    href="/account"
+                    className="flex items-center gap-2 px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                  >
+                    <UserIcon className="h-4 w-4 text-slate-400" />
+                    {labels.nav.account}
+                  </Link>
+                  <form action={logoutAction}>
+                    <button
+                      type="submit"
+                      className="flex w-full items-center gap-2 px-3 py-2.5 text-sm font-medium text-rose-700 hover:bg-rose-50"
+                    >
+                      <LogOutIcon className="h-4 w-4" />
+                      {labels.shell.signOut}
+                    </button>
+                  </form>
+                </div>
+              </details>
             </div>
           </div>
         </header>
