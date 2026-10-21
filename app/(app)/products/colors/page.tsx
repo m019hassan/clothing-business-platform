@@ -27,7 +27,15 @@ export default async function ProductColorsPage() {
         <p className="text-sm text-slate-600">{t.colors.subtitle}</p>
       </header>
 
-      {canManage ? <ColorCreateForm labels={t.colors} /> : null}
+      {canManage ? (
+        <Link
+          href="/products/colors/new"
+          className="inline-flex rounded-xl bg-slate-950 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
+        >
+          + {t.colors.add}
+        </Link>
+      ) : null}
+
 
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <table className="hidden w-full text-sm md:table">

@@ -6,8 +6,7 @@ import { getCurrentPermissions } from "@/modules/auth/application/authorization"
 import { PERMISSIONS } from "@/modules/auth/application/permissions";
 import { getCurrentAccount } from "@/modules/auth/infrastructure/session";
 import { listEmployees } from "@/modules/employees/application/employees";
-import { listBranchOptions, listDepartmentOptions, listRoleOptions } from "@/modules/employees/application/lookups";
-import { EmployeeCreateForm } from "@/modules/users/components/employee-create-form";
+import { listRoleOptions } from "@/modules/employees/application/lookups";
 import { EmployeeRowActions } from "@/modules/users/components/employee-row-actions";
 import type { EmployeePageView } from "@/modules/employees/types";
 import { formatDate } from "@/src/lib/format";
@@ -69,9 +68,8 @@ export default async function EmployeesPage({ searchParams }: EmployeesPageProps
   }
 
   const canManageEmployees = permissions.has(PERMISSIONS.USERS_MANAGE);
-  const [departmentOptions, roleOptions, branchOptions] = canManageEmployees
-    ? await Promise.all([listDepartmentOptions(), listRoleOptions(), listBranchOptions()])
-    : [[], [], []];
+  // Role options stay: each row's editor reassigns roles inline.
+  const roleOptions = canManageEmployees ? await listRoleOptions() : [];
 
   const { rows, pagination } = page;
   const rangeStart = rows.length === 0 ? pagination.offset : pagination.offset + 1;
@@ -90,20 +88,15 @@ export default async function EmployeesPage({ searchParams }: EmployeesPageProps
           </p>
         </div>
 
+        {canManageEmployees ? (
+          <Link
+            href="/employees/new"
+            className="inline-flex shrink-0 items-center rounded-xl bg-slate-950 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
+          >
+            + {t.employees.createTitle}
+          </Link>
+        ) : null}
       </section>
-
-      {canManageEmployees ? (
-        <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
-          <h3 className="text-base font-semibold text-slate-900">{t.employees.createTitle}</h3>
-          <p className="mt-1 text-sm text-slate-500">{t.employees.createHint}</p>
-          <EmployeeCreateForm
-            departments={departmentOptions}
-            branches={branchOptions}
-            roles={roleOptions}
-            labels={{ ...t.employees.editor, errors: t.errors }}
-          />
-        </section>
-      ) : null}
 
       {rows.length === 0 ? (
         <section className="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center">

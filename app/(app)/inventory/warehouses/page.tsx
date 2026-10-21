@@ -36,19 +36,15 @@ export default async function AdminWarehousesPage() {
         </Link>
         <h1 className="text-2xl font-semibold text-slate-900">{t.warehouses.title}</h1>
         <p className="text-sm text-slate-600">{t.warehouses.subtitle}</p>
+        {canManage ? (
+          <Link
+            href="/inventory/warehouses/new"
+            className="mt-3 inline-flex rounded-xl bg-slate-950 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
+          >
+            + {t.warehouses.add}
+          </Link>
+        ) : null}
       </header>
-
-      {canManage ? (
-        <WarehouseCreateForm
-          labels={{
-            code: t.warehouses.code,
-            codePlaceholder: t.warehouses.codePlaceholder,
-            name: t.warehouses.name,
-            namePlaceholder: t.warehouses.namePlaceholder,
-            add: t.warehouses.add,
-          }}
-        />
-      ) : null}
 
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <table className="hidden w-full text-sm md:table">

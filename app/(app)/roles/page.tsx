@@ -10,7 +10,6 @@ import {
   listPermissionCatalog,
   listRolesWithPermissions,
 } from "@/modules/employees/application/role-permissions";
-import { RoleCreateForm } from "@/modules/employees/components/role-create-form";
 import { RoleSettingsForm } from "@/modules/employees/components/role-settings-form";
 import { RolePermissionsEditor } from "@/modules/employees/components/role-permissions-editor";
 import type {
@@ -95,14 +94,15 @@ export default async function RolesPage() {
             )}
           </p>
         </div>
+        {canEditRoles ? (
+          <Link
+            href="/roles/new"
+            className="inline-flex shrink-0 items-center rounded-xl bg-slate-950 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
+          >
+            + {t.roles.createTitle}
+          </Link>
+        ) : null}
       </section>
-
-      {canEditRoles ? (
-        <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
-          <h3 className="text-base font-semibold text-slate-900">{t.roles.createTitle}</h3>
-          <RoleCreateForm labels={t.roles.create} />
-        </section>
-      ) : null}
 
       {roles.length === 0 ? (
         <section className="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center">

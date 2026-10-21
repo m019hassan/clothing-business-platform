@@ -27,7 +27,15 @@ export default async function ProductMaterialsPage() {
         <p className="text-sm text-slate-600">{t.materials.subtitle}</p>
       </header>
 
-      {canManage ? <MaterialCreateForm labels={t.materials} /> : null}
+      {canManage ? (
+        <Link
+          href="/products/materials/new"
+          className="inline-flex rounded-xl bg-slate-950 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
+        >
+          + {t.materials.add}
+        </Link>
+      ) : null}
+
 
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <table className="hidden w-full text-sm md:table">
