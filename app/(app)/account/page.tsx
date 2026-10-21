@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 
 import { AccountStatusBadge } from "@/components/account/account-status-badge";
 import { getCurrentAccount } from "@/modules/auth/infrastructure/session";
+import { getSelfProfile } from "@/modules/auth/application/self-profile";
+import { AccountAccess } from "@/modules/auth/components/account-access";
 import { getAccountOverview } from "@/modules/customers/application/account";
 import type { AccountOverviewView } from "@/modules/customers/types";
 import { listAddresses } from "@/modules/customers/application/addresses";
@@ -35,7 +37,8 @@ function InfoRow({ label, value }: { label: string; value: string }) {
 
 export default async function AccountPage() {
   const account = await getCurrentAccount();
-  const { t } = await getInterfaceLanguage();
+  const selfProfile = account ? await getSelfProfile(account).catch(() => null) : null;
+  const { t, locale } = await getInterfaceLanguage();
 
   if (!account) {
     redirect("/login");
@@ -168,6 +171,14 @@ export default async function AccountPage() {
             />
           </dl>
         </section>
+
+        {selfProfile ? (
+          <AccountAccess
+            profile={selfProfile}
+            isArabic={locale === "ar"}
+            accountType={overview.accountType}
+          />
+        ) : null}
 
         {overview.customer ? (
           <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
