@@ -58,12 +58,22 @@ export default async function AdminBranchesPage() {
             {t.branches.description}
           </p>
         </div>
-        <Link
-          href="/admin"
-          className="shrink-0 rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-50"
-        >
-          {t.adminUsers.title}
-        </Link>
+        <div className="flex shrink-0 flex-wrap items-center gap-2">
+          {canManage ? (
+            <Link
+              href="/admin/branches/new"
+              className="rounded-xl bg-slate-950 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
+            >
+              + {t.branches.newTitle}
+            </Link>
+          ) : null}
+          <Link
+            href="/admin"
+            className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-50"
+          >
+            {t.adminUsers.title}
+          </Link>
+        </div>
       </section>
 
       {branches.length === 0 ? (
@@ -161,14 +171,6 @@ export default async function AdminBranchesPage() {
         ))
       )}
 
-      {canManage ? (
-        <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
-          <h3 className="text-base font-semibold text-slate-900">{t.branches.newTitle}</h3>
-          <div className="mt-5">
-            <BranchForm mode="create" warehouses={warehouses} labels={{ ...t.branches, saving: t.branches.saving }} />
-          </div>
-        </section>
-      ) : null}
     </div>
   );
 }
