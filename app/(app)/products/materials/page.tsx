@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { FormDialog } from "@/components/ui/form-dialog";
 import { requireAuthenticated } from "@/modules/auth/infrastructure/session";
 import { getCurrentPermissions } from "@/modules/auth/application/authorization";
 import { PERMISSIONS } from "@/modules/auth/application/permissions";
@@ -12,7 +13,7 @@ export const dynamic = "force-dynamic";
 
 export default async function ProductMaterialsPage() {
   await requireAuthenticated();
-  const { t } = await getInterfaceLanguage();
+  const { t, locale } = await getInterfaceLanguage();
   const permissions = await getCurrentPermissions();
   const canManage = permissions.has(PERMISSIONS.PRODUCTS_CREATE);
   const materials = await listMaterialOptions();
@@ -28,12 +29,9 @@ export default async function ProductMaterialsPage() {
       </header>
 
       {canManage ? (
-        <Link
-          href="/products/materials/new"
-          className="inline-flex rounded-xl bg-slate-950 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
-        >
-          + {t.materials.add}
-        </Link>
+        <FormDialog trigger={`+ ${t.materials.add}`} title={t.materials.add} isArabic={locale === "ar"}>
+          <MaterialCreateForm labels={t.materials} />
+        </FormDialog>
       ) : null}
 
 

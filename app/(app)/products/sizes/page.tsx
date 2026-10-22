@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { FormDialog } from "@/components/ui/form-dialog";
 import { requireAuthenticated } from "@/modules/auth/infrastructure/session";
 import { getCurrentPermissions } from "@/modules/auth/application/authorization";
 import { PERMISSIONS } from "@/modules/auth/application/permissions";
@@ -12,7 +13,7 @@ export const dynamic = "force-dynamic";
 
 export default async function ProductSizesPage() {
   await requireAuthenticated();
-  const { t } = await getInterfaceLanguage();
+  const { t, locale } = await getInterfaceLanguage();
   const permissions = await getCurrentPermissions();
   const canManage = permissions.has(PERMISSIONS.PRODUCTS_CREATE);
   const sizes = await listSizeOptions();
@@ -28,12 +29,9 @@ export default async function ProductSizesPage() {
       </header>
 
       {canManage ? (
-        <Link
-          href="/products/sizes/new"
-          className="inline-flex rounded-xl bg-slate-950 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
-        >
-          + {t.sizes.add}
-        </Link>
+        <FormDialog trigger={`+ ${t.sizes.add}`} title={t.sizes.add} isArabic={locale === "ar"}>
+          <SizeCreateForm labels={t.sizes} />
+        </FormDialog>
       ) : null}
 
 

@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
+
+import { FormDialog } from "@/components/ui/form-dialog";import { redirect } from "next/navigation";
 
 import { getCurrentPermissions } from "@/modules/auth/application/authorization";
 import { PERMISSIONS } from "@/modules/auth/application/permissions";
@@ -25,7 +26,7 @@ export default async function AdminWarehousesPage() {
   }
 
   const canManage = permissions.has(PERMISSIONS.BRANCHES_MANAGE);
-  const { t } = await getInterfaceLanguage();
+  const { t, locale } = await getInterfaceLanguage();
   const warehouses = await listWarehouses("STORAGE");
 
   return (
@@ -37,12 +38,19 @@ export default async function AdminWarehousesPage() {
         <h1 className="text-2xl font-semibold text-slate-900">{t.warehouses.title}</h1>
         <p className="text-sm text-slate-600">{t.warehouses.subtitle}</p>
         {canManage ? (
-          <Link
-            href="/inventory/warehouses/new"
-            className="mt-3 inline-flex rounded-xl bg-slate-950 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
-          >
-            + {t.warehouses.add}
-          </Link>
+          <div className="mt-3">
+            <FormDialog trigger={`+ ${t.warehouses.add}`} title={t.warehouses.add} isArabic={locale === "ar"}>
+              <WarehouseCreateForm
+                labels={{
+                  code: t.warehouses.code,
+                  codePlaceholder: t.warehouses.codePlaceholder,
+                  name: t.warehouses.name,
+                  namePlaceholder: t.warehouses.namePlaceholder,
+                  add: t.warehouses.add,
+                }}
+              />
+            </FormDialog>
+          </div>
         ) : null}
       </header>
 

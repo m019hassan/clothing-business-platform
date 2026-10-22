@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { FormDialog } from "@/components/ui/form-dialog";
 import { ColorCreateForm } from "@/modules/catalog/components/color-create-form";
 import { ColorRowActions } from "@/modules/catalog/components/color-row-actions";
 import { listColorOptions } from "@/modules/catalog/application/colors";
@@ -12,7 +13,7 @@ export const dynamic = "force-dynamic";
 
 export default async function ProductColorsPage() {
   await requireAuthenticated();
-  const { t } = await getInterfaceLanguage();
+  const { t, locale } = await getInterfaceLanguage();
   const permissions = await getCurrentPermissions();
   const canManage = permissions.has(PERMISSIONS.PRODUCTS_CREATE);
   const colors = await listColorOptions();
@@ -28,12 +29,9 @@ export default async function ProductColorsPage() {
       </header>
 
       {canManage ? (
-        <Link
-          href="/products/colors/new"
-          className="inline-flex rounded-xl bg-slate-950 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
-        >
-          + {t.colors.add}
-        </Link>
+        <FormDialog trigger={`+ ${t.colors.add}`} title={t.colors.add} isArabic={locale === "ar"}>
+          <ColorCreateForm labels={t.colors} />
+        </FormDialog>
       ) : null}
 
 

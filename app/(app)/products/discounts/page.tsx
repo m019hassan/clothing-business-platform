@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
+
+import { FormDialog } from "@/components/ui/form-dialog";import { redirect } from "next/navigation";
 
 import { getCurrentPermissions } from "@/modules/auth/application/authorization";
 import { PERMISSIONS } from "@/modules/auth/application/permissions";
@@ -28,7 +29,7 @@ export default async function DiscountsPage() {
   }
 
   const permissions = await getCurrentPermissions();
-  const { t } = await getInterfaceLanguage();
+  const { t, locale } = await getInterfaceLanguage();
 
   if (!permissions.has(PERMISSIONS.DISCOUNTS_MANAGE)) {
     return (
@@ -55,12 +56,28 @@ export default async function DiscountsPage() {
         </Link>
         <h1 className="mt-1 text-lg font-semibold text-slate-900 sm:text-xl">{t.discounts.title}</h1>
         <p className="text-sm text-slate-600">{t.discounts.subtitle}</p>
-        <Link
-          href="/products/discounts/new"
-          className="mt-3 inline-flex rounded-xl bg-slate-950 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
-        >
-          + {t.discounts.create}
-        </Link>
+        <div className="mt-3">
+          <FormDialog trigger={`+ ${t.discounts.create}`} title={t.discounts.create} isArabic={locale === "ar"}>
+            <DiscountsCreateForm
+              products={products.map((product) => ({ id: product.id, name: product.name }))}
+              labels={{
+                create: t.discounts.create,
+                name: t.discounts.name,
+                namePlaceholder: t.discounts.namePlaceholder,
+                percent: t.discounts.percent,
+                startsAt: t.discounts.startsAt,
+                endsAt: t.discounts.endsAt,
+                products: t.discounts.products,
+                searchProducts: t.discounts.searchProducts,
+                selectAll: t.discounts.selectAll,
+                save: t.discounts.save,
+                saving: t.discounts.saving,
+                created: t.discounts.created,
+                failed: t.discounts.failed,
+              }}
+            />
+          </FormDialog>
+        </div>
       </div>
 
 
