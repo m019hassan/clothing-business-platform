@@ -63,6 +63,7 @@ export function PosTerminal({
   const [error, setError] = useState<string | null>(null);
   const [receipt, setReceipt] = useState<PosReceiptView | null>(null);
   const [view, setView] = useState<"list" | "cards">("list");
+  const [rowAdd, setRowAdd] = useState<Record<string, number>>({});
   const [soundEnabled, setSoundEnabled] = useState(true);
 
   // Cash / Change calculator modal state
@@ -260,21 +261,19 @@ export function PosTerminal({
     return attributes ? `${item.productName} · ${attributes}` : item.productName;
   };
 
-  function addItem(item: PosCatalogItemView) {
+  function addItem(item: PosCatalogItemView, requested = 1) {
     const shelfItem = catalog.items.find((entry) => entry.variantId === item.variantId) ?? item;
     const shelfQuantity = shelfItem.availableQuantity;
+    const amount = Math.max(1, Math.trunc(requested));
 
     setError(null);
     setLines((current) => {
       const existing = current.find((line) => line.item.variantId === item.variantId);
+      const currentQuantity = existing?.quantity ?? 0;
 
-      if (!existing) {
-        if (shelfQuantity <= 0) return current;
-        playBeep();
-        return [...current, { item: shelfItem, quantity: 1 }];
-      }
+      if (shelfQuantity <= 0) return current;
 
-      if (existing.quantity + 1 > shelfQuantity) {
+      if (currentQuantity + amount > shelfQuantity) {
         setError(
           labels.onlyAvailable
             .replace("{name}", describeItem(shelfItem))
@@ -284,8 +283,13 @@ export function PosTerminal({
       }
 
       playBeep();
+
+      if (!existing) {
+        return [...current, { item: shelfItem, quantity: amount }];
+      }
+
       return current.map((line) =>
-        line.item.variantId === item.variantId ? { ...line, quantity: line.quantity + 1 } : line,
+        line.item.variantId === item.variantId ? { ...line, quantity: line.quantity + amount } : line,
       );
     });
 
@@ -823,33 +827,120 @@ export function PosTerminal({
             </ul>
           ) : (
             <ul className="divide-y divide-slate-100 max-h-[580px] overflow-y-auto pe-1">
-              {stockedItems.slice(0, 30).map((item) => (
-                <li key={item.variantId} className="flex items-center justify-between gap-3 py-3 transition-colors hover:bg-slate-50/60 rounded-xl px-2">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-bold text-slate-900">{item.productName}</p>
-                    <p className="truncate text-xs text-slate-700 font-semibold mt-0.5">
-                      {[item.size, item.color].filter(Boolean).join(" · ") || "—"}
-                      <span className="ms-2 text-xs font-normal text-slate-500">
-                        {labels.availableInRow} {item.availableQuantity}
+              {stockedItems.slice(0, 30).map((item) => {
+                const inSale = lines.find((line) => line.item.variantId === item.variantId)?.quantity ?? 0;
+                const pendingQuantity = rowAdd[item.variantId] ?? 1;
+
+                return (
+                  <li
+                    key={item.variantId}
+                    className="flex flex-wrap items-center gap-3 rounded-xl px-2 py-3 transition-colors hover:bg-slate-50/60"
+                  >
+                    <div className="h-14 w-12 shrink-0 overflow-hidden rounded-lg bg-slate-100">
+                      {item.imageId ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={`/api/products/images/${item.imageId}`}
+                          alt={item.productName}
+                          loading="lazy"
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-slate-300">
+                          <ShoppingBagIcon className="h-5 w-5" />
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-bold text-slate-900">{item.productName}</p>
+
+                      <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                        {item.color ? (
+                          <span className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[11px] font-semibold text-slate-700">
+                            <span
+                              className="h-2.5 w-2.5 rounded-full border border-black/10"
+                              style={{ backgroundColor: item.colorHex ?? "#cbd5e1" }}
+                            />
+                            {item.color}
+                          </span>
+                        ) : null}
+
+                        {item.size ? (
+                          <span className="rounded-md bg-slate-900 px-2 py-0.5 text-xs font-bold text-white">
+                            {labels.sizeLabel}: {item.size}
+                          </span>
+                        ) : null}
+
+                        <span className="text-[11px] text-slate-400">
+                          {labels.availableInRow} {item.availableQuantity}
+                        </span>
+                      </div>
+
+                      <p className="mt-1 truncate font-mono text-[11px] text-slate-400">{item.sku}</p>
+                    </div>
+
+                    <div className="flex shrink-0 flex-col items-end gap-1.5">
+                      <span className="text-sm font-bold text-slate-900">
+                        {formatMoney(item.unitPrice, item.currency)}
                       </span>
-                    </p>
-                    <p className="truncate font-mono text-[11px] text-slate-400">{item.sku}</p>
-                  </div>
-                  <div className="flex shrink-0 items-center gap-3">
-                    <span className="text-sm font-bold text-slate-900">
-                      {formatMoney(item.unitPrice, item.currency)}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => addItem(item)}
-                      disabled={item.availableQuantity <= 0}
-                      className="rounded-xl bg-slate-950 px-3 py-1.5 text-xs font-semibold text-white shadow-xs transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400"
-                    >
-                      {labels.addToSale}
-                    </button>
-                  </div>
-                </li>
-              ))}
+
+                      <div className="flex items-center gap-1">
+                        <div className="flex items-center rounded-lg border border-slate-200 bg-white">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setRowAdd((current) => ({
+                                ...current,
+                                [item.variantId]: Math.max(1, (current[item.variantId] ?? 1) - 1),
+                              }))
+                            }
+                            aria-label={preferEnglish ? "Decrease quantity" : "تقليل الكمية"}
+                            className="flex h-7 w-7 items-center justify-center text-sm font-bold text-slate-600 hover:bg-slate-100"
+                          >
+                            −
+                          </button>
+                          <span className="w-7 text-center text-xs font-bold text-slate-900">{pendingQuantity}</span>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setRowAdd((current) => ({
+                                ...current,
+                                [item.variantId]: Math.min(
+                                  Math.max(item.availableQuantity, 1),
+                                  (current[item.variantId] ?? 1) + 1,
+                                ),
+                              }))
+                            }
+                            aria-label={preferEnglish ? "Increase quantity" : "زيادة الكمية"}
+                            className="flex h-7 w-7 items-center justify-center text-sm font-bold text-slate-600 hover:bg-slate-100"
+                          >
+                            +
+                          </button>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            addItem(item, rowAdd[item.variantId] ?? 1);
+                            setRowAdd((current) => ({ ...current, [item.variantId]: 1 }));
+                          }}
+                          disabled={item.availableQuantity <= 0}
+                          className="rounded-xl bg-slate-950 px-3 py-1.5 text-xs font-semibold text-white shadow-xs transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400"
+                        >
+                          {labels.addToSale}
+                        </button>
+                      </div>
+
+                      {inSale > 0 ? (
+                        <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
+                          {preferEnglish ? `In sale: ${inSale}` : `في الفاتورة: ${inSale}`}
+                        </span>
+                      ) : null}
+                    </div>
+                  </li>
+                );
+              })}
               {stockedItems.length === 0 ? <li className="py-12 text-center text-sm text-slate-500">{labels.noMatches}</li> : null}
             </ul>
           )}
