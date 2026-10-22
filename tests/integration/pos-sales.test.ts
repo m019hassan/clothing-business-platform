@@ -235,10 +235,15 @@ describe("getPosCatalog", () => {
   });
 
   it("carries the product photo for the card view", async () => {
+    // the photo belongs to the product that owns this variant
+    const variantRecord = await prisma.productVariant.findUniqueOrThrow({
+      where: { id: variantA },
+      select: { productId: true },
+    });
+
     const image = await prisma.productImage.create({
       data: {
-        // the newest product belongs to this test
-        productId: created.productIds[created.productIds.length - 1],
+        productId: variantRecord.productId,
         variantId: variantA,
         fileKey: "vitest-pos-card.png",
         originalName: "card.png",
@@ -260,9 +265,10 @@ describe("getPosCatalog", () => {
     expect(item?.colorHex).toBe("#DC2626");
     expect(catalog.items.find((entry) => entry.variantId === variantB)?.colorHex).toBeNull();
 
-    // the photo belongs to the product, so its other variants show it too
+    // the photo is tagged with variantA's colour, so the other colour must not borrow it
     const otherVariant = catalog.items.find((entry) => entry.variantId === variantB);
-    expect(otherVariant?.imageId).toBe(image.id);
+    expect(otherVariant?.imageId).toBeNull();
+    expect(otherVariant?.imageIds).toEqual([]);
   });
 
   it("matches legacy colour spellings and English names to the library", async () => {

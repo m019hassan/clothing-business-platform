@@ -63,7 +63,6 @@ export function PosTerminal({
   const [error, setError] = useState<string | null>(null);
   const [receipt, setReceipt] = useState<PosReceiptView | null>(null);
   const [view, setView] = useState<"list" | "cards">("list");
-  const [rowAdd, setRowAdd] = useState<Record<string, number>>({});
   const [soundEnabled, setSoundEnabled] = useState(true);
 
   // Cash / Change calculator modal state
@@ -829,7 +828,6 @@ export function PosTerminal({
             <ul className="divide-y divide-slate-100 max-h-[580px] overflow-y-auto pe-1">
               {stockedItems.slice(0, 30).map((item) => {
                 const inSale = lines.find((line) => line.item.variantId === item.variantId)?.quantity ?? 0;
-                const pendingQuantity = rowAdd[item.variantId] ?? 1;
 
                 return (
                   <li
@@ -845,6 +843,13 @@ export function PosTerminal({
                           loading="lazy"
                           className="h-full w-full object-cover"
                         />
+                      ) : item.colorHex ? (
+                        <div className="flex h-full w-full items-center justify-center bg-white">
+                          <span
+                            className="h-7 w-7 rounded-full border border-black/10"
+                            style={{ backgroundColor: item.colorHex }}
+                          />
+                        </div>
                       ) : (
                         <div className="flex h-full w-full items-center justify-center text-slate-300">
                           <ShoppingBagIcon className="h-5 w-5" />
@@ -889,31 +894,29 @@ export function PosTerminal({
                         <div className="flex items-center rounded-lg border border-slate-200 bg-white">
                           <button
                             type="button"
-                            onClick={() =>
-                              setRowAdd((current) => ({
-                                ...current,
-                                [item.variantId]: Math.max(1, (current[item.variantId] ?? 1) - 1),
-                              }))
-                            }
-                            aria-label={preferEnglish ? "Decrease quantity" : "تقليل الكمية"}
-                            className="flex h-7 w-7 items-center justify-center text-sm font-bold text-slate-600 hover:bg-slate-100"
+                            onClick={() => changeQuantity(item.variantId, -1)}
+                            disabled={inSale === 0}
+                            aria-label={preferEnglish ? "Remove one from the sale" : "تقليل الكمية في الفاتورة"}
+                            className="flex h-7 w-7 items-center justify-center text-sm font-bold text-slate-600 hover:bg-slate-100 disabled:cursor-not-allowed disabled:text-slate-300"
                           >
                             −
                           </button>
-                          <span className="w-7 text-center text-xs font-bold text-slate-900">{pendingQuantity}</span>
+                          <span
+                            aria-live="polite"
+                            className={
+                              inSale > 0
+                                ? "w-7 text-center text-sm font-bold text-emerald-700"
+                                : "w-7 text-center text-sm font-bold text-slate-400"
+                            }
+                          >
+                            {inSale}
+                          </span>
                           <button
                             type="button"
-                            onClick={() =>
-                              setRowAdd((current) => ({
-                                ...current,
-                                [item.variantId]: Math.min(
-                                  Math.max(item.availableQuantity, 1),
-                                  (current[item.variantId] ?? 1) + 1,
-                                ),
-                              }))
-                            }
-                            aria-label={preferEnglish ? "Increase quantity" : "زيادة الكمية"}
-                            className="flex h-7 w-7 items-center justify-center text-sm font-bold text-slate-600 hover:bg-slate-100"
+                            onClick={() => (inSale === 0 ? addItem(item) : changeQuantity(item.variantId, 1))}
+                            disabled={item.availableQuantity <= 0}
+                            aria-label={preferEnglish ? "Add one to the sale" : "زيادة الكمية في الفاتورة"}
+                            className="flex h-7 w-7 items-center justify-center text-sm font-bold text-slate-600 hover:bg-slate-100 disabled:cursor-not-allowed disabled:text-slate-300"
                           >
                             +
                           </button>
@@ -921,22 +924,13 @@ export function PosTerminal({
 
                         <button
                           type="button"
-                          onClick={() => {
-                            addItem(item, rowAdd[item.variantId] ?? 1);
-                            setRowAdd((current) => ({ ...current, [item.variantId]: 1 }));
-                          }}
+                          onClick={() => addItem(item)}
                           disabled={item.availableQuantity <= 0}
                           className="rounded-xl bg-slate-950 px-3 py-1.5 text-xs font-semibold text-white shadow-xs transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400"
                         >
                           {labels.addToSale}
                         </button>
                       </div>
-
-                      {inSale > 0 ? (
-                        <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
-                          {preferEnglish ? `In sale: ${inSale}` : `في الفاتورة: ${inSale}`}
-                        </span>
-                      ) : null}
                     </div>
                   </li>
                 );

@@ -345,7 +345,7 @@ export async function getPosCatalog(account: AuthenticatedAccount): Promise<PosC
                 currency: true,
                 category: { select: { id: true, name: true } },
                 taxExempt: true,
-                images: { orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }], select: { id: true } },
+                images: { orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }], select: { id: true, variantId: true } },
               },
             },
           },
@@ -373,6 +373,15 @@ export async function getPosCatalog(account: AuthenticatedAccount): Promise<PosC
 
     const discountPercent = discountMap.get(item.variant.product.id) ?? null;
 
+    // A photo can belong to one variant (its exact colour) or to the product as a whole.
+    // When a product tags photos by colour, a variant without its own photo gets none:
+    // showing another colour's photo is worse than showing nothing.
+    const ownPhoto = item.variant.product.images.filter((image) => image.variantId === item.variantId);
+    const sharedPhotos = item.variant.product.images.filter((image) => image.variantId === null);
+    const coloursHavePhotos = item.variant.product.images.some((image) => image.variantId !== null);
+    const orderedPhotos =
+      ownPhoto.length > 0 ? [...ownPhoto, ...sharedPhotos] : coloursHavePhotos ? [] : sharedPhotos;
+
     aggregated.set(item.variantId, {
       variantId: item.variantId,
       sku: item.variant.sku,
@@ -380,8 +389,8 @@ export async function getPosCatalog(account: AuthenticatedAccount): Promise<PosC
       color: item.variant.color,
       productId: item.variant.product.id,
       productName: item.variant.product.name,
-      imageId: item.variant.product.images[0]?.id ?? null,
-      imageIds: item.variant.product.images.map((image) => image.id),
+      imageId: orderedPhotos[0]?.id ?? null,
+      imageIds: orderedPhotos.map((image) => image.id),
       colorHex: item.variant.color
         ? (libraryByColor.get(normalizeColorKey(item.variant.color))?.hex ?? null)
         : null,
